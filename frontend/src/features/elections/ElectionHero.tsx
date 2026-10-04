@@ -105,7 +105,7 @@ export function ElectionHero({ status }: { status: ElectionStatus | null }) {
   return (
     <section aria-labelledby="eleicao-titulo" className="container-page pt-10 md:pt-16">
       <div className="flex flex-wrap items-center gap-3">
-        <p className="font-semibold text-ipe">{election.name}</p>
+        <p className="font-semibold text-azul">{election.name}</p>
         {status.phase === 'voting' && <StatusBadge status="live">Votação em andamento</StatusBadge>}
         {status.phase === 'counting' && <StatusBadge status="partial">Votação encerrada</StatusBadge>}
       </div>

@@ -34,7 +34,7 @@ export function TextField({ label, hint, error, type = 'text', className, ...res
           className={cx(
             'block w-full min-h-12 rounded-control bg-surface px-3.5 text-base text-ink',
             'border placeholder:text-muted/80 transition-colors',
-            'focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-ipe',
+            'focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-azul',
             error ? 'border-danger' : 'border-line-strong hover:border-ink',
             isPassword && 'pr-24',
           )}
@@ -46,7 +46,7 @@ export function TextField({ label, hint, error, type = 'text', className, ...res
             onClick={() => setRevealed((v) => !v)}
             aria-pressed={revealed}
             aria-controls={id}
-            className="absolute inset-y-1 right-1 rounded-[0.5rem] px-3 text-sm font-semibold text-ipe hover:bg-ipe-soft"
+            className="absolute inset-y-1 right-1 rounded-[0.5rem] px-3 text-sm font-semibold text-azul hover:bg-azul-soft"
           >
             {revealed ? 'Ocultar' : 'Mostrar'}
           </button>

@@ -49,7 +49,7 @@ export function BottomNav() {
               className={({ isActive }) =>
                 cx(
                   'flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs font-semibold no-underline',
-                  isActive ? 'text-ipe' : 'text-muted',
+                  isActive ? 'text-azul' : 'text-muted',
                 )
               }
             >

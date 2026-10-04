@@ -11,7 +11,7 @@ const base =
   'disabled:cursor-not-allowed disabled:opacity-55 aria-busy:cursor-progress'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-ipe text-on-ipe hover:bg-ipe-strong',
+  primary: 'bg-azul text-on-azul hover:bg-azul-strong',
   secondary: 'bg-surface text-ink border border-line-strong hover:border-ink',
   quiet: 'text-ink hover:bg-sunken',
   danger: 'bg-surface text-danger border border-danger/60 hover:bg-danger-soft',

@@ -30,8 +30,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'any',
-        theme_color: '#6b2a87',
-        background_color: '#f3f5f8',
+        theme_color: '#ffffff',
+        background_color: '#f6f8fa',
         categories: ['news', 'government', 'education'],
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },

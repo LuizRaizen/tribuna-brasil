@@ -18,7 +18,7 @@ export function RouteError() {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="min-h-11 rounded-control bg-ipe px-4 font-semibold text-on-ipe"
+          className="min-h-11 rounded-control bg-azul px-4 font-semibold text-on-azul"
         >
           Tentar de novo
         </button>

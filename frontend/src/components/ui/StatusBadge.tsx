@@ -6,7 +6,7 @@ const styles: Record<Status, string> = {
   partial: 'bg-partial-soft text-partial',
   final: 'bg-final-soft text-final',
   soon: 'bg-sunken text-muted',
-  live: 'bg-ipe-soft text-ipe',
+  live: 'bg-azul-soft text-azul',
 }
 
 /** Rótulo de estado. O texto sempre carrega o significado; a cor apenas reforça. */

@@ -26,12 +26,13 @@ export function SourceSeal({ sourceName, officialUrl, fetchedAt, sourceUpdatedAt
     <aside
       aria-label="Procedência da informação"
       className={cx(
-        'relative flex gap-3 border-l-[3px] border-ipe pl-3 text-sm',
+        // Verde = "oficial / verificado" em todo o sistema.
+        'relative flex gap-3 border-l-[3px] border-verde pl-3 text-sm',
         compact ? 'items-center' : 'items-start',
         className,
       )}
     >
-      <SealIcon className={cx('shrink-0 text-ipe', compact ? 'size-5' : 'mt-0.5 size-6')} />
+      <SealIcon className={cx('shrink-0 text-verde', compact ? 'size-5' : 'mt-0.5 size-6')} />
       <div className={cx('flex min-w-0', compact ? 'flex-wrap items-baseline gap-x-3 gap-y-0.5' : 'flex-col gap-0.5')}>
         <p>
           <span className="text-muted">Fonte oficial: </span>

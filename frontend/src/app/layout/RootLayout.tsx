@@ -11,7 +11,7 @@ export function RootLayout() {
     <div className="flex min-h-dvh flex-col">
       <a
         href="#conteudo"
-        className="sr-only z-50 rounded-control bg-ipe px-4 py-2 font-semibold text-on-ipe no-underline focus:not-sr-only focus:fixed focus:left-4 focus:top-3"
+        className="sr-only z-50 rounded-control bg-azul px-4 py-2 font-semibold text-on-azul no-underline focus:not-sr-only focus:fixed focus:left-4 focus:top-3"
       >
         Pular para o conteúdo
       </a>

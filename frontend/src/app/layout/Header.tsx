@@ -17,7 +17,8 @@ export function Header() {
   const onAuthPage = useLocation().pathname.startsWith('/conta/')
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-paper/92 backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-paper">
+    <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-surface">
+      <div aria-hidden="true" className="filete-nacional h-[3px]" />
       <div className="container-page flex h-16 items-center gap-6">
         <Link to="/" className="no-underline" aria-label="Tribuna Brasil, página inicial">
           <Logo />
@@ -49,7 +50,7 @@ export function Header() {
             <button
               type="button"
               onClick={install}
-              className="hidden min-h-11 rounded-control px-3 text-sm font-semibold text-ipe hover:bg-ipe-soft sm:inline-flex sm:items-center"
+              className="hidden min-h-11 rounded-control px-3 text-sm font-semibold text-azul hover:bg-azul-soft sm:inline-flex sm:items-center"
             >
               Instalar app
             </button>
@@ -61,7 +62,7 @@ export function Header() {
               to="/conta"
               className="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-semibold text-ink no-underline hover:bg-sunken"
             >
-              <span className="grid size-8 place-items-center rounded-full bg-ipe-soft font-bold text-ipe" aria-hidden="true">
+              <span className="grid size-8 place-items-center rounded-full bg-azul-soft font-bold text-azul" aria-hidden="true">
                 {(user.display || user.email).charAt(0).toUpperCase()}
               </span>
               <span className="hidden sm:inline">Minha conta</span>

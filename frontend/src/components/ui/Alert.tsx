@@ -4,7 +4,7 @@ import { cx } from '@/lib/cx'
 type Tone = 'info' | 'success' | 'error'
 
 const tones: Record<Tone, string> = {
-  info: 'bg-ipe-soft border-ipe/30',
+  info: 'bg-azul-soft border-azul/30',
   success: 'bg-final-soft border-final/40',
   error: 'bg-danger-soft border-danger/40',
 }

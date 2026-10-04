@@ -98,20 +98,20 @@ export default function HomePage() {
 
       <ElectionCalendar now={now} />
 
-      <section aria-labelledby="principios-titulo" className="mt-24 bg-ink text-paper">
+      <section aria-labelledby="principios-titulo" className="mt-24 bg-azul-strong text-white">
         <div className="container-page py-14 md:py-20">
           <h2 id="principios-titulo" className="max-w-[24ch] text-2xl font-extrabold md:text-3xl">
             Informação pública para você decidir por conta própria.
           </h2>
           <dl className="mt-10 grid gap-8 md:grid-cols-3">
             {PRINCIPLES.map((p) => (
-              <div key={p.title} className="border-t-2 border-[color-mix(in_oklab,var(--paper)_35%,transparent)] pt-4">
-                <dt className="text-lg font-bold">{p.title}</dt>
-                <dd className="mt-2 text-[color-mix(in_oklab,var(--paper)_78%,transparent)]">{p.text}</dd>
+              <div key={p.title} className="border-t-2 border-amarelo pt-4">
+                <dt className="font-display text-lg font-bold">{p.title}</dt>
+                <dd className="mt-2 text-white/80">{p.text}</dd>
               </div>
             ))}
           </dl>
-          <Link to="/como-funciona" className="mt-10 inline-block font-semibold text-paper">
+          <Link to="/como-funciona" className="mt-10 inline-block font-semibold text-white">
             Leia como o Tribuna funciona
           </Link>
         </div>

@@ -20,14 +20,15 @@ export function ElectionCalendar({ now }: { now: Date }) {
           return (
             <li key={`${election.name}-${round.number}`} className="relative grid grid-cols-[1.5rem_1fr] gap-x-4 pb-8 last:pb-0">
               {i < rounds.length - 1 && (
-                <span aria-hidden="true" className={cx('absolute left-[0.6875rem] top-6 bottom-0 w-0.5', done ? 'bg-ipe' : 'bg-line')} />
+                <span aria-hidden="true" className={cx('absolute left-[0.6875rem] top-6 bottom-0 w-0.5', done ? 'bg-verde' : 'bg-line')} />
               )}
               <span
                 aria-hidden="true"
                 className={cx(
                   'relative mt-1 size-6 rounded-full border-2',
-                  done && 'border-ipe bg-ipe',
-                  current && 'border-ipe bg-surface ring-4 ring-ipe-soft',
+                  // Realizado = verde (fato consumado); próxima votação = amarelo, o ponto de atenção.
+                  done && 'border-verde bg-verde',
+                  current && 'border-azul bg-amarelo ring-4 ring-amarelo-soft',
                   !done && !current && 'border-line-strong bg-paper',
                 )}
               />
