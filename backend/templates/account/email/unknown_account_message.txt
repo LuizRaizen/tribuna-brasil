@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.txt" %}
+{% block content %}{% autoescape off %}Alguém pediu acesso a uma conta do Tribuna Brasil com o e-mail {{ email }}, mas não existe conta com esse endereço.
+
+Se foi você e quer criar uma conta, use o link abaixo:
+
+{{ signup_url }}
+
+Se você não fez esse pedido, ignore esta mensagem.{% endautoescape %}{% endblock content %}

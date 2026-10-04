@@ -1,0 +1,100 @@
+# Produção em uma VM: docker compose -f docker-compose.prod.yml up -d --build
+# Variáveis obrigatórias no .env: DJANGO_SECRET_KEY, POSTGRES_PASSWORD, DATABASE_URL,
+# DJANGO_ALLOWED_HOSTS, FRONTEND_URL, CSRF_TRUSTED_ORIGINS, EMAIL_URL, SITE_ADDRESS, ACME_EMAIL.
+
+x-backend: &backend
+  build:
+    context: ./backend
+    target: prod
+  env_file: .env
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.prod
+    TRUSTED_PROXY_COUNT: "1"
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tribuna}
+      POSTGRES_USER: ${POSTGRES_USER:-tribuna}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: ["python", "manage.py", "migrate", "--noinput"]
+
+  backend:
+    <<: *backend
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  scheduler:
+    <<: *backend
+    command: ["celery", "-A", "config", "beat", "--loglevel=INFO"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  caddy:
+    build:
+      context: ./frontend
+      target: prod
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?defina SITE_ADDRESS (ex.: tribuna.exemplo.com.br)}
+      ACME_EMAIL: ${ACME_EMAIL:?defina ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - backend
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

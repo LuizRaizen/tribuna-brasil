@@ -1,0 +1,40 @@
+# Ponto de entrada público: TLS automático, frontend estático e proxy para a API.
+# Frontend e API na mesma origem: cookies SameSite + CSRF funcionam sem abrir CORS.
+{
+	email {$ACME_EMAIL}
+}
+
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Cross-Origin-Opener-Policy "same-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		-Server
+	}
+
+	@backend path /api/* /admin* /static/* /accounts/* /health /ready
+	handle @backend {
+		reverse_proxy backend:8000 {
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	handle {
+		root * /srv
+		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+
+		# Arquivos com hash no nome são imutáveis; o shell e o service worker nunca são cacheados.
+		@hashed path /assets/*
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@shell path / /index.html /sw.js /registerSW.js /manifest.webmanifest
+		header @shell Cache-Control "no-cache"
+
+		try_files {path} /index.html
+		file_server
+	}
+}

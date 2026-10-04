@@ -1,0 +1,7 @@
+{% autoescape off %}Olá,
+
+{% block content %}{% endblock content %}
+
+Tribuna Brasil
+Informação pública, verificável e com fonte.
+{% endautoescape %}

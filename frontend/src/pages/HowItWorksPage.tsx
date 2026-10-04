@@ -1,0 +1,152 @@
+import { ContextNote, JUDICIAL_DISCLAIMER } from '@/components/ui/ContextNote'
+import { usePageTitle } from '@/hooks/usePageTitle'
+
+const SOURCES = [
+  { name: 'Tribunal Superior Eleitoral (TSE)', url: 'https://dadosabertos.tse.jus.br/', use: 'Eleições, candidaturas, bens declarados, prestação de contas, eleitorado e resultados.' },
+  { name: 'Câmara dos Deputados', url: 'https://dadosabertos.camara.leg.br/', use: 'Deputados, mandatos, proposições, votações, discursos e despesas.' },
+  { name: 'Senado Federal', url: 'https://www12.senado.leg.br/dados-abertos', use: 'Senadores, mandatos, filiações, votações e proposições.' },
+  { name: 'Conselho Nacional de Justiça (DataJud)', url: 'https://datajud-wiki.cnj.jus.br/', use: 'Metadados públicos de processos judiciais: tribunal, classe, assunto e movimentações.' },
+  { name: 'Tribunal de Contas da União (TCU)', url: 'https://portal.tcu.gov.br/', use: 'Contas julgadas irregulares e decisões de controle externo.' },
+  { name: 'Portal da Transparência', url: 'https://portaldatransparencia.gov.br/', use: 'Despesas, contratos, convênios e cadastros de sanções (CEIS, CNEP, CEAF).' },
+] as const
+
+const SECTIONS = [
+  { id: 'principios', title: 'Princípios' },
+  { id: 'fontes', title: 'Fontes oficiais' },
+  { id: 'atualizacao', title: 'Atualização' },
+  { id: 'apresentacao', title: 'Critérios de apresentação' },
+  { id: 'processos', title: 'Processos e contas públicas' },
+  { id: 'limitacoes', title: 'Limitações' },
+  { id: 'dados', title: 'Tratamento de dados pessoais' },
+  { id: 'correcoes', title: 'Correções' },
+] as const
+
+function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  return (
+    <section id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-24 border-t border-line pt-8">
+      <h2 id={`${id}-titulo`} className="text-xl font-extrabold">
+        {title}
+      </h2>
+      <div className="mt-4 flex max-w-[66ch] flex-col gap-4">{children}</div>
+    </section>
+  )
+}
+
+export default function HowItWorksPage() {
+  usePageTitle('Como o Tribuna funciona')
+  return (
+    <div className="container-page pt-10 md:pt-16">
+      <header className="max-w-[40rem]">
+        <h1 className="text-3xl font-extrabold">Como o Tribuna funciona</h1>
+        <p className="mt-4 text-lg text-muted">
+          O que publicamos, de onde vem cada dado, com que frequência ele é atualizado e o que fazemos quando há erro.
+        </p>
+      </header>
+
+      <div className="mt-12 grid gap-12 lg:grid-cols-[14rem_1fr]">
+        <nav aria-label="Nesta página" className="lg:sticky lg:top-24 lg:self-start">
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm lg:flex-col">
+            {SECTIONS.map((s) => (
+              <li key={s.id}>
+                <a href={`#${s.id}`} className="text-muted no-underline hover:text-ink hover:underline">
+                  {s.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="flex flex-col gap-12">
+          <Section id="principios" title="Princípios">
+            <p>
+              O Tribuna Brasil não diz em quem votar. Nossa função é reunir informação pública, verificável e com
+              procedência, para que cada pessoa tome a própria decisão.
+            </p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>Não recomendamos candidatos nem classificamos ninguém como “bom” ou “ruim”.</li>
+              <li>Não criamos rankings ideológicos nem usamos seu perfil para persuasão política.</li>
+              <li>Não exibimos propaganda política.</li>
+              <li>Quando um dado é inferido ou calculado por nós, isso aparece marcado de forma explícita.</li>
+            </ul>
+          </Section>
+
+          <Section id="fontes" title="Fontes oficiais">
+            <p>
+              Usamos prioritariamente dados abertos de órgãos públicos. Quando fontes divergem, prevalece a fonte oficial
+              primária daquele dado: por exemplo, o TSE para candidaturas e a Câmara para votações de deputados.
+            </p>
+            <ul className="divide-y divide-line border-y border-line">
+              {SOURCES.map((s) => (
+                <li key={s.name} className="py-4">
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="font-semibold">
+                    {s.name}
+                    <span className="sr-only"> (abre em nova aba)</span>
+                  </a>
+                  <p className="mt-1 text-muted">{s.use}</p>
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section id="atualizacao" title="Atualização">
+            <p>
+              Os dados são coletados automaticamente das fontes, validados e só então publicados. Cada informação exibe a
+              data da última atualização e um link para a fonte original, para que você possa conferir.
+            </p>
+            <p>
+              Resultados de apuração parciais são sempre identificados como parciais, com o percentual de seções apuradas e
+              o horário da última atualização. Um resultado só é apresentado como final quando o TSE o informa assim.
+            </p>
+          </Section>
+
+          <Section id="apresentacao" title="Critérios de apresentação">
+            <p>
+              A ordem das listas segue critérios neutros e públicos. Candidaturas aparecem em ordem alfabética do nome de
+              urna; resultados aparecem em ordem de votos recebidos. Nenhuma pessoa ou partido recebe destaque pago ou
+              editorial na ordenação.
+            </p>
+          </Section>
+
+          <Section id="processos" title="Processos e contas públicas">
+            <p>
+              Registros judiciais e de controle externo são informação pública, mas precisam de contexto. Distinguimos
+              investigação, processo, decisão, condenação, absolvição, recurso, trânsito em julgado e arquivamento, e
+              usamos linguagem descritiva: “há registro de processo público relacionado a…”.
+            </p>
+            <p>Processos sob sigilo não são exibidos.</p>
+            <ContextNote>{JUDICIAL_DISCLAIMER}</ContextNote>
+          </Section>
+
+          <Section id="limitacoes" title="Limitações">
+            <p>
+              Dependemos da disponibilidade e da qualidade das fontes oficiais. Quando uma fonte está fora do ar, mostramos
+              a última versão coletada com a respectiva data. Erros na origem podem se refletir aqui até serem corrigidos
+              pelo órgão responsável.
+            </p>
+          </Section>
+
+          <Section id="dados" title="Tratamento de dados pessoais">
+            <p>
+              Publicamos apenas dados que os próprios órgãos tornam públicos. Identificadores como CPF são usados
+              internamente apenas para relacionar registros entre fontes e nunca são exibidos.
+            </p>
+            <p>
+              Da sua conta guardamos o e-mail e a senha, protegida com Argon2id. A sessão usa um cookie inacessível a
+              scripts. Não usamos rastreadores de publicidade.
+            </p>
+          </Section>
+
+          <Section id="correcoes" title="Correções">
+            <p>
+              Se você encontrar uma informação incorreta ou desatualizada, poderá informar pelo botão “Corrigir uma
+              informação”, presente em cada página de dados. Cada pedido é revisado e confrontado com a fonte oficial.
+            </p>
+            <p className="text-muted">
+              O formulário de correção entra no ar junto com as primeiras páginas de dados, ainda nesta fase do projeto.
+            </p>
+          </Section>
+        </div>
+      </div>
+    </div>
+  )
+}

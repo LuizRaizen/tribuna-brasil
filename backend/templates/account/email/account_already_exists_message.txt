@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.txt" %}
+{% block content %}{% autoescape off %}Alguém tentou criar uma conta no Tribuna Brasil com o e-mail {{ email }}, mas já existe uma conta com esse endereço.
+
+Se você esqueceu a senha, redefina-a pelo link abaixo:
+
+{{ password_reset_url }}
+
+Se você não fez esse pedido, ignore esta mensagem.{% endautoescape %}{% endblock content %}

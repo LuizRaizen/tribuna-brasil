@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.txt" %}
+{% block content %}{% autoescape off %}Recebemos um pedido para usar este endereço numa conta do Tribuna Brasil.
+
+Para confirmar o e-mail, abra o link abaixo:
+
+{{ activate_url }}
+
+Se você não fez esse pedido, ignore esta mensagem. Nenhuma conta será ativada.{% endautoescape %}{% endblock content %}

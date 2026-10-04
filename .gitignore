@@ -1,0 +1,34 @@
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+backend/staticfiles/
+backend/media/
+*.sqlite3
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/dev-dist/
+frontend/coverage/
+e2e/test-results/
+e2e/playwright-report/
+
+# Editor / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

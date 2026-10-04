@@ -1,0 +1,204 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/atkinson-hyperlegible-next';
+@import '@fontsource-variable/atkinson-hyperlegible-mono';
+
+/*
+ * Tribuna Brasil — tokens de design
+ *
+ * Neutralidade cromática é regra de produto: nenhuma cor de destaque coincide com as
+ * associadas a partidos ou campos políticos (vermelho, azul, verde-amarelo, laranja).
+ * O destaque é o roxo-ipê. Informação processual ou sensível usa tons neutros, nunca
+ * o vermelho de alerta; vermelho fica restrito a erros de formulário.
+ */
+
+:root {
+  color-scheme: light;
+  --paper: #f3f5f8;
+  --surface: #ffffff;
+  --surface-sunken: #e9edf2;
+  --ink: #172033;
+  --ink-muted: #505b6f;
+  --line: #d8dde5;
+  --line-strong: #7d8799;
+  --ipe: #6b2a87;
+  --ipe-strong: #521f69;
+  --ipe-soft: #f2eaf7;
+  --on-ipe: #ffffff;
+  --partial: #7f4c00;
+  --partial-soft: #fff1d1;
+  --final: #0b5f50;
+  --final-soft: #ddf2ec;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --paper: #12161f;
+    --surface: #1a202b;
+    --surface-sunken: #0d1118;
+    --ink: #e7eaf0;
+    --ink-muted: #a3acbb;
+    --line: #2c3442;
+    --line-strong: #6d7788;
+    --ipe: #c9a0de;
+    --ipe-strong: #dcc0ea;
+    --ipe-soft: #2a2036;
+    --on-ipe: #1b0f24;
+    --partial: #f2c46b;
+    --partial-soft: #352812;
+    --final: #7fd6c2;
+    --final-soft: #12302a;
+    --danger: #ff9b8f;
+    --danger-soft: #3a1714;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #12161f;
+  --surface: #1a202b;
+  --surface-sunken: #0d1118;
+  --ink: #e7eaf0;
+  --ink-muted: #a3acbb;
+  --line: #2c3442;
+  --line-strong: #6d7788;
+  --ipe: #c9a0de;
+  --ipe-strong: #dcc0ea;
+  --ipe-soft: #2a2036;
+  --on-ipe: #1b0f24;
+  --partial: #f2c46b;
+  --partial-soft: #352812;
+  --final: #7fd6c2;
+  --final-soft: #12302a;
+  --danger: #ff9b8f;
+  --danger-soft: #3a1714;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ipe: var(--ipe);
+  --color-ipe-strong: var(--ipe-strong);
+  --color-ipe-soft: var(--ipe-soft);
+  --color-on-ipe: var(--on-ipe);
+  --color-partial: var(--partial);
+  --color-partial-soft: var(--partial-soft);
+  --color-final: var(--final);
+  --color-final-soft: var(--final-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+}
+
+@theme {
+  --font-sans: 'Atkinson Hyperlegible Next Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Atkinson Hyperlegible Mono Variable', ui-monospace, monospace;
+
+  /* Escala de terça maior (1,25) a partir de 17px: legível em telas pequenas. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.3125rem;
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.625rem;
+  --text-xl--line-height: 1.25;
+  --text-2xl: 2.0625rem;
+  --text-2xl--line-height: 1.15;
+  --text-3xl: 2.5625rem;
+  --text-3xl--line-height: 1.08;
+
+  --radius-control: 0.625rem;
+  --radius-panel: 1rem;
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans text-base antialiased;
+    font-feature-settings: 'tnum' 0;
+    min-height: 100dvh;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    @apply text-ipe underline decoration-1 underline-offset-3;
+  }
+
+  a:hover {
+    @apply decoration-2;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--ipe);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--ipe-soft);
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Entrada orquestrada única da Home: os dígitos "acendem" como no visor da urna. */
+@keyframes digit-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.12em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

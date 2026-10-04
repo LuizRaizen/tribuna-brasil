@@ -1,0 +1,315 @@
+# Tribuna Brasil — Plano do MVP
+
+> Documento-guia derivado de `PROJECT_ESCOPE.txt`. Em caso de conflito, o escopo prevalece.
+> Data da análise: 2026-10-04.
+
+## 0. Análise do repositório (escopo §47)
+
+| Item | Situação |
+|---|---|
+| Código existente | Nenhum. Apenas `PROJECT_ESCOPE.txt`. |
+| Controle de versão | Não inicializado (sem `.git`). |
+| Banco / configuração | Inexistentes. |
+| Toolchain local | Python 3.14, Node 24, npm 11, Docker 28, Git 2.47, psql 17. |
+| Plano de migração | Não se aplica — projeto greenfield. |
+
+**Contexto temporal relevante:** hoje (04/10/2026) é o 1º turno das Eleições Gerais 2026; o 2º turno é em 25/10/2026. O MVP não ficará pronto para o 1º turno. O 2º turno é um alvo realista para o módulo de resultados (ver §6, decisão D1).
+
+---
+
+## 1. Arquitetura proposta
+
+Monólito modular (escopo §4). Um único projeto Django, organizado em apps por domínio, mais uma SPA React. Workers Celery usam o mesmo código do backend.
+
+```
+                ┌──────────────── Navegador (PWA) ────────────────┐
+                │ React + TS + Vite · TanStack Query · SW (Workbox) │
+                └───────────────┬───────────────────┬──────────────┘
+                     HTTPS /api/v1 (cookies)    SSE /api/v1/results/stream
+                ┌───────────────▼───────────────────▼──────────────┐
+                │ Django 5.2 LTS (ASGI/uvicorn) · DRF · allauth      │
+                │ apps: accounts, people, elections, candidates, ... │
+                └──────┬───────────────┬───────────────┬────────────┘
+                       │               │               │ pub/sub, cache, rate limit
+                 PostgreSQL 17       Redis 7 ◄─────────┤
+                       ▲               ▲               │
+                ┌──────┴───────────────┴──────┐        │
+                │ Celery worker  ·  Celery beat (scheduler)
+                │ Connectors → Ingestion → Validation → Normalization → Persistence
+                └──────────────┬──────────────┘
+                               ▼
+        TSE · CNJ/DataJud · TCU · Câmara · Senado · Portal da Transparência
+```
+
+### Decisões técnicas
+
+| Tema | Escolha | Motivo |
+|---|---|---|
+| Runtime backend | Python 3.13 (imagem Docker), Django 5.2 LTS, DRF | LTS até 04/2028; 3.13 tem suporte amplo das libs. |
+| Autenticação | **django-allauth (modo headless, cliente "browser")** + sessões Django | Cadastro, login, confirmação de e-mail, reset de senha, rate limit e `usersessions` (listar e revogar sessões) já prontos e auditados. Cookie de sessão HttpOnly/Secure/SameSite=Lax + CSRF. Nenhum token em localStorage. |
+| Hash de senha | Argon2id (`argon2-cffi`) | Exigência §16. |
+| Rate limit / brute force | Rate limits do allauth + `django-ratelimit` (Redis) nas rotas públicas pesadas | Defesa em camadas. |
+| OpenAPI | `drf-spectacular` | Gera schema e Swagger/Redoc; o schema também alimenta os tipos TS do frontend. |
+| Filas | Celery + Redis; beat com `django-celery-beat` | Agendamentos editáveis no Admin. |
+| Tempo real | SSE (view ASGI assíncrona assinando Redis pub/sub) | Fluxo unidirecional, mais simples que WebSocket e funciona atrás de qualquer proxy HTTP. |
+| Busca | Postgres FTS (`SearchVector` + `unaccent` + `pg_trgm`) | Atende o MVP; a interface `SearchBackend` fica isolada para trocar por OpenSearch depois. |
+| Frontend | React 19, TypeScript estrito, Vite, React Router, TanStack Query, Tailwind CSS v4, `vite-plugin-pwa` | Conforme §4. |
+| Tipos da API no front | `openapi-typescript` gerado a partir do schema | Evita divergência entre contrato e frontend. |
+| Testes | pytest + pytest-django + factory-boy + `respx`/`responses` (fixtures gravadas das APIs); Vitest + Testing Library + axe-core; Playwright | §34. |
+| Lint / tipos | ruff, mypy (django-stubs); ESLint, `tsc --noEmit` | §38. |
+| Segurança CI | `pip-audit`, `npm audit`, `bandit`, gitleaks | §17/§38. |
+| Logs | `structlog` em JSON; `request_id` propagado | §35. |
+| Deploy | Docker Compose em VM barata (ex.: Hetzner/Lightsail), Caddy como proxy TLS | Baixo custo; migrável para PaaS depois. |
+
+### Camada de integração (escopo §5, §20, §43)
+
+Cada fonte é um pacote em `apps/ingestion/connectors/<fonte>/` com:
+
+```
+client.py     # HTTP: timeout, retry com backoff exponencial, circuit breaker, User-Agent identificado
+dto.py        # Modelos pydantic do formato EXTERNO (validação estrita; nunca saem do pacote)
+mapper.py     # DTO → comandos de domínio (o domínio não conhece o formato externo)
+connector.py  # Implementa a interface comum
+```
+
+Interface comum:
+
+```python
+class Connector(Protocol):
+    source_code: str                                  # "tse", "camara", ...
+    def fetch(self, scope: SyncScope) -> Iterator[RawRecord]: ...   # bruto + metadados de coleta
+    def validate(self, raw: RawRecord) -> DTO: ...                  # pydantic; falha → registro rejeitado, não aborta o lote
+    def map(self, dto: DTO) -> DomainUpsert: ...
+```
+
+Um pipeline genérico (`ingestion/pipeline.py`) orquestra: abre um `SyncRun` → grava um `DataSnapshot` (hash do payload) → valida → normaliza → faz upsert idempotente pela chave `(source, external_id)` → atualiza `ExternalRecord` → fecha o `SyncRun` com métricas. Uma falha numa fonte afeta apenas o `SyncRun` dela.
+
+### Fontes: o que se sabe e riscos
+
+| Fonte | Acesso | Observações / riscos |
+|---|---|---|
+| TSE Dados Abertos | CKAN em `dadosabertos.tse.jus.br`; CSVs zipados por ano (candidatos, bens, contas, resultados) | Base principal. CSV em Latin-1 com `;` e valores sentinela (`#NULO#`, `-1`). Exige mapper robusto. |
+| TSE DivulgaCandContas | JSON usado pelo portal oficial | Endpoint sem contrato público: usar apenas como complemento (fotos e propostas em PDF), com fallback. |
+| TSE Resultados | JSON estático em `resultados.tse.jus.br` (por eleição, cargo e abrangência) | Formato muda entre pleitos e precisa ser validado contra 2026 antes do 2º turno. |
+| CNJ DataJud | API pública Elasticsearch, uma por tribunal, com chave pública | **Risco alto:** a API pública busca por número/classe/órgão e **não permite buscar por nome de parte**. A ligação pessoa ↔ processo precisa vir de fonte oficial que cite o número (ex.: certidões da candidatura no TSE) ou de curadoria editorial com fonte registrada. |
+| TCU | Serviço de contas julgadas irregulares (com flag de implicação eleitoral) | Ligação por CPF. O CPF é dado pessoal e deve ficar só no backend: usado para o vínculo e nunca exposto (LGPD). |
+| Câmara | REST `dadosabertos.camara.leg.br/api/v2` | Estável e bem documentada. |
+| Senado | `legis.senado.leg.br/dadosabertos` (XML/JSON) | Formatos heterogêneos. |
+| Portal da Transparência | REST com chave (`chave-api-dados`) | A chave fica só no backend, via variável de ambiente. |
+
+---
+
+## 2. Árvore de diretórios
+
+```
+tribuna-brasil/
+├── PROJECT_ESCOPE.txt
+├── README.md
+├── docker-compose.yml            # dev: frontend, backend, postgres, redis, worker, scheduler
+├── docker-compose.prod.yml
+├── .env.example                  # nunca commitar .env
+├── .github/workflows/ci.yml
+├── docs/
+│   ├── PLANO_MVP.md
+│   ├── adr/                      # decisões arquiteturais (0001-monolito-modular.md, ...)
+│   └── fontes/                   # notas por fonte oficial (formatos, limites, exemplos)
+├── backend/
+│   ├── pyproject.toml
+│   ├── Dockerfile
+│   ├── manage.py
+│   ├── config/
+│   │   ├── settings/{base,dev,test,prod}.py
+│   │   ├── urls.py  asgi.py  celery.py
+│   ├── apps/
+│   │   ├── core/                 # TimeStamped, health/ready, paginação, utilidades
+│   │   ├── accounts/             # User, adapters allauth
+│   │   ├── audit/                # AuditLog + sinais
+│   │   ├── sources/              # Source, DataSnapshot, ExternalRecord (proveniência)
+│   │   ├── ingestion/            # SyncRun, pipeline, connectors/{tse,cnj,tcu,camara,senado,transparencia}
+│   │   ├── people/               # Person, PartyMembership, PublicOffice, Event
+│   │   ├── parties/
+│   │   ├── elections/            # Election, ElectionRound, Region, Office, Result*
+│   │   ├── candidates/           # Candidacy, Asset, Proposal, CampaignFinance
+│   │   ├── parliament/           # Mandate, LegislativeProposal, Vote, Expense
+│   │   ├── judiciary/            # JudicialCase, JudicialMovement
+│   │   ├── transparency/         # PublicAccount (TCU), Sanction (CEIS/CNEP)
+│   │   ├── history/              # HistoricalPeriod, Government, PoliticalEvent
+│   │   ├── watchlist/            # Watchlist, WatchlistItem
+│   │   ├── notifications/
+│   │   ├── search/
+│   │   └── feedback/             # CorrectionReport
+│   │   # cada app: models/ (pacote), services.py, selectors.py, api/{serializers,views,urls}.py, tests/
+│   └── tests/                    # integração cross-app, fixtures de APIs gravadas
+├── frontend/
+│   ├── package.json  vite.config.ts  tsconfig.json  Dockerfile
+│   ├── public/                   # ícones PWA, manifest assets
+│   └── src/
+│       ├── app/                  # providers, router, layout raiz
+│       ├── components/ui/        # design system (Button, Card, Badge, SourceTag, Disclaimer...)
+│       ├── features/             # auth, search, people, candidates, elections, results, history, watchlist
+│       ├── pages/
+│       ├── hooks/  services/ (cliente API)  lib/  stores/  types/ (gerados do OpenAPI)  styles/
+│       └── sw.ts
+└── e2e/                          # Playwright
+```
+
+---
+
+## 3. Modelo de dados
+
+### 3.1 Proveniência (transversal, escopo §3)
+
+```
+Source            code (tse, camara...), name, agency, base_url, homepage, license, is_active
+DataSnapshot      source→, dataset/endpoint, request_params, fetched_at, content_hash (sha256),
+                  storage_ref (arquivo bruto em object storage/volume), record_count, sync_run→
+ExternalRecord    source→, external_id, content_type+object_id (GenericFK p/ entidade de domínio),
+                  official_url, first_seen_at, fetched_at, source_updated_at, content_hash,
+                  snapshot→, version (int, incrementa quando o hash muda),
+                  validation_status (valid | warning | rejected), validation_notes
+                  UNIQUE(source, external_id, content_type)
+SyncRun           source→, job, scope (json), status, started_at, finished_at,
+                  created/updated/unchanged/rejected counts, error_summary
+```
+
+A API expõe um bloco `provenance` padronizado (`source_name`, `official_url`, `fetched_at`, `source_updated_at`) em cada recurso. É ele que alimenta o componente **Fonte oficial · Última atualização · Consultar fonte original**.
+
+### 3.2 Domínio
+
+```
+User (AbstractUser, email único, sem username obrigatório)
+
+Person ─────────────── entidade central (§6)
+  full_name, social_name, slug, birth_date (só ano exposto, se aplicável), gender*, education*,
+  occupation*, birthplace_uf/municipality, photo (url oficial + cache), bio_public, search_vector
+  [CPF: campo cifrado, nunca serializado; usado apenas para vincular registros entre fontes]
+  ├── PartyMembership     party→, start, end
+  ├── Candidacy           election_round→ ... (ver abaixo)
+  ├── Mandate             office→, region→, start, end, origin (eleito/suplente...), legislature
+  ├── PublicOffice        cargos não eletivos (ministro etc.)
+  ├── JudicialCaseParty   case→, role (autor/réu/... somente se a fonte oficial publicar)
+  ├── PublicAccount (TCU)
+  └── Event               timeline: date, kind, title, related object (GFK)
+
+Party            acronym, number, name, founded_at, status, logo
+Election         year, kind (geral | municipal | suplementar | plebiscito), name, config (json)
+ElectionRound    election→, number (1|2), date, status
+Region           kind (país | UF | município | zona), code_tse, code_ibge, name, parent→
+Office           code_tse, name, kind (executivo | legislativo), scope (federal|estadual|municipal)
+Contest          election_round→, office→, region→   (a "disputa" = cargo × região × turno)
+Candidacy        person→, contest→, party→, coalition, ballot_name, ballot_number, status_tse,
+                 status_detail, elected_status, sq_candidato (id TSE)
+  ├── DeclaredAsset    kind, description, value
+  ├── Proposal         file_url (PDF oficial), extracted_text (marcado como "extraído")
+  └── CampaignFinance  totals + Donation (doador, valor) + Expense (fornecedor, valor)
+
+ResultSnapshot   contest→, region→, captured_at, source_timestamp, sections_total, sections_counted,
+                 pct_counted, electorate, turnout, valid, blank, null, status (parcial|final|anulado)
+CandidateResult  snapshot→, candidacy→, votes, pct_valid, position, elected_flag (só se oficial)
+
+LegislativeProposal  house, type, number, year, ementa, status, authors (M2M Person)
+LegislativeVote      proposal→, date, description, result
+PersonVote           vote→, person→, vote (sim|não|abstenção|obstrução|ausente)
+ParliamentaryExpense mandate→, date, category, supplier, value
+
+JudicialCase     cnj_number, court, class, subject, status, last_movement_at, is_sealed (nunca exposto)
+JudicialMovement case→, date, code, description
+
+HistoricalPeriod name, start, end, summary
+Government       period→, person→ (presidente), start, end, how_assumed
+PoliticalEvent   date, title, summary, period→, people (M2M)
+
+Watchlist / WatchlistItem   user→, content_type+object_id, created_at, notify (bool)
+Notification     user→, kind, title, body, target (GFK), read_at
+CorrectionReport target (GFK), description, reporter_email (opcional), status
+AuditLog         actor→ (nullable), action, target (GFK), ip_hash, user_agent, metadata (json), at
+```
+
+Princípios do modelo:
+- **Contest** desacopla eleição, cargo e região, cobrindo eleições nacionais, estaduais e municipais e turnos distintos sem supor estrutura fixa (§8).
+- Resultados são **append-only**: cada coleta gera um `ResultSnapshot`, e o mais recente fica em cache no Redis. O status `final` só é atribuído quando o TSE o indica (§9).
+- Campos com `*` vêm do TSE e mudam por pleito, por isso são guardados por candidatura e espelhados em Person com a data da fonte.
+- Ordenação neutra (§32): candidatos em ordem alfabética do nome de urna por padrão; em resultados, por votos. O critério é documentado na página "Como o Tribuna funciona".
+
+---
+
+## 4. Backlog (épicos)
+
+Ordem revisada em 04/10/2026 (decisão D1): resultados antecipados para logo após a Fundação, para
+cobrir a apuração do 2º turno (25/10/2026).
+
+| # | Épico | Sprint |
+|---|---|---|
+| E1 | Fundação: monorepo, Docker, CI, settings seguros, health/ready, logs | 1 ✅ |
+| E2 | Autenticação e sessões (allauth headless, Argon2id, revogação, auditoria) | 1 ✅ |
+| E3 | Design system + shell PWA (manifest, SW, offline, layout responsivo) | 1 ✅ |
+| E4 | Proveniência e pipeline de ingestão genérico | 2 |
+| E9 | Resultados: Election/Contest mínimos, connector TSE, snapshots, Redis, SSE, painel de apuração | 2 |
+| E5 | TSE: eleições, cargos, partidos, candidaturas (CSV Dados Abertos) | 3 |
+| E6 | Busca global agrupada (FTS) | 3 |
+| E7 | Página de candidatura e de pessoa (timeline, bens, propostas, fontes) | 3–4 |
+| E8 | Watchlist e notificações in-app | 4 |
+| E10 | Câmara e Senado: mandatos, proposições, votos, despesas | 5 |
+| E11 | Judiciário (DataJud) e TCU com contexto e disclaimers | 5 |
+| E12 | História republicana: presidentes, períodos, eventos | 5–6 |
+| E13 | Transparência do sistema: "Como funciona" e "Correção de informação" | 3 |
+| E14 | Polimento: a11y (axe + manual), performance, E2E, deploy | 6 |
+
+---
+
+## 5. Sprint 1 — Fundação (1 semana)
+
+**Objetivo:** esqueleto rodando com `docker compose up`, usuário consegue criar conta, confirmar e-mail, entrar, sair e revogar sessões em uma PWA instalável com o design system base, e o CI fica verde.
+
+| Tarefa | Critério de aceitação |
+|---|---|
+| S1.1 `git init`, `.gitignore`, `.env.example`, README | Nenhum segredo versionado; gitleaks passa. |
+| S1.2 Backend Django: settings split, apps `core`, `accounts`, `audit` | `pytest` passa; `manage.py check --deploy` sem alertas em prod. |
+| S1.3 Docker Compose: frontend, backend, postgres, redis, worker, scheduler (+ mailpit no dev) | `docker compose up` sobe tudo; worker executa uma task de teste. |
+| S1.4 `/health` (liveness) e `/ready` (testa DB e Redis) | `/ready` retorna 503 se o Postgres cair. |
+| S1.5 Auth: allauth headless, Argon2id, verificação de e-mail obrigatória, reset de senha, `usersessions`, rate limits | Testes de API para cada fluxo, incluindo brute force bloqueado e CSRF exigido. |
+| S1.6 AuditLog: login, logout, falha de login, cadastro, troca de senha/e-mail, revogação de sessão | Testes confirmam os eventos sem gravar senha nem token. |
+| S1.7 Segurança HTTP: CSP, HSTS, X-Content-Type-Options, Referrer-Policy, CORS restrito, cookies Secure/HttpOnly/SameSite | Teste verifica os headers. |
+| S1.8 OpenAPI em `/api/v1/schema/` + docs (só em dev/admin) | Schema válido; tipos TS gerados. |
+| S1.9 Frontend: Vite + React + TS + Router + Query + Tailwind; tokens do design system; componentes base (Button, Input, Card, Badge, SourceTag, Disclaimer, Skeleton) | Vitest + axe sem violações nos componentes. |
+| S1.10 Telas: Home (placeholder estruturado), Entrar, Criar conta, Confirmar e-mail, Esqueci a senha, Minha conta/Sessões | Funcionam de 320px a desktop; navegáveis por teclado. |
+| S1.11 PWA: manifest, ícones, SW (cache do shell, fallback offline), prompt de instalação | Lighthouse PWA instalável; página offline aparece sem rede. |
+| S1.12 CI GitHub Actions: lint → typecheck → testes → build → pip-audit/npm audit/bandit/gitleaks | Pipeline falha se qualquer etapa falhar. |
+| S1.13 ADRs 0001–0004 (monólito modular, sessão vs. JWT, SSE, FTS) | Documentados em `docs/adr/`. |
+
+Fora do Sprint 1: qualquer dado do TSE (Sprint 2).
+
+---
+
+## 6. Decisões do responsável pelo produto (04/10/2026)
+
+- **D1 — Resultados antes:** o épico de resultados (E9) vem logo após a Fundação, mirando o 2º turno.
+- **D2 — Repositório e CI:** GitHub (conta LuizRaizen) com GitHub Actions.
+- **D3 — Identidade visual:** criada no Sprint 1. Ver [IDENTIDADE_VISUAL.md](IDENTIDADE_VISUAL.md).
+
+## 7. Sprint 1 — situação ao final
+
+Entregue: S1.1 a S1.13, exceto os itens abaixo.
+
+- O Docker Compose foi escrito, mas não foi executado nesta máquina (Docker Desktop estava desligado).
+- Os testes de backend rodaram localmente com SQLite; o CI os executa contra PostgreSQL 17.
+- A geração de tipos TypeScript a partir do OpenAPI (parte de S1.8) entra no Sprint 2, quando houver
+  endpoints de domínio; hoje a API expõe apenas os fluxos de conta do allauth.
+
+## 8. Sprint 2 — Resultados (meta: no ar antes de 25/10/2026)
+
+**Objetivo:** acompanhar a apuração do 2º turno sem refresh manual, com dados oficiais do TSE e
+sinalização clara de resultado parcial.
+
+| Tarefa | Critério de aceitação |
+|---|---|
+| S2.1 App `sources`: Source, DataSnapshot, ExternalRecord, SyncRun | Upsert idempotente por `(source, external_id)`; reprocessar o mesmo payload não duplica. |
+| S2.2 Pipeline genérico de ingestão (retry com backoff, timeout, circuit breaker) | Falha simulada na fonte não derruba a API; SyncRun registra o erro. |
+| S2.3 Modelos mínimos: Election, ElectionRound, Region, Office, Contest, Party, Candidacy | Eleição 2026 e 2º turno carregados por comando de gestão. |
+| S2.4 Connector de resultados do TSE (JSON de divulgação) com DTO pydantic e mapper | Testes com fixtures gravadas do 1º turno de 2026; formato validado. |
+| S2.5 ResultSnapshot e CandidateResult append-only; cache do último snapshot no Redis | Status `final` só quando o TSE indica totalização concluída. |
+| S2.6 Celery beat: coleta a cada 1 min no dia da eleição | Métricas por SyncRun visíveis no Admin. |
+| S2.7 Endpoint REST `/api/v1/elections/.../results/` + SSE `/api/v1/results/stream` | Reconexão automática; fallback para polling. |
+| S2.8 Painel de apuração (presidente e governadores por UF) | Votos, % válidos, brancos, nulos, seções apuradas, horário, abrangência; "parcial" sempre visível. |
+| S2.9 Home passa a ler eleição e turnos da API, aposentando `calendar.ts` | Mesmo comportamento, agora com proveniência do banco. |
+| S2.10 Teste de carga básico do SSE | Meta: 2 mil conexões simultâneas numa VM pequena. |

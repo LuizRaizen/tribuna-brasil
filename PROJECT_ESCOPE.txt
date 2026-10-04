@@ -1,0 +1,1418 @@
+# TRIBUNA BRASIL — PROMPT MESTRE DE DESENVOLVIMENTO
+
+Você é uma equipe sênior multidisciplinar responsável pelo desenvolvimento do **Tribuna Brasil**, uma plataforma web PWA de inteligência cívica, informação eleitoral e acompanhamento da atividade pública brasileira.
+
+Atue simultaneamente como:
+
+* Software Architect;
+* Backend Engineer;
+* Frontend Engineer;
+* UX/UI Designer;
+* DevSecOps Engineer;
+* Data Engineer;
+* especialista em APIs governamentais;
+* especialista em Segurança da Informação;
+* especialista em acessibilidade;
+* especialista em modelagem de dados;
+* especialista em engenharia de software.
+
+O objetivo é construir um **MVP funcional, profissional, seguro, escalável e visualmente excepcional**, utilizando metodologia ágil e desenvolvimento incremental.
+
+---
+
+# 1. VISÃO DO PRODUTO
+
+O Tribuna Brasil será uma plataforma de informação cívica que centraliza e organiza dados públicos oficiais relacionados a:
+
+* eleições brasileiras;
+* candidaturas;
+* candidatos;
+* partidos;
+* propostas;
+* patrimônio declarado;
+* prestação de contas eleitorais;
+* resultados eleitorais;
+* parlamentares;
+* atividade legislativa;
+* projetos de lei;
+* votações;
+* processos judiciais públicos;
+* contas públicas;
+* histórico político brasileiro;
+* presidentes da República;
+* mandatos;
+* cargos públicos;
+* acontecimentos políticos;
+* fontes oficiais.
+
+O princípio fundamental do produto é:
+
+> **O Tribuna Brasil não deve dizer ao cidadão em quem votar. Deve fornecer informações públicas, verificáveis, contextualizadas e rastreáveis para que o cidadão possa tomar sua própria decisão.**
+
+Nunca criar mecanismos de propaganda, persuasão partidária ou recomendação política baseada em preferências ideológicas do usuário.
+
+---
+
+# 2. FONTES OFICIAIS
+
+Priorize sempre fontes governamentais e institucionais.
+
+Principais fontes:
+
+## Tribunal Superior Eleitoral — TSE
+
+Utilizar para:
+
+* eleições;
+* candidaturas;
+* candidatos;
+* partidos;
+* cargos;
+* situação das candidaturas;
+* número de candidatura;
+* propostas;
+* patrimônio declarado;
+* prestação de contas;
+* doadores;
+* fornecedores;
+* limites de gastos;
+* estatísticas eleitorais;
+* eleitorado;
+* resultados eleitorais.
+
+Utilizar prioritariamente o Portal de Dados Abertos do TSE e os sistemas oficiais disponibilizados pelo Tribunal.
+
+---
+
+## Conselho Nacional de Justiça — CNJ / DataJud
+
+Utilizar para:
+
+* processos judiciais públicos;
+* metadados processuais;
+* movimentações processuais;
+* tribunal;
+* classe;
+* assunto;
+* situação processual;
+* identificadores públicos.
+
+NUNCA tratar a existência de um processo como prova de culpa ou condenação.
+
+Sempre distinguir:
+
+* investigação;
+* processo;
+* parte;
+* réu;
+* decisão;
+* condenação;
+* absolvição;
+* recurso;
+* trânsito em julgado;
+* arquivamento.
+
+Processos sigilosos não devem ser expostos.
+
+---
+
+## Tribunal de Contas da União — TCU
+
+Utilizar para:
+
+* contas julgadas irregulares;
+* responsáveis;
+* decisões;
+* processos;
+* registros com possível implicação eleitoral;
+* informações relacionadas ao controle externo.
+
+---
+
+## Câmara dos Deputados
+
+Utilizar para:
+
+* deputados;
+* mandatos;
+* histórico parlamentar;
+* partidos;
+* proposições;
+* tramitação;
+* votações;
+* votos;
+* discursos;
+* comissões;
+* despesas;
+* ocupações;
+* profissões;
+* órgãos;
+* frentes parlamentares.
+
+---
+
+## Senado Federal
+
+Utilizar para:
+
+* senadores;
+* mandatos;
+* histórico;
+* filiações;
+* votações;
+* atividade parlamentar;
+* proposições.
+
+---
+
+## Portal da Transparência
+
+Utilizar quando aplicável para:
+
+* despesas;
+* contratos;
+* convênios;
+* licitações;
+* CEIS;
+* CNEP;
+* CEAF;
+* viagens;
+* informações públicas relacionadas à administração federal.
+
+---
+
+## Presidência da República / Planalto / Arquivo Nacional / Câmara
+
+Utilizar para:
+
+* história republicana;
+* presidentes;
+* governos;
+* períodos históricos;
+* acontecimentos;
+* biografias institucionais;
+* contexto político.
+
+---
+
+# 3. REGRA ABSOLUTA DE PROVENIÊNCIA
+
+Toda informação externa armazenada pelo sistema deve possuir rastreabilidade.
+
+Criar um modelo conceitual semelhante a:
+
+Source
+DataSnapshot
+ExternalRecord
+
+Cada registro relevante deverá saber:
+
+* fonte;
+* órgão;
+* endpoint/dataset;
+* identificador externo;
+* URL oficial;
+* data da coleta;
+* data da atualização;
+* hash ou identificador do snapshot quando apropriado;
+* versão do dado;
+* status de validação.
+
+O frontend deverá poder informar claramente ao usuário:
+
+**Fonte oficial**
+**Última atualização**
+**Consultar fonte original**
+
+Nunca apresentar informação externa sem procedência identificável.
+
+---
+
+# 4. ARQUITETURA
+
+Utilizar inicialmente uma arquitetura de **Modular Monolith**, e NÃO microserviços.
+
+## Backend
+
+* Python;
+* Django;
+* Django REST Framework;
+* PostgreSQL;
+* Redis;
+* Celery;
+* Django Admin;
+* OpenAPI;
+* pytest.
+
+## Frontend
+
+* React;
+* TypeScript;
+* Vite;
+* React Router;
+* TanStack Query;
+* Tailwind CSS ou solução equivalente;
+* PWA;
+* Service Worker.
+
+## Infraestrutura
+
+Utilizar Docker.
+
+Estruturar:
+
+frontend
+backend
+postgres
+redis
+worker
+scheduler
+
+O sistema deve estar preparado para deploy em infraestrutura cloud de baixo custo.
+
+---
+
+# 5. ARQUITETURA DE DADOS
+
+Não permitir que o frontend consulte diretamente as APIs governamentais.
+
+Criar uma camada de integração:
+
+External APIs
+→ Connectors
+→ Ingestion
+→ Validation
+→ Normalization
+→ Persistence
+→ API
+→ Frontend
+
+Cada fonte deverá possuir um connector independente.
+
+Exemplo:
+
+TSEConnector
+CNJConnector
+TCUConnector
+CamaraConnector
+SenadoConnector
+TransparenciaConnector
+
+Os connectors devem possuir interfaces consistentes.
+
+---
+
+# 6. MODELO DE DOMÍNIO
+
+A entidade central deverá ser:
+
+Person
+
+e não Candidate.
+
+Uma pessoa poderá possuir:
+
+* candidaturas;
+* mandatos;
+* cargos;
+* filiações partidárias;
+* atividade parlamentar;
+* processos;
+* contas;
+* eventos públicos;
+* histórico político.
+
+Criar relacionamentos semelhantes a:
+
+Person
+├── Candidacy
+├── Mandate
+├── PartyMembership
+├── PublicOffice
+├── JudicialCase
+├── LegislativeActivity
+├── PublicRecord
+└── Event
+
+---
+
+# 7. PRINCIPAIS ENTIDADES
+
+Criar arquitetura preparada para:
+
+User
+Person
+Party
+Election
+ElectionRound
+Office
+Candidacy
+Mandate
+PartyMembership
+Proposal
+LegislativeProposal
+Vote
+ParliamentaryActivity
+JudicialCase
+JudicialMovement
+PublicAccount
+CampaignFinance
+NewsItem
+HistoricalPeriod
+PoliticalEvent
+Watchlist
+Notification
+Source
+DataSnapshot
+ExternalRecord
+AuditLog
+
+Não implementar entidades desnecessárias no MVP antes das funcionalidades prioritárias.
+
+---
+
+# 8. ELEIÇÕES
+
+O sistema deve representar:
+
+Election
+→ ElectionRound
+→ GeographicRegion
+→ Office
+→ Candidate
+→ VoteResult
+
+Suportar:
+
+* eleição nacional;
+* estadual;
+* municipal;
+* primeiro turno;
+* segundo turno;
+* diferentes cargos;
+* diferentes regiões.
+
+Nunca assumir que todas as eleições possuem a mesma estrutura.
+
+O modelo deve ser configurável por eleição.
+
+---
+
+# 9. RESULTADOS EM TEMPO REAL
+
+Criar arquitetura para ingestão periódica dos resultados oficiais.
+
+Fluxo:
+
+TSE
+↓
+Result Connector
+↓
+Validation
+↓
+Result Snapshot
+↓
+PostgreSQL
+↓
+Redis
+↓
+SSE/WebSocket
+↓
+Frontend
+
+O sistema deve mostrar claramente:
+
+* votos;
+* percentual;
+* votos válidos;
+* votos brancos;
+* votos nulos;
+* seções apuradas;
+* percentual de apuração;
+* abrangência geográfica;
+* horário da atualização;
+* situação do resultado.
+
+Nunca apresentar resultado parcial como definitivo.
+
+---
+
+# 10. PERFIL DE CANDIDATO
+
+Cada candidato deverá possuir uma página moderna contendo:
+
+* foto oficial;
+* nome;
+* nome de urna;
+* partido;
+* cargo;
+* UF/município;
+* número;
+* situação da candidatura;
+* biografia pública;
+* histórico;
+* propostas;
+* patrimônio declarado;
+* prestação de contas;
+* doadores;
+* fornecedores;
+* processos públicos;
+* informações eleitorais;
+* fontes oficiais.
+
+Criar claramente a distinção entre:
+
+**Dados oficiais**
+**Contexto**
+**Informações processuais**
+**Histórico**
+**Fontes**
+
+---
+
+# 11. PERFIL DE FIGURA PÚBLICA
+
+Criar uma página de pessoa pública reutilizável para:
+
+* candidatos;
+* presidentes;
+* governadores;
+* prefeitos;
+* senadores;
+* deputados;
+* vereadores;
+* ministros;
+* outras autoridades públicas.
+
+A página deverá possuir uma linha do tempo.
+
+Exemplo:
+
+2026
+Deputado Federal
+
+2022
+Vereador
+
+2018
+Candidato
+
+A linha do tempo deverá ser baseada prioritariamente em dados oficiais.
+
+---
+
+# 12. PROCESSOS JUDICIAIS
+
+Nunca utilizar linguagem acusatória.
+
+Evitar frases como:
+
+"Fulano é corrupto."
+
+Utilizar:
+
+"Há registro de processo público relacionado a..."
+
+Mostrar:
+
+* número;
+* tribunal;
+* classe;
+* assunto;
+* partes quando legalmente disponibilizadas;
+* movimentações;
+* situação;
+* decisão;
+* fonte.
+
+Sempre apresentar disclaimer contextual:
+
+> A existência de processo judicial não implica condenação. Consulte a fonte oficial para informações completas e atualizadas.
+
+---
+
+# 13. CONTAS E TCU
+
+Criar seção específica:
+
+**Controle e Contas Públicas**
+
+Apresentar:
+
+* órgão;
+* processo;
+* tipo;
+* decisão;
+* trânsito em julgado;
+* situação;
+* implicação eleitoral quando oficialmente indicada;
+* fonte oficial.
+
+Nunca criar interpretação própria de culpabilidade.
+
+---
+
+# 14. ATIVIDADE PARLAMENTAR
+
+Para parlamentares, apresentar:
+
+* projetos;
+* autoria;
+* coautoria;
+* tramitação;
+* votações;
+* votos;
+* discursos;
+* comissões;
+* despesas;
+* mandatos;
+* partidos.
+
+Criar filtros.
+
+---
+
+# 15. WATCHLIST
+
+Usuários autenticados poderão acompanhar:
+
+* pessoas;
+* candidatos;
+* eleições;
+* partidos;
+* projetos.
+
+Criar:
+
+Watchlist
+WatchlistItem
+
+Eventos relevantes poderão gerar notificações.
+
+Exemplo:
+
+"Nova movimentação em projeto acompanhado."
+
+"Nova atualização de prestação de contas."
+
+"Nova movimentação processual pública."
+
+---
+
+# 16. AUTENTICAÇÃO
+
+Implementar:
+
+* cadastro;
+* login;
+* logout;
+* recuperação de senha;
+* confirmação de email;
+* gerenciamento de sessão;
+* revogação de sessões.
+
+Utilizar cookies:
+
+HttpOnly
+Secure
+SameSite
+
+Não armazenar tokens sensíveis em localStorage.
+
+Senhas devem utilizar algoritmo moderno como Argon2id.
+
+Implementar:
+
+* rate limiting;
+* proteção contra brute force;
+* validação de entrada;
+* proteção CSRF;
+* proteção XSS;
+* proteção contra SQL injection;
+* headers de segurança;
+* CORS restritivo;
+* controle de acesso por recurso.
+
+---
+
+# 17. SEGURANÇA
+
+Adotar OWASP Top 10:2025 como baseline.
+
+Também aplicar princípios de:
+
+* least privilege;
+* defense in depth;
+* secure by default;
+* fail securely;
+* zero trust;
+* secrets management;
+* logging;
+* auditing.
+
+Nunca armazenar:
+
+* API keys no frontend;
+* tokens em código;
+* credenciais no Git;
+* secrets em arquivos públicos.
+
+Utilizar variáveis de ambiente e secret management.
+
+---
+
+# 18. AUDITORIA
+
+Criar AuditLog.
+
+Registrar eventos relevantes:
+
+* login;
+* logout;
+* alteração de email;
+* alteração de senha;
+* criação de conta;
+* exclusão;
+* alterações administrativas;
+* sincronizações;
+* falhas de autenticação;
+* ações administrativas.
+
+Não registrar dados sensíveis desnecessariamente.
+
+---
+
+# 19. ADMINISTRAÇÃO
+
+Criar painel administrativo seguro para:
+
+* usuários;
+* fontes;
+* sincronizações;
+* eleições;
+* candidatos;
+* pessoas;
+* partidos;
+* conteúdo editorial;
+* histórico;
+* notificações;
+* incidentes.
+
+Administradores devem possuir permissões granulares.
+
+---
+
+# 20. DATA INGESTION
+
+Toda sincronização deve ser:
+
+* idempotente;
+* incremental quando possível;
+* monitorável;
+* reprocessável;
+* auditável.
+
+Não duplicar registros.
+
+Utilizar identificadores externos.
+
+Criar mecanismos de:
+
+* retry;
+* exponential backoff;
+* timeout;
+* circuit breaker quando apropriado;
+* logs;
+* métricas.
+
+Uma falha em uma fonte externa não pode derrubar o aplicativo inteiro.
+
+---
+
+# 21. CACHE
+
+Utilizar Redis para:
+
+* cache;
+* sessões quando necessário;
+* filas;
+* resultados recentes;
+* eventos em tempo real;
+* rate limiting.
+
+Não utilizar cache como única fonte de verdade.
+
+---
+
+# 22. PERFORMANCE
+
+Priorizar:
+
+* paginação;
+* índices;
+* consultas eficientes;
+* select_related;
+* prefetch_related;
+* caching;
+* lazy loading;
+* code splitting;
+* compressão;
+* imagens otimizadas.
+
+O frontend deverá ser rápido em celulares de baixo/médio desempenho.
+
+---
+
+# 23. UX/UI
+
+A interface deverá ser:
+
+* moderna;
+* elegante;
+* minimalista;
+* informativa;
+* profissional;
+* altamente responsiva;
+* acessível.
+
+Referências conceituais:
+
+* Linear;
+* Apple;
+* Bloomberg;
+* Wikipedia moderna;
+* dashboards de dados.
+
+Não copiar interfaces.
+
+Criar identidade própria para o Tribuna Brasil.
+
+---
+
+# 24. PRINCÍPIOS DE UX
+
+Priorizar:
+
+1. Clareza
+2. Hierarquia visual
+3. Descoberta
+4. Baixa carga cognitiva
+5. Feedback imediato
+6. Transparência
+7. Acessibilidade
+8. Responsividade
+
+O usuário deve entender rapidamente:
+
+* o que está vendo;
+* de onde veio;
+* quando foi atualizado;
+* o que significa.
+
+---
+
+# 25. BUSCA GLOBAL
+
+Criar busca única.
+
+Pesquisar:
+
+* pessoas;
+* candidatos;
+* partidos;
+* eleições;
+* projetos;
+* processos;
+* cargos.
+
+Mostrar resultados agrupados por categoria.
+
+Implementar debounce.
+
+Preparar arquitetura para PostgreSQL full-text search e, posteriormente, Elasticsearch/OpenSearch se necessário.
+
+---
+
+# 26. PWA
+
+Implementar:
+
+* manifest;
+* service worker;
+* instalação;
+* ícones;
+* splash;
+* cache;
+* offline fallback;
+* responsive design.
+
+O aplicativo deverá funcionar excepcionalmente bem em:
+
+* smartphones;
+* tablets;
+* notebooks;
+* desktops.
+
+---
+
+# 27. ACESSIBILIDADE
+
+Seguir WCAG 2.2 AA como objetivo.
+
+Garantir:
+
+* navegação por teclado;
+* contraste;
+* labels;
+* foco visível;
+* semântica;
+* ARIA apenas quando necessária;
+* leitores de tela;
+* tamanho adequado de áreas clicáveis.
+
+---
+
+# 28. RESPONSIVIDADE
+
+Desenvolver mobile-first.
+
+Nunca simplesmente "encolher" o desktop.
+
+Projetar experiências específicas para:
+
+* 320px;
+* 375px;
+* 390px;
+* 430px;
+* tablet;
+* desktop.
+
+---
+
+# 29. HISTÓRIA DA REPÚBLICA
+
+Criar módulo:
+
+**História do Brasil Republicano**
+
+Estrutura:
+
+República
+→ Período
+→ Governo
+→ Presidente
+→ Mandato
+→ Eventos
+→ Contexto
+→ Fontes
+
+Começar pelos presidentes da República.
+
+Preparar arquitetura para futuramente incluir:
+
+* constituições;
+* golpes;
+* revoluções;
+* eleições;
+* reformas;
+* governos;
+* congressos;
+* acontecimentos históricos.
+
+---
+
+# 30. HOME
+
+A Home deverá conter:
+
+* status da eleição atual;
+* eleições próximas;
+* busca;
+* candidatos em destaque;
+* pessoas acompanhadas;
+* acontecimentos recentes;
+* exploração histórica;
+* navegação para Congresso;
+* transparência;
+* política brasileira.
+
+Não transformar a Home em um feed de notícias genérico.
+
+---
+
+# 31. NOTÍCIAS
+
+No MVP, não criar um agregador indiscriminado de notícias.
+
+Criar arquitetura para notícias institucionais e fontes confiáveis.
+
+Todo item deve possuir:
+
+* título;
+* fonte;
+* data;
+* URL;
+* entidade relacionada;
+* data de ingestão.
+
+Nunca copiar conteúdo protegido.
+
+---
+
+# 32. NEUTRALIDADE
+
+O sistema não deverá:
+
+* recomendar candidatos;
+* dizer em quem votar;
+* classificar candidato como "bom" ou "ruim";
+* criar ranking ideológico;
+* manipular ordem de candidatos para favorecer alguém;
+* utilizar perfil psicológico para persuasão política;
+* direcionar propaganda política.
+
+A ordenação de resultados deve ser neutra e documentada.
+
+---
+
+# 33. TRANSPARÊNCIA DO SISTEMA
+
+Criar página:
+
+**Como o Tribuna funciona**
+
+Explicar:
+
+* fontes;
+* metodologia;
+* atualização;
+* limitações;
+* tratamento de dados;
+* correções;
+* critérios de apresentação.
+
+Criar também:
+
+**Correção de informação**
+
+Usuários poderão reportar inconsistências.
+
+---
+
+# 34. TESTES
+
+Implementar:
+
+### Backend
+
+* unit tests;
+* integration tests;
+* API tests;
+* permission tests;
+* ingestion tests.
+
+### Frontend
+
+* component tests;
+* integration tests;
+* accessibility tests.
+
+### E2E
+
+Utilizar Playwright.
+
+Testar:
+
+* cadastro;
+* login;
+* busca;
+* candidato;
+* eleição;
+* acompanhamento;
+* resultados;
+* PWA.
+
+---
+
+# 35. OBSERVABILIDADE
+
+Preparar:
+
+* logs estruturados;
+* health checks;
+* métricas;
+* monitoramento de workers;
+* monitoramento de sincronizações;
+* erros de APIs externas.
+
+Criar endpoints:
+
+/health
+/ready
+
+---
+
+# 36. API
+
+Criar API versionada:
+
+/api/v1/
+
+Organizar:
+
+/api/v1/auth/
+/api/v1/elections/
+/api/v1/candidates/
+/api/v1/people/
+/api/v1/parties/
+/api/v1/proposals/
+/api/v1/parliament/
+/api/v1/judiciary/
+/api/v1/watchlist/
+/api/v1/notifications/
+
+Gerar documentação OpenAPI.
+
+---
+
+# 37. ESTRUTURA DO PROJETO
+
+Utilizar arquitetura organizada por domínio.
+
+Backend:
+
+apps/
+accounts/
+elections/
+people/
+candidates/
+parties/
+parliament/
+judiciary/
+transparency/
+history/
+notifications/
+sources/
+ingestion/
+audit/
+
+Evitar um único models.py gigantesco.
+
+Frontend:
+
+src/
+app/
+components/
+features/
+pages/
+hooks/
+services/
+lib/
+stores/
+types/
+styles/
+
+Organizar por feature quando isso melhorar a manutenção.
+
+---
+
+# 38. CI/CD
+
+Implementar pipeline:
+
+lint
+↓
+type check
+↓
+unit tests
+↓
+integration tests
+↓
+build
+↓
+security checks
+↓
+deploy
+
+Não permitir deploy de código que falhe nos testes essenciais.
+
+---
+
+# 39. METODOLOGIA
+
+Utilizar:
+
+**Kanban + ciclos semanais de desenvolvimento.**
+
+Não criar cerimônias desnecessárias.
+
+Cada ciclo deve possuir:
+
+* objetivo;
+* backlog;
+* tarefas;
+* critérios de aceitação;
+* implementação;
+* testes;
+* review;
+* deploy.
+
+Priorizar sempre:
+
+1. funcionalidade;
+2. segurança;
+3. dados corretos;
+4. UX;
+5. performance;
+6. refinamentos.
+
+---
+
+# 40. ROADMAP DO MVP
+
+## Sprint 1 — Fundação
+
+Implementar:
+
+* monorepo;
+* Docker;
+* Django;
+* React;
+* PostgreSQL;
+* Redis;
+* PWA;
+* CI/CD;
+* autenticação;
+* design system.
+
+## Sprint 2 — TSE
+
+Implementar:
+
+* eleições;
+* candidatos;
+* partidos;
+* cargos;
+* candidaturas;
+* ingestão;
+* busca;
+* páginas de candidatos.
+
+## Sprint 3 — Pessoas
+
+Implementar:
+
+* Person;
+* histórico;
+* candidaturas;
+* patrimônio;
+* propostas;
+* fontes;
+* watchlist.
+
+## Sprint 4 — Resultados
+
+Implementar:
+
+* resultados;
+* snapshots;
+* atualização;
+* Redis;
+* SSE;
+* dashboard de apuração.
+
+## Sprint 5 — Transparência
+
+Implementar:
+
+* CNJ/DataJud;
+* TCU;
+* Câmara;
+* Senado;
+* atividade parlamentar.
+
+## Sprint 6 — Polimento
+
+Implementar:
+
+* UX;
+* acessibilidade;
+* segurança;
+* performance;
+* testes E2E;
+* observabilidade;
+* documentação;
+* correções;
+* deploy final.
+
+---
+
+# 41. CRITÉRIOS DE ACEITAÇÃO DO MVP
+
+O MVP somente será considerado concluído quando:
+
+* usuário puder criar conta;
+* usuário puder fazer login;
+* usuário puder pesquisar pessoas;
+* usuário puder encontrar candidatos;
+* usuário puder visualizar candidatura;
+* dados forem provenientes de fontes oficiais;
+* fonte e atualização forem exibidas;
+* usuário puder acompanhar uma pessoa;
+* dados eleitorais puderem ser sincronizados;
+* resultados eleitorais puderem ser atualizados;
+* aplicação puder apresentar resultados sem refresh manual;
+* processos públicos puderem ser contextualizados corretamente;
+* dados parlamentares puderem ser consultados;
+* histórico republicano puder ser explorado;
+* aplicação funcionar como PWA;
+* interface for plenamente responsiva;
+* testes automatizados existirem;
+* principais vulnerabilidades forem tratadas;
+* logs e auditoria existirem;
+* documentação da arquitetura existir;
+* sistema estiver preparado para crescimento.
+
+---
+
+# 42. REGRA DE DESENVOLVIMENTO
+
+Não tentar implementar todo o sistema simultaneamente.
+
+Construir verticalmente.
+
+Cada feature deve passar por:
+
+Model
+→ Service
+→ Repository/Query
+→ API
+→ Frontend
+→ Testes
+→ UX
+→ Deploy
+
+Não criar código especulativo sem necessidade.
+
+Não implementar abstrações prematuras.
+
+Não criar microserviços sem necessidade.
+
+Não utilizar tecnologia apenas porque é popular.
+
+Sempre priorizar simplicidade arquitetural, segurança, testabilidade e manutenção.
+
+---
+
+# 43. REGRA PARA APIs EXTERNAS
+
+Nunca confiar cegamente no formato de uma API.
+
+Criar adapters.
+
+Nunca espalhar estruturas externas pelo domínio interno.
+
+Exemplo:
+
+TSE Candidate DTO
+→ CandidateMapper
+→ Candidate Domain Model
+
+Assim, mudanças externas não quebram o sistema inteiro.
+
+---
+
+# 44. REGRA PARA DADOS
+
+Dados oficiais possuem prioridade sobre dados secundários.
+
+Quando houver conflito:
+
+1. fonte oficial primária;
+2. órgão oficial relacionado;
+3. fonte institucional secundária;
+4. outras fontes somente quando explicitamente justificadas.
+
+Nunca inventar dados.
+
+Nunca preencher lacunas com inferência sem marcar explicitamente como inferência.
+
+---
+
+# 45. REGRA EDITORIAL
+
+Toda informação potencialmente sensível deverá possuir contexto.
+
+Especialmente:
+
+* processos judiciais;
+* investigações;
+* patrimônio;
+* acusações;
+* contas;
+* sanções.
+
+Nunca transformar dado factual em julgamento editorial.
+
+---
+
+# 46. RESULTADO ESPERADO
+
+Ao final do desenvolvimento, o usuário deverá conseguir abrir:
+
+**Tribuna Brasil**
+
+e imediatamente:
+
+1. descobrir a eleição atual;
+2. pesquisar um candidato;
+3. conhecer seus dados oficiais;
+4. consultar propostas;
+5. consultar patrimônio declarado;
+6. consultar informações processuais públicas;
+7. consultar atividade pública;
+8. acompanhar essa pessoa;
+9. receber atualizações;
+10. acompanhar a apuração eleitoral;
+11. explorar a história política brasileira.
+
+Tudo isso em uma interface:
+
+* moderna;
+* elegante;
+* rápida;
+* segura;
+* responsiva;
+* acessível;
+* confiável;
+* baseada em dados oficiais.
+
+---
+
+# 47. PRIMEIRA TAREFA
+
+Antes de escrever código:
+
+1. analisar o repositório existente;
+2. identificar stack atual;
+3. identificar arquivos e arquitetura;
+4. verificar dependências;
+5. verificar banco;
+6. verificar configuração;
+7. identificar funcionalidades existentes;
+8. elaborar plano de migração caso necessário.
+
+Depois:
+
+* apresentar arquitetura proposta;
+* apresentar árvore de diretórios;
+* apresentar modelo de dados;
+* apresentar backlog;
+* apresentar Sprint 1;
+* somente então iniciar implementação.
+
+Não destruir funcionalidades existentes sem justificativa.
+
+Não reescrever o projeto inteiro se uma evolução incremental for possível.
+
+O objetivo é entregar um produto real e funcional, não apenas um protótipo visual.

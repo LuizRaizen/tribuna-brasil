@@ -1,0 +1,82 @@
+[project]
+name = "tribuna-backend"
+version = "0.1.0"
+description = "Tribuna Brasil — API e workers"
+requires-python = ">=3.13"
+dependencies = [
+    "django>=5.2,<5.3",
+    "djangorestframework>=3.16",
+    "django-allauth>=65.10",
+    "argon2-cffi>=25.1",
+    "psycopg[binary]>=3.2",
+    "django-environ>=0.12",
+    "redis>=6.0",
+    "celery>=5.5",
+    "django-celery-beat>=2.8",
+    "drf-spectacular>=0.28",
+    "drf-spectacular-sidecar>=2025.1",
+    "structlog>=25.1",
+    "uvicorn[standard]>=0.35",
+    "gunicorn>=23.0",
+    "uvicorn-worker>=0.3",
+    "whitenoise>=6.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4",
+    "pytest-django>=4.11",
+    "pytest-cov>=6.2",
+    "factory-boy>=3.3",
+    "ruff>=0.12",
+    "mypy>=1.17",
+    "django-stubs[compatible-mypy]>=5.2",
+    "djangorestframework-stubs>=3.16",
+    "bandit>=1.8",
+    "pip-audit>=2.9",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["**/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "SIM", "RUF"]
+ignore = ["RUF012"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106"]
+"conftest.py" = ["S101", "S105"]
+"config/settings/*" = ["F405", "F403"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+addopts = "-q --strict-markers"
+filterwarnings = ["ignore:No directory at:UserWarning"]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+strict_optional = true
+warn_unused_ignores = true
+check_untyped_defs = true
+exclude = ["migrations/"]
+
+[[tool.mypy.overrides]]
+module = ["allauth.*", "celery.*", "environ.*", "django_celery_beat.*", "factory.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
