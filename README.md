@@ -57,6 +57,23 @@ npm install
 npm run dev        # proxy de /api para http://localhost:8000
 ```
 
+## Apuração (resultados do TSE)
+
+```bash
+# 1. Cria eleição, turnos, UFs, disputas e feeds a partir da configuração oficial do TSE
+docker compose exec backend python manage.py carregar_eleicoes_2026
+
+# 2. A coleta roda sozinha a cada minuto (serviço scheduler) durante a janela de apuração.
+#    Para coletar na hora:
+docker compose exec backend python manage.py coletar_resultados --cargo presidente --local br
+```
+
+O painel fica em http://localhost:5173/apuracao. No Admin, em "Feeds de resultados", é possível
+ligar ou desligar feeds e disparar uma coleta; "Sincronizações" mostra cada coleta e seu resultado.
+
+Sem Docker e sem Redis, use o modo leve no `.env` (`CACHE_BACKEND=locmem` e `RESULTS_BUS=memory`):
+tudo funciona num único processo, com o painel atualizando por polling.
+
 ## Testes e qualidade
 
 ```bash
@@ -93,6 +110,10 @@ docs/       Plano, ADRs e guia de identidade visual
 | `GET /ready` | Readiness: banco e cache acessíveis (503 caso contrário) |
 | `GET /api/v1/auth/csrf/` | Define o cookie CSRF |
 | `/api/v1/auth/browser/v1/...` | Conta: cadastro, login, sessões, senha (allauth headless) |
+| `GET /api/v1/elections/` | Eleições e turnos |
+| `GET /api/v1/results/{eleicao}/{turno}/` | Feeds disponíveis no turno |
+| `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/` | Último resultado oficial, com procedência |
+| `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/stream/` | Atualizações ao vivo (SSE) |
 | `GET /api/v1/schema/` | OpenAPI (habilitado em desenvolvimento) |
 
 ## Documentação

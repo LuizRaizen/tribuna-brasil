@@ -10,6 +10,16 @@ const items: { to: string; label: string; end: boolean; icon: ReactNode }[] = [
     icon: <path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z" />,
   },
   {
+    to: '/apuracao',
+    label: 'Apuração',
+    end: false,
+    icon: (
+      <>
+        <path d="M5 19V11M10 19V6M15 19v-5M20 19V9" />
+      </>
+    ),
+  },
+  {
     to: '/como-funciona',
     label: 'Como funciona',
     end: false,
@@ -40,7 +50,7 @@ export function BottomNav() {
       aria-label="Navegação rápida"
       className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul className="mx-auto grid max-w-md grid-cols-3">
+      <ul className="mx-auto grid max-w-md grid-cols-4">
         {items.map((item) => (
           <li key={item.to}>
             <NavLink

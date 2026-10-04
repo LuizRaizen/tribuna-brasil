@@ -25,7 +25,8 @@ RUN pip install .
 COPY --chown=app:app . .
 ENV DJANGO_SETTINGS_MODULE=config.settings.prod
 RUN DJANGO_SECRET_KEY=build-only DATABASE_URL=sqlite:///tmp/build.db \
-    python manage.py collectstatic --noinput
+    python manage.py collectstatic --noinput \
+    && mkdir -p /app/media && chown app:app /app/media
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"

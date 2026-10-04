@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { BallotDigits } from '@/components/ui/BallotDigits'
-import { buttonClass } from '@/components/ui/Button'
+import { ButtonLink } from '@/components/ui/Button'
 import { SourceSeal } from '@/components/ui/SourceSeal'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDayMonth, pluralize } from '@/lib/format'
@@ -83,13 +83,18 @@ export function ElectionHero({ status }: { status: ElectionStatus | null }) {
           A votação do {roundName(round)} terminou.
         </h1>
         <p className="mt-4 max-w-[58ch] text-lg text-muted">
-          O TSE divulga os resultados à medida que as urnas são apuradas. O painel de apuração do Tribuna estará
-          disponível no 2º turno.
+          O TSE divulga os resultados à medida que as seções são apuradas. Acompanhe aqui, com atualização automática e
+          link para cada arquivo oficial.
         </p>
-        <a href={TSE_RESULTS_URL} target="_blank" rel="noopener noreferrer" className={buttonClass('primary', 'lg', 'mt-6')}>
-          Ver resultados no site do TSE
-          <span className="sr-only"> (abre em nova aba)</span>
-        </a>
+        <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+          <ButtonLink to={`/apuracao?turno=${round.number}`} size="lg">
+            Acompanhar a apuração
+          </ButtonLink>
+          <a href={TSE_RESULTS_URL} target="_blank" rel="noopener noreferrer" className="font-semibold">
+            Ver no site do TSE
+            <span className="sr-only"> (abre em nova aba)</span>
+          </a>
+        </div>
       </>
     )
     if (status.next) {

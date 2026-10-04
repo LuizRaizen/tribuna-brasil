@@ -9,8 +9,9 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 const MODULES = [
   {
     title: 'Apuração em tempo real',
-    description: 'Votos, percentuais e seções apuradas a partir dos boletins oficiais do TSE, sem recarregar a página.',
-    status: 'Previsto para o 2º turno',
+    description: 'Votos, percentuais e seções apuradas a partir dos arquivos oficiais do TSE, sem recarregar a página.',
+    status: 'Disponível',
+    to: '/apuracao',
   },
   {
     title: 'Candidaturas',
@@ -38,6 +39,12 @@ const MODULES = [
     status: 'Planejado',
   },
 ] as const
+
+const MODULE_BADGE = {
+  Disponível: 'final',
+  'Em desenvolvimento': 'partial',
+  Planejado: 'soon',
+} as const
 
 const PRINCIPLES = [
   {
@@ -87,8 +94,16 @@ export default function HomePage() {
           {MODULES.map((module) => (
             <li key={module.title} className="flex flex-col gap-2 border-b border-line py-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-lg font-bold">{module.title}</h3>
-                <StatusBadge status={module.status === 'Planejado' ? 'soon' : 'live'}>{module.status}</StatusBadge>
+                <h3 className="text-lg font-bold">
+                  {'to' in module ? (
+                    <Link to={module.to} className="text-ink">
+                      {module.title}
+                    </Link>
+                  ) : (
+                    module.title
+                  )}
+                </h3>
+                <StatusBadge status={MODULE_BADGE[module.status]}>{module.status}</StatusBadge>
               </div>
               <p className="max-w-[52ch] text-muted">{module.description}</p>
             </li>

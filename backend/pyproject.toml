@@ -20,6 +20,8 @@ dependencies = [
     "gunicorn>=23.0",
     "uvicorn-worker>=0.3",
     "whitenoise>=6.9",
+    "httpx>=0.28",
+    "pydantic>=2.11",
 ]
 
 [project.optional-dependencies]
@@ -28,6 +30,8 @@ dev = [
     "pytest-django>=4.11",
     "pytest-cov>=6.2",
     "factory-boy>=3.3",
+    "respx>=0.22",
+    "fakeredis>=2.30",
     "ruff>=0.12",
     "mypy>=1.17",
     "django-stubs[compatible-mypy]>=5.2",

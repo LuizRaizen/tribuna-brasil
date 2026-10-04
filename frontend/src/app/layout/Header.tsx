@@ -6,6 +6,7 @@ import { cx } from '@/lib/cx'
 
 export const NAV_ITEMS = [
   { to: '/', label: 'Início', end: true },
+  { to: '/apuracao', label: 'Apuração', end: false },
   { to: '/como-funciona', label: 'Como funciona', end: false },
 ] as const
 

@@ -42,6 +42,11 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.audit",
+    "apps.sources",
+    "apps.people",
+    "apps.parties",
+    "apps.elections",
+    "apps.candidates",
 ]
 
 MIDDLEWARE = [
@@ -94,6 +99,9 @@ CACHES = {
         "TIMEOUT": 300,
     }
 }
+if env("CACHE_BACKEND", default="redis") == "locmem":
+    # Modo leve para desenvolvimento sem Redis (um único processo). Nunca use em produção.
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 # --- Autenticação ------------------------------------------------------------
 
@@ -217,6 +225,16 @@ CELERY_TASK_TIME_LIMIT = 60 * 30
 CELERY_TASK_SOFT_TIME_LIMIT = 60 * 25
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TIMEZONE = "America/Sao_Paulo"
+CELERY_BEAT_SCHEDULE = {
+    # Só coleta feeds dentro da janela de apuração; fora dela a tarefa termina sem fazer nada.
+    "results-poll": {"task": "elections.poll_results", "schedule": 60.0},
+}
+
+# --- Fontes externas ------------------------------------------------------------
+
+TSE_RESULTS_BASE_URL = env("TSE_RESULTS_BASE_URL", default="https://resultados.tse.jus.br/oficial")
+# "redis" em produção; "memory" para testes ou um único processo sem Redis.
+RESULTS_BUS = env("RESULTS_BUS", default="redis")
 
 # --- Internacionalização -----------------------------------------------------
 
@@ -229,6 +247,9 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Payloads brutos das fontes (DataSnapshot). Não é servido publicamente.
+MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
+MEDIA_URL = "/media/"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},

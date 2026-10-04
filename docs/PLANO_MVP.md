@@ -313,3 +313,27 @@ sinalização clara de resultado parcial.
 | S2.8 Painel de apuração (presidente e governadores por UF) | Votos, % válidos, brancos, nulos, seções apuradas, horário, abrangência; "parcial" sempre visível. |
 | S2.9 Home passa a ler eleição e turnos da API, aposentando `calendar.ts` | Mesmo comportamento, agora com proveniência do banco. |
 | S2.10 Teste de carga básico do SSE | Meta: 2 mil conexões simultâneas numa VM pequena. |
+
+## 9. Sprint 2 — situação ao final (04/10/2026)
+
+Entregue e validado contra os arquivos reais do 1º turno de 2026 (ver [ADR 0005](adr/0005-resultados-tse.md)):
+S2.1 a S2.8. Ajuste de modelo: `Contest` é eleição + cargo + território, e turno e abrangência ficam em
+`ResultFeed`, porque o TSE mantém o mesmo sequencial de candidatura nos dois turnos.
+
+Ficaram para o próximo ciclo:
+
+- **S2.9:** a Home ainda usa `calendar.ts`; ela já leva ao painel, que lê eleição e turnos da API.
+- **S2.10:** teste de carga do SSE. Precisa do ambiente Docker/VM e deve ser feito antes de 25/10.
+- **Infra:** o Compose ainda não foi executado aqui (Docker desligado). É o primeiro passo do próximo ciclo,
+  junto com o deploy numa VM para o 2º turno.
+
+## 10. Próximo ciclo — pronto para o 2º turno (até 25/10/2026)
+
+| Tarefa | Critério de aceitação |
+|---|---|
+| S3.1 Subir a stack com Docker Compose e corrigir o que aparecer | `docker compose up` funcional; coleta via scheduler observada no Admin. |
+| S3.2 Deploy em VM com Caddy e TLS | Painel acessível publicamente; `/ready` monitorado. |
+| S3.3 Teste de carga do SSE | 2 mil conexões; latência de publicação < 5 s. |
+| S3.4 Recarregar a configuração quando o TSE publicar o pleito do 2º turno | Data do 2º turno vinda do índice oficial. |
+| S3.5 Home lê eleição e turnos da API | `calendar.ts` removido. |
+| S3.6 Ensaio geral com os arquivos do 1º turno | Coleta ponta a ponta sem intervenção. |

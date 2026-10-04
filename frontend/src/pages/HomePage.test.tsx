@@ -13,10 +13,11 @@ function renderAt(iso: string) {
 }
 
 describe('HomePage', () => {
-  it('no dia da eleição após o fechamento, aponta o resultado oficial e o 2º turno', async () => {
+  it('no dia da eleição após o fechamento, leva à apuração, ao site do TSE e ao 2º turno', async () => {
     const { container } = renderAt('2026-10-04T19:00:00')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('A votação do 1º turno terminou.')
-    expect(screen.getByRole('link', { name: /resultados no site do tse/i })).toHaveAttribute('href', 'https://resultados.tse.jus.br/')
+    expect(screen.getByRole('link', { name: 'Acompanhar a apuração' })).toHaveAttribute('href', '/apuracao?turno=1')
+    expect(screen.getByRole('link', { name: /ver no site do tse/i })).toHaveAttribute('href', 'https://resultados.tse.jus.br/')
     expect(screen.getByRole('img', { name: '21 dias' })).toBeInTheDocument()
     expect(screen.getByLabelText('Procedência da informação')).toBeInTheDocument()
     await expectNoA11yViolations(container)

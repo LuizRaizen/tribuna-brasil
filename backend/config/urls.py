@@ -13,6 +13,7 @@ api_v1: list[URLPattern | URLResolver] = [
     # Endpoints de conta do allauth (cliente "browser", baseado em cookie de sessão):
     # /api/v1/auth/browser/v1/auth/login, .../auth/signup, .../auth/sessions etc.
     path("auth/", include("allauth.headless.urls")),
+    path("", include("apps.elections.api.urls")),
 ]
 
 urlpatterns = [
