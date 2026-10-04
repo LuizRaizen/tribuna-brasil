@@ -1,14 +1,23 @@
-# Ponto de entrada público: TLS automático, frontend estático e proxy para a API.
-# Frontend e API na mesma origem: cookies SameSite + CSRF funcionam sem abrir CORS.
+# Ponto de entrada público: frontend estático e proxy para a API, na mesma origem
+# (cookies SameSite + CSRF funcionam sem abrir CORS).
+#
+# Dois modos, escolhidos por SITE_ADDRESS no .env:
+#   - "tribuna.duckdns.org" (ou outro domínio): o Caddy emite o certificado TLS (Let's Encrypt).
+#   - ":80" atrás do Cloudflare Tunnel: o TLS termina no Cloudflare e o Caddy fica só na rede interna.
 {
 	email {$ACME_EMAIL}
+	servers {
+		# Confia nos cabeçalhos X-Forwarded-* apenas quando vêm da rede interna dos contêineres
+		# (cloudflared). Requisições da internet não conseguem forjar IP ou esquema.
+		trusted_proxies static private_ranges
+	}
 }
 
 {$SITE_ADDRESS:localhost} {
 	encode zstd gzip
 
 	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
@@ -19,9 +28,9 @@
 
 	@backend path /api/* /admin* /static/* /accounts/* /health /ready
 	handle @backend {
-		reverse_proxy backend:8000 {
-			header_up X-Forwarded-Proto {scheme}
-		}
+		# O Caddy repassa X-Forwarded-For/Proto/Host automaticamente, respeitando trusted_proxies.
+		# O SSE (text/event-stream) é transmitido sem buffer.
+		reverse_proxy backend:8000
 	}
 
 	handle {

@@ -133,18 +133,35 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  images:
-    name: Build das imagens de produção
-    needs: [backend, frontend]
+  infra:
+    name: Scripts e Compose
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: ShellCheck
+        run: shellcheck deploy/*.sh
+      - name: Validar docker-compose
+        run: |
+          cp deploy/env.prod.example .env
+          docker compose -f docker-compose.prod.yml config --quiet
+          docker compose -f docker-compose.prod.yml --profile tunnel config --quiet
+          cp .env.example .env && docker compose config --quiet
+
+  images:
+    name: Build das imagens de produção
+    needs: [backend, frontend, infra]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # A VM gratuita da Oracle é ARM (Ampere A1): as imagens precisam construir para arm64.
+      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - name: Backend
         uses: docker/build-push-action@v6
         with:
           context: backend
           target: prod
+          platforms: linux/amd64,linux/arm64
           push: false
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
@@ -153,6 +170,7 @@ jobs:
         with:
           context: frontend
           target: prod
+          platforms: linux/amd64,linux/arm64
           push: false
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend

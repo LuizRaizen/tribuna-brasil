@@ -332,7 +332,7 @@ Ficaram para o próximo ciclo:
 | Tarefa | Critério de aceitação |
 |---|---|
 | S3.1 Subir a stack com Docker Compose e corrigir o que aparecer | `docker compose up` funcional; coleta via scheduler observada no Admin. |
-| S3.2 Deploy em VM com Caddy e TLS | Painel acessível publicamente; `/ready` monitorado. |
+| S3.2 Deploy em VM com Caddy e TLS ([guia](DEPLOY.md): Oracle Always Free + DuckDNS, custo zero) | Painel acessível publicamente; `/ready` monitorado. |
 | S3.3 Teste de carga do SSE | 2 mil conexões; latência de publicação < 5 s. |
 | S3.4 Recarregar a configuração quando o TSE publicar o pleito do 2º turno | Data do 2º turno vinda do índice oficial. |
 | S3.5 Home lê eleição e turnos da API | `calendar.ts` removido. |

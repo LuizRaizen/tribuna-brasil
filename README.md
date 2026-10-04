@@ -119,5 +119,6 @@ docs/       Plano, ADRs e guia de identidade visual
 ## Documentação
 
 - [Plano do MVP](docs/PLANO_MVP.md): arquitetura, modelo de dados, backlog e sprints
+- [Deploy com custo zero](docs/DEPLOY.md): Oracle Cloud Always Free, DuckDNS, GitHub Actions
 - [Identidade visual](docs/IDENTIDADE_VISUAL.md)
 - [Decisões arquiteturais (ADRs)](docs/adr/)

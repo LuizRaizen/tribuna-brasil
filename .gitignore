@@ -33,3 +33,4 @@ e2e/playwright-report/
 .DS_Store
 Thumbs.db
 backend/.pytest_media/
+backups/

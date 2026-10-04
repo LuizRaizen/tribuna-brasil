@@ -23,11 +23,12 @@ CMD ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"
 FROM base AS prod
 RUN pip install .
 COPY --chown=app:app . .
-ENV DJANGO_SETTINGS_MODULE=config.settings.prod
+ENV DJANGO_SETTINGS_MODULE=config.settings.prod \
+    WEB_CONCURRENCY=3
 RUN DJANGO_SECRET_KEY=build-only DATABASE_URL=sqlite:///tmp/build.db \
     python manage.py collectstatic --noinput \
     && mkdir -p /app/media && chown app:app /app/media
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
-CMD ["gunicorn", "config.asgi:application", "-k", "uvicorn_worker.UvicornWorker", "-w", "3", "-b", "0.0.0.0:8000", "--access-logfile", "-"]
+CMD ["gunicorn", "config.asgi:application", "-k", "uvicorn_worker.UvicornWorker", "-b", "0.0.0.0:8000", "--access-logfile", "-"]

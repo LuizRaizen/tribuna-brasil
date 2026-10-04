@@ -1,6 +1,16 @@
-# Produção em uma VM: docker compose -f docker-compose.prod.yml up -d --build
-# Variáveis obrigatórias no .env: DJANGO_SECRET_KEY, POSTGRES_PASSWORD, DATABASE_URL,
-# DJANGO_ALLOWED_HOSTS, FRONTEND_URL, CSRF_TRUSTED_ORIGINS, EMAIL_URL, SITE_ADDRESS, ACME_EMAIL.
+# Produção em uma única VM (ex.: Oracle Cloud Always Free, ARM 2 OCPU / 12 GB).
+#   ./deploy/deploy.sh                      (recomendado: build, migração, subida e verificação)
+#   docker compose -f docker-compose.prod.yml up -d --build
+# Com Cloudflare Tunnel (domínio próprio, sem portas abertas):
+#   docker compose -f docker-compose.prod.yml --profile tunnel up -d --build
+# Variáveis: veja deploy/env.prod.example.
+
+x-logging: &logging
+  # Logs rotacionados: a VM gratuita tem disco limitado.
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
 
 x-backend: &backend
   build:
@@ -9,7 +19,8 @@ x-backend: &backend
   env_file: .env
   environment:
     DJANGO_SETTINGS_MODULE: config.settings.prod
-    TRUSTED_PROXY_COUNT: "1"
+    # 1 = só o Caddy à frente; 2 = Cloudflare Tunnel + Caddy.
+    TRUSTED_PROXY_COUNT: ${TRUSTED_PROXY_COUNT:-1}
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -19,6 +30,7 @@ x-backend: &backend
     - media:/app/media
   security_opt:
     - no-new-privileges:true
+  logging: *logging
   depends_on:
     postgres:
       condition: service_healthy
@@ -29,12 +41,23 @@ services:
   postgres:
     image: postgres:17-alpine
     restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=2GB
+      - -c
+      - max_connections=60
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-tribuna}
       POSTGRES_USER: ${POSTGRES_USER:-tribuna}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    shm_size: 256mb
+    mem_limit: 3g
+    logging: *logging
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
@@ -44,9 +67,12 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    # Cache e pub/sub: sem persistência obrigatória; a fonte de verdade é o PostgreSQL.
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
     volumes:
       - redis-data:/data
+    mem_limit: 384m
+    logging: *logging
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -60,6 +86,7 @@ services:
 
   backend:
     <<: *backend
+    mem_limit: 2g
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -67,13 +94,16 @@ services:
   worker:
     <<: *backend
     command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2"]
+    mem_limit: 1g
     depends_on:
       migrate:
         condition: service_completed_successfully
 
   scheduler:
     <<: *backend
-    command: ["celery", "-A", "config", "beat", "--loglevel=INFO"]
+    command:
+      ["celery", "-A", "config", "beat", "--loglevel=INFO", "--pidfile=/tmp/celerybeat.pid"]
+    mem_limit: 256m
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -84,7 +114,7 @@ services:
       target: prod
     restart: unless-stopped
     environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:?defina SITE_ADDRESS (ex.: tribuna.exemplo.com.br)}
+      SITE_ADDRESS: ${SITE_ADDRESS:?defina SITE_ADDRESS (ex.: tribuna.duckdns.org ou ":80" com tunnel)}
       ACME_EMAIL: ${ACME_EMAIL:?defina ACME_EMAIL}
     ports:
       - "80:80"
@@ -93,8 +123,24 @@ services:
     volumes:
       - caddy-data:/data
       - caddy-config:/config
+    mem_limit: 256m
+    logging: *logging
     depends_on:
       - backend
+
+  # Opcional: Cloudflare Tunnel (precisa de domínio próprio no Cloudflare). Com ele, as portas
+  # 80/443 podem ficar fechadas no firewall e o IP do servidor não fica exposto.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    mem_limit: 128m
+    logging: *logging
+    depends_on:
+      - caddy
 
 volumes:
   postgres-data:

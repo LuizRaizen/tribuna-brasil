@@ -1,0 +1,59 @@
+name: Deploy
+
+# Só implanta código que passou em todo o CI (lint, tipos, testes, E2E, segurança, build).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Produção
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      SITE_URL: ${{ vars.SITE_URL }}
+      REF: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Verificar configuração
+        id: config
+        run: |
+          if [ -z "$DEPLOY_HOST" ] || [ -z "$DEPLOY_SSH_KEY" ] || [ -z "$DEPLOY_KNOWN_HOSTS" ]; then
+            echo "Segredos de deploy ausentes; nada a fazer. Veja docs/DEPLOY.md." >> "$GITHUB_STEP_SUMMARY"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Implantar via SSH
+        if: steps.config.outputs.ready == 'true'
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER:-tribuna}@${DEPLOY_HOST}" \
+            "cd /opt/tribuna && ./deploy/deploy.sh '$REF'"
+
+      - name: Verificar o site publicado
+        if: steps.config.outputs.ready == 'true' && env.SITE_URL != ''
+        run: |
+          for i in $(seq 1 10); do
+            curl -fsS "$SITE_URL/ready" && exit 0
+            sleep 6
+          done
+          echo "O site não respondeu em $SITE_URL/ready" && exit 1
