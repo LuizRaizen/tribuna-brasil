@@ -19,6 +19,8 @@ logger = structlog.get_logger(__name__)
 
 USER_AGENT = "TribunaBrasil/0.1 (+https://github.com/LuizRaizen/tribuna-brasil)"
 RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+# Fonte de aleatoriedade do sistema operacional para o jitter do backoff.
+_jitter = random.SystemRandom()
 
 
 class SourceError(Exception):
@@ -116,7 +118,7 @@ def fetch(
                     break
             if attempt < attempts:
                 # Backoff exponencial com jitter: evita que vários workers batam juntos na fonte.
-                delay = backoff_base * (2 ** (attempt - 1)) * (1 + random.random() * 0.25)  # noqa: S311
+                delay = backoff_base * (2 ** (attempt - 1)) * (1 + _jitter.random() * 0.25)
                 logger.info("fetch.retry", url=url, attempt=attempt, delay=round(delay, 2))
                 sleep(delay)
     finally:
