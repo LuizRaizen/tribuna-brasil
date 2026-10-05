@@ -1,0 +1,16 @@
+# Configuração do gitleaks (CI: job "Varredura de segredos").
+# Mantém todas as regras padrão e libera apenas credenciais fictícias de testes automatizados
+# (ex.: "Senha-forte-123" usada para simular um login). Código de produção segue sendo varrido.
+title = "Tribuna Brasil"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Credenciais fictícias em testes automatizados"
+paths = [
+  '''(^|/)tests?/''',
+  '''(^|/)conftest\.py$''',
+  '''\.test\.tsx?$''',
+  '''^e2e/tests/''',
+]

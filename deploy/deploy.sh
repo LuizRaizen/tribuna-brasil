@@ -25,7 +25,7 @@ echo "==> Subindo serviços (migrações rodam antes do backend)"
 "${COMPOSE[@]}" up -d --remove-orphans
 
 echo "==> Verificando /ready"
-for attempt in $(seq 1 30); do
+for _ in $(seq 1 30); do
   if "${COMPOSE[@]}" exec -T backend python -c \
       "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/ready').status==200 else 1)" \
       >/dev/null 2>&1; then

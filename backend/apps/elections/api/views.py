@@ -39,7 +39,7 @@ class ElectionSerializer(serializers.Serializer):
 class ElectionListView(APIView):
     permission_classes = [AllowAny]
 
-    @extend_schema(responses=ElectionSerializer(many=True))
+    @extend_schema(operation_id="elections_list", responses=ElectionSerializer(many=True))
     def get(self, request: Request) -> Response:
         data = ElectionSerializer(selectors.elections(), many=True).data
         response = Response(data)
@@ -52,7 +52,7 @@ class FeedListView(APIView):
 
     permission_classes = [AllowAny]
 
-    @extend_schema(responses=OpenApiTypes.OBJECT)
+    @extend_schema(operation_id="results_feeds_list", responses=OpenApiTypes.OBJECT)
     def get(self, request: Request, election: str, round_number: int) -> Response:
         feeds = selectors.feeds_of(election, round_number)
         data = [
@@ -74,7 +74,7 @@ class FeedResultView(APIView):
 
     permission_classes = [AllowAny]
 
-    @extend_schema(responses=OpenApiTypes.OBJECT)
+    @extend_schema(operation_id="results_feed_retrieve", responses=OpenApiTypes.OBJECT)
     def get(
         self, request: Request, election: str, round_number: int, office: str, region: str
     ) -> HttpResponse:

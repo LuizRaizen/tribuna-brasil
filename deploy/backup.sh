@@ -22,8 +22,13 @@ docker compose -f docker-compose.prod.yml exec -T postgres \
 # Domingo: guarda também uma cópia semanal.
 if [ "$(date +%u)" = "7" ]; then cp "$file" backups/weekly/; fi
 
-ls -1t backups/daily/*.sql.gz | tail -n +8 | xargs -r rm --
-ls -1t backups/weekly/*.sql.gz 2>/dev/null | tail -n +5 | xargs -r rm --
+# Mantém os N mais recentes de cada pasta (ordenados pela data de modificação).
+prune() {
+  find "$1" -maxdepth 1 -name '*.sql.gz' -printf '%T@ %p\n' \
+    | sort -rn | tail -n +"$(($2 + 1))" | cut -d' ' -f2- | xargs -r rm --
+}
+prune backups/daily 7
+prune backups/weekly 4
 
 if [ -n "${BACKUP_RCLONE_REMOTE:-}" ] && command -v rclone >/dev/null; then
   rclone copy backups "$BACKUP_RCLONE_REMOTE" --include "*.sql.gz"
