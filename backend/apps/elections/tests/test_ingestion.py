@@ -136,6 +136,25 @@ def test_final_totalization_stops_collection_and_is_audited(
     assert AuditLog.objects.filter(action=AuditAction.SYNC_RUN).count() == 1
 
 
+def test_payload_rejected_earlier_is_reprocessed_after_a_fix(
+    tse: respx.MockRouter, br_feed: ResultFeed
+) -> None:
+    """Caso real de 05/10/2026: o arquivo final foi rejeitado (campo 'md' ausente) e, depois da
+    correção do conector, o mesmo payload precisa ser processado, não tratado como repetido."""
+    from unittest import mock
+
+    from apps.ingestion.connectors.tse_resultados.mapper import ResultRejected
+
+    tse.get(BR_URL).mock(return_value=httpx.Response(200, content=fixture_bytes(BR_PRESIDENT)))
+    with mock.patch(
+        "apps.elections.services.results.parse", side_effect=ResultRejected("formato antigo")
+    ):
+        assert collect(br_feed) == Outcome.REJECTED
+    assert collect(br_feed) == Outcome.CREATED
+    assert ResultSnapshot.objects.count() == 1
+    assert collect(br_feed) == Outcome.UNCHANGED
+
+
 def test_overlapping_collection_is_locked(br_feed: ResultFeed) -> None:
     from django.core.cache import cache
 

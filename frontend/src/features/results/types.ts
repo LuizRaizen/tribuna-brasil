@@ -24,6 +24,7 @@ export interface RunningMate {
 
 export interface CandidateResult {
   id: number
+  tse_id: string
   ballot_number: string
   ballot_name: string
   party: string

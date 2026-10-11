@@ -39,6 +39,7 @@ export function snapshot(overrides: Partial<ResultSnapshot> = {}): ResultSnapsho
     candidates: [
       {
         id: 1,
+        tse_id: '900001',
         ballot_number: '91',
         ballot_name: 'CANDIDATA ALFA DA SILVA',
         party: 'PA',
@@ -53,6 +54,7 @@ export function snapshot(overrides: Partial<ResultSnapshot> = {}): ResultSnapsho
       },
       {
         id: 2,
+        tse_id: '900002',
         ballot_number: '92',
         ballot_name: 'CANDIDATO BETA',
         party: 'PB',

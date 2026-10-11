@@ -1,0 +1,110 @@
+import json
+from typing import Any
+
+import pytest
+import respx
+from django.test import Client
+
+from apps.candidates.search import normalize
+from apps.candidates.services import import_candidacies
+from apps.people.models import Person
+
+pytestmark = pytest.mark.django_db
+LULA = "280002542548"
+
+
+@pytest.fixture
+def imported(tse_open_data: respx.MockRouter) -> None:
+    import_candidacies(2026)
+
+
+def get(path: str) -> Any:
+    return Client().get(path)
+
+
+def test_normalize_removes_accents_and_case() -> None:
+    assert normalize("  Tarcísio  de FREITAS ") == "tarcisio de freitas"
+
+
+def test_detail_has_official_data_assets_ticket_and_provenance(imported: None) -> None:
+    response = get(f"/api/v1/candidates/{LULA}/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["ballot_name"] == "LULA"
+    assert body["office"] == {"slug": "presidente", "name": "Presidente"}
+    assert body["registration_status"] == "DEFERIDO"
+    assert body["rounds"][0] == {"number": 1, "status": "2º TURNO"}
+    assert body["photo_url"].endswith("/ele2026/6257/fotos/br/280002542548.jpeg")
+    assert [m["ballot_name"] for m in body["ticket_members"]] == ["GERALDO ALCKMIN"]
+    assert body["assets"]["count"] == len(body["assets"]["items"])
+    assert body["provenance"][0]["official_url"].endswith("consulta_cand_2026.zip")
+    assert "public" in response["Cache-Control"]
+
+
+def test_no_personal_identifiers_leak(imported: None) -> None:
+    raw = get(f"/api/v1/candidates/{LULA}/").content.decode()
+    identity = Person.objects.get(candidacies__tse_id=LULA).identity_hash
+    assert identity and identity not in raw
+    for forbidden in ("identity_hash", "search_text", "assets_hash", "cpf", "titulo", "90000000"):
+        assert forbidden not in raw.lower()
+
+
+def test_vice_points_back_to_the_head_of_ticket(imported: None) -> None:
+    body = get("/api/v1/candidates/280002542549/").json()
+    assert body["ticket_head"]["tse_id"] == LULA
+
+
+def test_unknown_candidacy_is_404(imported: None) -> None:
+    assert get("/api/v1/candidates/000/").status_code == 404
+
+
+def test_list_filters_and_neutral_alphabetical_order(imported: None) -> None:
+    body = get("/api/v1/candidates/?cargo=deputado-federal&uf=sp").json()
+    names = [c["ballot_name"] for c in body["results"]]
+    assert names == sorted(names)
+    assert all(c["office"]["slug"] == "deputado-federal" for c in body["results"])
+    assert body["count"] == 2
+
+
+def test_list_filters_by_party(imported: None) -> None:
+    body = get("/api/v1/candidates/?partido=13").json()
+    assert body["count"] >= 1
+    assert all(c["party"] == "PT" for c in body["results"])
+
+
+def test_search_ignores_accents_and_groups_results(imported: None) -> None:
+    body = get("/api/v1/search/?q=tarcisio").json()
+    groups = {g["kind"]: g for g in body["groups"]}
+    assert [c["ballot_name"] for c in groups["candidacies"]["items"]] == ["TARCÍSIO"]
+
+
+def test_search_ranks_exact_ballot_name_before_longer_names(imported: None) -> None:
+    from apps.candidates.models import Candidacy
+    from apps.candidates.search import search_candidacies
+
+    other = Candidacy.objects.get(ballot_name="FERNANDO HADDAD")
+    other.ballot_name, other.sort_name = "TARCISIO ALBERTO", "tarcisio alberto"
+    other.search_text = "tarcisio alberto"
+    other.save()
+    names = [c.ballot_name for c in search_candidacies("Tarcísio")]
+    # Nome idêntico primeiro; acento não altera a ordem alfabética.
+    assert names == ["TARCÍSIO", "TARCISIO ALBERTO"]
+
+
+def test_search_ranks_exact_ballot_number_first(imported: None) -> None:
+    body = get("/api/v1/search/?q=13").json()
+    items = body["groups"][0]["items"]
+    assert items[0]["ballot_number"] == "13"
+
+
+def test_search_finds_parties(imported: None) -> None:
+    groups = {g["kind"]: g for g in get("/api/v1/search/?q=republicanos").json()["groups"]}
+    assert groups["parties"]["items"][0]["acronym"] == "REPUBLICANOS"
+
+
+def test_short_query_returns_nothing(imported: None) -> None:
+    assert get("/api/v1/search/?q=a").json() == {"query": "a", "groups": []}
+
+
+def test_search_response_is_json_safe(imported: None) -> None:
+    json.loads(get("/api/v1/search/?q=sp").content)

@@ -6,6 +6,7 @@ Segredos e parâmetros de infraestrutura vêm exclusivamente de variáveis de am
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -228,11 +229,22 @@ CELERY_TIMEZONE = "America/Sao_Paulo"
 CELERY_BEAT_SCHEDULE = {
     # Só coleta feeds dentro da janela de apuração; fora dela a tarefa termina sem fazer nada.
     "results-poll": {"task": "elections.poll_results", "schedule": 60.0},
+    # O TSE regenera os arquivos de candidaturas com julgamentos e situação pós-turno.
+    "candidates-import": {
+        "task": "candidates.import",
+        "schedule": crontab(hour=6, minute=30),
+    },
 }
 
 # --- Fontes externas ------------------------------------------------------------
 
 TSE_RESULTS_BASE_URL = env("TSE_RESULTS_BASE_URL", default="https://resultados.tse.jus.br/oficial")
+TSE_OPEN_DATA_BASE_URL = env(
+    "TSE_OPEN_DATA_BASE_URL", default="https://cdn.tse.jus.br/estatistica/sead/odsele"
+)
+# Chave do HMAC que identifica a mesma pessoa entre fontes (a partir do CPF publicado pelo TSE).
+# Deve ser estável: trocá-la desfaz a ligação entre registros já importados.
+IDENTITY_HASH_KEY = env("IDENTITY_HASH_KEY", default=SECRET_KEY)
 # "redis" em produção; "memory" para testes ou um único processo sem Redis.
 RESULTS_BUS = env("RESULTS_BUS", default="redis")
 

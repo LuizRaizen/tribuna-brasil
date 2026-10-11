@@ -130,6 +130,7 @@ describe('displayName', () => {
     ['LUIZ INÁCIO LULA DA SILVA', 'Luiz Inácio Lula da Silva'],
     ['ESCRITOR AUGUSTO CURY', 'Escritor Augusto Cury'],
     ['DE OLIVEIRA', 'De Oliveira'],
+    ['TARCÍSIO DA NCT', 'Tarcísio da NCT'],
   ])('%s → %s', (input, expected) => {
     expect(displayName(input)).toBe(expected)
   })

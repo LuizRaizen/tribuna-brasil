@@ -7,6 +7,7 @@ import { cx } from '@/lib/cx'
 export const NAV_ITEMS = [
   { to: '/', label: 'Início', end: true },
   { to: '/apuracao', label: 'Apuração', end: false },
+  { to: '/candidaturas', label: 'Candidaturas', end: false },
   { to: '/como-funciona', label: 'Como funciona', end: false },
 ] as const
 
@@ -47,6 +48,16 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            to="/busca"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-control px-2 text-sm font-semibold text-ink no-underline hover:bg-sunken md:px-3"
+          >
+            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+            </svg>
+            <span className="sr-only md:not-sr-only">Buscar</span>
+          </Link>
           {canInstall && (
             <button
               type="button"

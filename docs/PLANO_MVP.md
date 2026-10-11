@@ -337,3 +337,34 @@ Ficaram para o próximo ciclo:
 | S3.4 Recarregar a configuração quando o TSE publicar o pleito do 2º turno | Data do 2º turno vinda do índice oficial. |
 | S3.5 Home lê eleição e turnos da API | `calendar.ts` removido. |
 | S3.6 Ensaio geral com os arquivos do 1º turno | Coleta ponta a ponta sem intervenção. |
+
+> Em 06/10/2026 o responsável pelo produto adiou a hospedagem (sem cartão de crédito disponível para os
+> planos gratuitos). O ciclo de infraestrutura acima fica pendente; o desenvolvimento seguiu para as
+> candidaturas.
+
+## 11. Sprint 3 — Candidaturas, busca e página da candidatura (11/10/2026)
+
+Entregue e validado contra os arquivos reais do Portal de Dados Abertos (ver
+[ADR 0006](adr/0006-candidaturas-tse.md)):
+
+| Tarefa | Situação |
+|---|---|
+| Importação oficial: candidaturas, complementar e bens (≈21 mil candidaturas, 77 mil bens, ~40 s) | ✅ |
+| Pessoa unificada por HMAC do CPF; CPF e título de eleitor nunca guardados nem expostos | ✅ |
+| Chapa: vice e suplentes ligados ao titular | ✅ |
+| Busca global agrupada, sem acentos, com ordem neutra documentada | ✅ |
+| Página da candidatura: dados oficiais, situação por turno, resultado, chapa, bens com contexto, fontes | ✅ |
+| Lista de candidaturas por cargo, UF e partido | ✅ |
+| Apuração leva às páginas de candidatura | ✅ |
+| Importação diária automática (Celery beat) | ✅ |
+
+Correções vindas dos dados reais do 1º turno:
+
+- **"Eleito"** passou a vir só da situação oficial: o campo `e` do TSE também marca quem vai ao 2º turno.
+- O arquivo final de resultados não tem o campo `md`; o DTO passou a aceitar a ausência.
+- Payloads rejeitados antes de uma correção agora são **reprocessados**, tanto nos resultados quanto nas
+  candidaturas.
+
+Próximos passos sugeridos (Sprint 4 — Pessoas): linha do tempo da pessoa com o histórico de candidaturas
+do TSE (`historico_candidatura_2026.zip`), propostas de governo (PDFs oficiais), prestação de contas
+(doadores e fornecedores), watchlist e notificações, formulário de correção de informação.

@@ -20,13 +20,13 @@ const items: { to: string; label: string; end: boolean; icon: ReactNode }[] = [
     ),
   },
   {
-    to: '/como-funciona',
-    label: 'Como funciona',
+    to: '/busca',
+    label: 'Buscar',
     end: false,
     icon: (
       <>
-        <circle cx="12" cy="12" r="8" />
-        <path d="M12 11v5M12 8v.5" />
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
       </>
     ),
   },

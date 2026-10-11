@@ -11,6 +11,7 @@ from django.utils import timezone
 from apps.audit.models import AuditAction
 from apps.audit.services import record as audit
 from apps.candidates.models import Candidacy
+from apps.candidates.search import apply_search_fields
 from apps.elections.models import CandidateResult, ResultFeed, ResultSnapshot
 from apps.ingestion.connectors.tse_resultados import client as tse
 from apps.ingestion.connectors.tse_resultados.mapper import (
@@ -89,9 +90,12 @@ def _collect(feed: ResultFeed) -> Outcome:
         fetched_at=fetched.fetched_at,
         sync_run=run,
     )
-    if not stored.created:
+    already_processed = ResultSnapshot.objects.filter(data_snapshot=stored.snapshot).exists()
+    if not stored.created and already_processed:
         sources.finish_run(run, SyncRun.Status.UNCHANGED, unchanged=1)
         return Outcome.UNCHANGED
+    # Um payload já guardado, mas nunca processado (ex.: rejeitado antes de uma correção no
+    # conector), é reprocessado: a ingestão precisa ser reprocessável (escopo §20).
 
     try:
         data = parse(fetched.content, locator)
@@ -183,16 +187,28 @@ def upsert_candidacy(
         "group_composition": line.group_composition,
         "running_mates": [asdict(mate) for mate in line.running_mates],
     }
-    candidacy = Candidacy.objects.filter(tse_id=line.tse_id).first()
+    candidacy = (
+        Candidacy.objects.select_related("person", "party").filter(tse_id=line.tse_id).first()
+    )
     if candidacy is None:
         person = Person.objects.create(full_name=line.name, birth_date=line.birth_date)
-        candidacy = Candidacy.objects.create(person=person, tse_id=line.tse_id, **fields)
-    else:
+        candidacy = Candidacy(
+            person=person, tse_id=line.tse_id, tse_election_code=feed.tse_election_code, **fields
+        )
+        apply_search_fields(candidacy)
+        candidacy.save()
+    elif candidacy.tse_updated_at is None:
+        # Só atualiza candidaturas que ainda não vieram dos Dados Abertos (cadastro mais completo).
         changed = [k for k, v in fields.items() if getattr(candidacy, k) != v]
         for key in changed:
             setattr(candidacy, key, fields[key])
         if changed:
-            candidacy.save(update_fields=[*changed, "updated_at"])
+            apply_search_fields(candidacy)
+            candidacy.save(update_fields=[*changed, "search_text", "sort_name", "updated_at"])
+    elif candidacy.running_mates != fields["running_mates"]:
+        # O vice/suplente como divulgado na apuração continua vindo do arquivo de resultados.
+        candidacy.running_mates = fields["running_mates"]
+        candidacy.save(update_fields=["running_mates", "updated_at"])
 
     sources.track(
         candidacy,

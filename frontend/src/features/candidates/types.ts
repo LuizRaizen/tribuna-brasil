@@ -1,0 +1,86 @@
+/** Contrato de /api/v1/candidates e /api/v1/search (espelha apps/candidates/presenters.py). */
+
+export interface CandidacySummary {
+  tse_id: string
+  ballot_name: string
+  ballot_number: string
+  photo_url: string | null
+  party: string
+  office: { slug: string; name: string }
+  region: { code: string; name: string }
+  election: { slug: string; year: number }
+  registration_status: string
+  first_round_status: string
+}
+
+export interface TicketRef {
+  tse_id: string
+  ballot_name: string
+  office: string
+}
+
+export interface CandidacyDetail extends Omit<CandidacySummary, 'party'> {
+  person: {
+    full_name: string
+    social_name: string
+    birth_date: string | null
+    birth_uf: string
+    birth_city: string
+    gender: string
+  }
+  party: { number: string; acronym: string; name: string }
+  group: { kind: 'party' | 'federation' | 'coalition'; name: string; composition: string }
+  rounds: { number: number; status: string }[]
+  education: string
+  occupation: string
+  spending_limit: string | null
+  registration_process: string
+  ticket_head: TicketRef | null
+  ticket_members: TicketRef[]
+  assets: {
+    count: number
+    total: string
+    updated_at: string | null
+    items: { kind: string; description: string; value: string }[]
+  }
+  results: {
+    round: number
+    votes: number
+    pct_valid: number
+    elected: boolean
+    situation: string
+    status: 'partial' | 'final'
+    pct_sections_counted: number
+    generated_at: string
+  }[]
+  provenance: {
+    source_name: string
+    dataset: string
+    official_url: string
+    portal_url: string
+    fetched_at: string
+    source_updated_at: string | null
+  }[]
+}
+
+export interface PartySummary {
+  number: string
+  acronym: string
+  name: string
+}
+
+export type SearchGroup =
+  | { kind: 'candidacies'; label: string; total: number; items: CandidacySummary[] }
+  | { kind: 'parties'; label: string; total: number; items: PartySummary[] }
+
+export interface SearchResponse {
+  query: string
+  groups: SearchGroup[]
+}
+
+export interface Page<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}

@@ -8,6 +8,9 @@ import { RouteError } from './RouteError'
 // A Home vai no bundle principal (primeira pintura rápida); o resto é carregado sob demanda.
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
 const ResultsPage = lazy(() => import('@/pages/ResultsPage'))
+const SearchPage = lazy(() => import('@/pages/SearchPage'))
+const CandidaciesPage = lazy(() => import('@/pages/CandidaciesPage'))
+const CandidacyPage = lazy(() => import('@/pages/CandidacyPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const SignupPage = lazy(() => import('@/pages/auth/SignupPage'))
 const VerifyEmailSentPage = lazy(() => import('@/pages/auth/VerifyEmailSentPage'))
@@ -25,6 +28,9 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'como-funciona', element: <HowItWorksPage /> },
       { path: 'apuracao', element: <ResultsPage /> },
+      { path: 'busca', element: <SearchPage /> },
+      { path: 'candidaturas', element: <CandidaciesPage /> },
+      { path: 'candidaturas/:tseId', element: <CandidacyPage /> },
       {
         path: 'conta',
         children: [

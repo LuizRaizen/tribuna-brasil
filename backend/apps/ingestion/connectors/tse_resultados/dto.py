@@ -53,8 +53,10 @@ class CandidateDTO(_DTO):
     dt: str = ""  # data de nascimento dd/mm/aaaa
     dvt: str  # destinação do voto ("Válido", "Anulado"...)
     seq: BRInt  # posição na apuração
-    e: Flag  # eleito: "s"/"n"
-    st: str = ""  # situação (ex.: "Eleito", "2º turno"), vazia na apuração parcial
+    # ATENÇÃO: "e" = "s" NÃO significa eleito. No resultado final do 1º turno, quem vai ao
+    # 2º turno também vem com e="s" (situação "2º turno"). A eleição é lida de "st".
+    e: Flag
+    st: str = ""  # situação oficial (ex.: "Eleito", "2º turno", "Não eleito"), vazia na parcial
     vap: BRInt  # votos apurados
     pvapn: BRDecimal  # % dos votos válidos, alta precisão
     vs: list[RunningMateDTO] = Field(default_factory=list)
@@ -121,7 +123,9 @@ class UnifiedResultDTO(_DTO):
     dt: str  # data da totalização
     ht: str
     tf: Flag  # totalização final: s/n
-    md: Flag  # matematicamente definida: n / e (eleito) / s (segundo turno)
+    # Matematicamente definida: n / e (eleito) / s (segundo turno). Some do arquivo depois da
+    # totalização final (verificado em 05/10/2026), por isso é opcional.
+    md: Flag = "n"
     s: SectionsDTO
     e: ElectorateDTO
     v: VotesDTO

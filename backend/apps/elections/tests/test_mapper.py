@@ -107,6 +107,35 @@ def test_flags_inconsistent_vote_sum_as_warning() -> None:
     assert data.warnings and "difere" in data.warnings[0]
 
 
+def test_real_final_file_without_md_and_runoff_is_not_elected() -> None:
+    """Arquivo final real do 1º turno (05/10/2026): sem "md", e quem vai ao 2º turno tem e="s"."""
+    data = parse(fixture_bytes("br-c0001-e006257-u-final.json"), BR)
+    assert data.is_final is True
+    assert data.math_defined == ""
+    assert data.pct_sections_counted == Decimal("100")
+    runoff = [c for c in data.candidates if c.situation == "2º turno"]
+    assert len(runoff) == 2
+    assert not any(c.elected for c in data.candidates)
+
+
+@pytest.mark.parametrize(
+    ("situation", "elected"),
+    [
+        ("Eleito", True),
+        ("Eleito por QP", True),
+        ("ELEITO POR MÉDIA", True),
+        ("2º turno", False),
+        ("Não eleito", False),
+        ("Suplente", False),
+        ("", False),
+    ],
+)
+def test_elected_comes_only_from_official_situation(situation: str, elected: bool) -> None:
+    from apps.ingestion.connectors.tse_resultados.mapper import is_elected
+
+    assert is_elected(situation) is elected
+
+
 def test_final_totalization_is_recognized() -> None:
     payload = fixture_json(BR_PRESIDENT)
     payload["tf"] = "S"

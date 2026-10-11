@@ -101,10 +101,18 @@ export default function HowItWorksPage() {
 
           <Section id="apresentacao" title="Critérios de apresentação">
             <p>
-              A ordem das listas segue critérios neutros e públicos. Candidaturas aparecem em ordem alfabética do nome de
-              urna; resultados aparecem em ordem de votos recebidos. Nenhuma pessoa ou partido recebe destaque pago ou
-              editorial na ordenação.
+              A ordem das listas segue critérios neutros e públicos. Nenhuma pessoa ou partido recebe destaque pago ou
+              editorial.
             </p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>Listas de candidaturas: ordem alfabética do nome de urna, ignorando acentos.</li>
+              <li>
+                Busca: primeiro o número de urna idêntico ao termo, depois o nome de urna idêntico, depois os nomes que
+                começam pelo termo e, por fim, os demais, sempre em ordem alfabética dentro de cada grupo.
+              </li>
+              <li>Resultados de apuração: ordem de votos recebidos, como divulgado pelo TSE.</li>
+              <li>“Eleito” só aparece quando a situação oficial divulgada pelo TSE diz isso.</li>
+            </ul>
           </Section>
 
           <Section id="processos" title="Processos e contas públicas">
@@ -127,8 +135,13 @@ export default function HowItWorksPage() {
 
           <Section id="dados" title="Tratamento de dados pessoais">
             <p>
-              Publicamos apenas dados que os próprios órgãos tornam públicos. Identificadores como CPF são usados
-              internamente apenas para relacionar registros entre fontes e nunca são exibidos.
+              Publicamos apenas dados que os próprios órgãos tornam públicos, e nem todos eles. O TSE divulga CPF e título
+              de eleitor das candidaturas: o título não é guardado, e o CPF é convertido num código irreversível usado
+              apenas para reconhecer a mesma pessoa entre eleições e fontes. Nenhum dos dois é exibido.
+            </p>
+            <p>
+              Bens declarados são autodeclarações da candidatura ao TSE e aparecem acompanhados desse aviso: não são
+              avaliação de mercado nem resultado de auditoria.
             </p>
             <p>
               Da sua conta guardamos o e-mail e a senha, protegida com Argon2id. A sessão usa um cookie inacessível a

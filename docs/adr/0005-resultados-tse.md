@@ -32,6 +32,13 @@ oficial de resultados.
   janela de apuração (do fechamento das urnas até 3 dias depois). Cada feed é uma tarefa isolada, com
   lock contra sobreposição.
 
+## Atualização de 2026-10-11
+
+Com o arquivo final do 1º turno, duas premissas se mostraram erradas e foram corrigidas (ver
+[ADR 0006](0006-candidaturas-tse.md)): o campo `md` some após a totalização final, e `e = "s"` também
+marca quem vai ao 2º turno. "Eleito" passou a vir só da situação oficial (`st`). Payloads rejeitados
+passaram a ser reprocessados.
+
 ## Consequências
 
 - Mudanças de formato do TSE são barradas na validação (`SyncRun` com status "rejeitado") em vez de

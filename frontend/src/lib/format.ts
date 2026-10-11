@@ -46,7 +46,11 @@ const timeOnly = new Intl.DateTimeFormat('pt-BR', {
   timeZone: BRASILIA_TZ,
 })
 
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
 export const formatInt = (n: number) => integer.format(n)
+/** Valor em reais. Aceita a string decimal da API ("4775650.64") sem perder precisão de exibição. */
+export const formatBRL = (value: string | number) => currency.format(Number(value))
 /** Percentual com duas casas, como o TSE divulga ("49,58%"). */
 export const formatPct = (n: number) => `${percent2.format(n)}%`
 export const formatTime = (d: Date) => timeOnly.format(d)
@@ -59,12 +63,24 @@ const LOWER_WORDS = new Set(['da', 'das', 'de', 'do', 'dos', 'e'])
  */
 export function displayName(upper: string): string {
   return upper
-    .toLocaleLowerCase('pt-BR')
     .split(/(\s+)/)
-    .map((word, i) =>
-      i > 0 && LOWER_WORDS.has(word) ? word : word.charAt(0).toLocaleUpperCase('pt-BR') + word.slice(1),
-    )
+    .map((original, i) => {
+      // Siglas sem vogal ("NCT", "PCB") ficam como publicadas.
+      const bare = original.normalize('NFD').replace(/[^A-Za-z]/g, '')
+      if (bare.length >= 2 && !/[aeiouy]/i.test(bare)) return original
+      const word = original.toLocaleLowerCase('pt-BR')
+      if (i > 0 && LOWER_WORDS.has(word)) return word
+      return word.charAt(0).toLocaleUpperCase('pt-BR') + word.slice(1)
+    })
     .join('')
+}
+
+const ACRONYMS: Record<string, string> = { qp: 'QP' }
+
+/** Situações oficiais em caixa-alta ("ELEITO POR QP") exibidas como frase ("Eleito por QP"). */
+export function sentenceCase(upper: string): string {
+  const lower = upper.toLocaleLowerCase('pt-BR').replace(/\b(qp)\b/g, (m) => ACRONYMS[m] ?? m)
+  return lower.charAt(0).toLocaleUpperCase('pt-BR') + lower.slice(1)
 }
 
 export function pluralize(n: number, one: string, many: string): string {

@@ -80,6 +80,7 @@ def snapshot_payload(snapshot: ResultSnapshot) -> dict[str, Any]:
         "candidates": [
             {
                 "id": line.candidacy.pk,
+                "tse_id": line.candidacy.tse_id,
                 "ballot_number": line.candidacy.ballot_number,
                 "ballot_name": line.candidacy.ballot_name,
                 "party": line.candidacy.party.acronym,

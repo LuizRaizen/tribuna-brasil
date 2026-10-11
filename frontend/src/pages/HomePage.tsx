@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { SearchField } from '@/pages/SearchPage'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getElectionStatus } from '@/features/elections/calendar'
 import { ElectionCalendar } from '@/features/elections/ElectionCalendar'
@@ -15,8 +16,9 @@ const MODULES = [
   },
   {
     title: 'Candidaturas',
-    description: 'Situação do registro, número de urna, bens declarados, propostas e prestação de contas.',
-    status: 'Em desenvolvimento',
+    description: 'Situação do registro, número de urna, chapa, resultado e bens declarados de cada candidatura.',
+    status: 'Disponível',
+    to: '/candidaturas',
   },
   {
     title: 'Pessoas públicas',
@@ -73,12 +75,31 @@ function useNow(intervalMs = 60_000) {
 
 export default function HomePage() {
   usePageTitle()
+  const navigate = useNavigate()
   const now = useNow()
   const status = getElectionStatus(now)
 
   return (
     <>
       <ElectionHero status={status} />
+
+      <section aria-labelledby="busca-titulo" className="container-page mt-16 max-w-3xl md:mx-0 md:ml-[max(0px,calc((100vw-72rem)/2))]">
+        <h2 id="busca-titulo" className="text-xl font-bold">
+          Encontre uma candidatura
+        </h2>
+        <form
+          role="search"
+          action="/busca"
+          className="mt-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            const q = String(new FormData(event.currentTarget).get('q') ?? '').trim()
+            navigate(q ? `/busca?q=${encodeURIComponent(q)}` : '/busca')
+          }}
+        >
+          <SearchField />
+        </form>
+      </section>
 
       <section aria-labelledby="modulos-titulo" className="container-page mt-24">
         <div className="max-w-2xl">

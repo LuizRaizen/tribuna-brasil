@@ -81,6 +81,14 @@ class ResultData:
     warnings: tuple[str, ...] = ()
 
 
+def is_elected(situation: str) -> bool:
+    """Eleito só quando a situação oficial diz isso ("Eleito", "Eleito por QP", "Eleito por média").
+
+    O campo "e" do arquivo não serve para isso: ele também marca quem foi ao 2º turno.
+    """
+    return situation.strip().lower().startswith("eleito")
+
+
 def _dt(day: str, time: str) -> datetime:
     return datetime.strptime(f"{day} {time}", "%d/%m/%Y %H:%M:%S").replace(tzinfo=BRT)
 
@@ -128,7 +136,7 @@ def parse(raw: bytes, locator: FeedLocator) -> ResultData:
             votes=cand.vap,
             pct_valid=cand.pvapn,
             position=cand.seq,
-            elected=cand.e == "s",
+            elected=is_elected(cand.st),
             situation=cand.st.strip(),
             vote_destination=cand.dvt.strip(),
             running_mates=tuple(

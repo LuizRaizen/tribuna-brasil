@@ -1,0 +1,67 @@
+import type { CandidacyDetail, CandidacySummary, SearchResponse } from '@/features/candidates/types'
+
+/** Dados fictícios de interface; não correspondem a nenhuma candidatura real. */
+export const summary: CandidacySummary = {
+  tse_id: '900001',
+  ballot_name: 'CANDIDATA ALFA',
+  ballot_number: '91',
+  photo_url: null,
+  party: 'PA',
+  office: { slug: 'governador', name: 'Governador' },
+  region: { code: 'sp', name: 'São Paulo' },
+  election: { slug: 'eleicoes-gerais-2026', year: 2026 },
+  registration_status: 'DEFERIDO',
+  first_round_status: 'ELEITO',
+}
+
+export function detail(overrides: Partial<CandidacyDetail> = {}): CandidacyDetail {
+  return {
+    ...summary,
+    party: { number: '91', acronym: 'PA', name: 'PARTIDO ALFA' },
+    person: {
+      full_name: 'CANDIDATA ALFA DA SILVA',
+      social_name: '',
+      birth_date: '1970-05-02',
+      birth_uf: 'SP',
+      birth_city: 'Campinas',
+      gender: 'FEMININO',
+    },
+    group: { kind: 'federation', name: 'FEDERAÇÃO EXEMPLO', composition: 'PA / PB' },
+    rounds: [{ number: 1, status: 'ELEITO POR QP' }],
+    education: 'SUPERIOR COMPLETO',
+    occupation: 'PROFESSORA',
+    spending_limit: '1270629.01',
+    registration_process: '06007573320266070000',
+    ticket_head: null,
+    ticket_members: [{ tse_id: '900002', ballot_name: 'VICE BETA', office: 'Vice-governador' }],
+    assets: {
+      count: 2,
+      total: '350000.50',
+      updated_at: '2026-10-05T12:00:00Z',
+      items: [
+        { kind: 'Casa', description: 'CASA EM CAMPINAS', value: '300000.00' },
+        { kind: 'Caderneta de poupança', description: '', value: '50000.50' },
+      ],
+    },
+    results: [],
+    provenance: [
+      {
+        source_name: 'Tribunal Superior Eleitoral (TSE)',
+        dataset: 'Portal de Dados Abertos do TSE',
+        official_url: 'https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2026.zip',
+        portal_url: 'https://dadosabertos.tse.jus.br/dataset/candidatos-2026',
+        fetched_at: '2026-10-11T15:00:00Z',
+        source_updated_at: '2026-10-11T12:30:59Z',
+      },
+    ],
+    ...overrides,
+  }
+}
+
+export const search: SearchResponse = {
+  query: 'alfa',
+  groups: [
+    { kind: 'candidacies', label: 'Candidaturas', total: 12, items: [summary] },
+    { kind: 'parties', label: 'Partidos', total: 1, items: [{ number: '91', acronym: 'PA', name: 'PARTIDO ALFA' }] },
+  ],
+}

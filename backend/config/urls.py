@@ -14,6 +14,7 @@ api_v1: list[URLPattern | URLResolver] = [
     # /api/v1/auth/browser/v1/auth/login, .../auth/signup, .../auth/sessions etc.
     path("auth/", include("allauth.headless.urls")),
     path("", include("apps.elections.api.urls")),
+    path("", include("apps.candidates.api.urls")),
 ]
 
 urlpatterns = [

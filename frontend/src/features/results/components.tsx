@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { BallotDigits } from '@/components/ui/BallotDigits'
 import { ContextNote } from '@/components/ui/ContextNote'
 import { SourceSeal } from '@/components/ui/SourceSeal'
@@ -70,7 +71,9 @@ function CandidateRow({ candidate, rank }: { candidate: CandidateResult; rank: n
       <BallotDigits value={candidate.ballot_number} label={`Número ${candidate.ballot_number}`} size="sm" />
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-display text-lg font-bold">{displayName(candidate.ballot_name)}</span>
+          <Link to={`/candidaturas/${candidate.tse_id}`} className="font-display text-lg font-bold text-ink">
+            {displayName(candidate.ballot_name)}
+          </Link>
           {candidate.elected && (
             <span className="inline-flex items-center gap-1 rounded-full bg-final-soft px-2 py-0.5 text-xs font-semibold text-final">
               <svg viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

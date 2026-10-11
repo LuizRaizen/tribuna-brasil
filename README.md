@@ -68,7 +68,15 @@ docker compose exec backend python manage.py carregar_eleicoes_2026
 docker compose exec backend python manage.py coletar_resultados --cargo presidente --local br
 ```
 
-O painel fica em http://localhost:5173/apuracao. No Admin, em "Feeds de resultados", é possível
+Candidaturas, informações complementares e bens (Portal de Dados Abertos do TSE; roda sozinha todo
+dia às 06h30):
+
+```bash
+docker compose exec backend python manage.py importar_candidaturas --ano 2026
+```
+
+O painel fica em http://localhost:5173/apuracao, a busca em `/busca` e as candidaturas em
+`/candidaturas`. No Admin, em "Feeds de resultados", é possível
 ligar ou desligar feeds e disparar uma coleta; "Sincronizações" mostra cada coleta e seu resultado.
 
 Sem Docker e sem Redis, use o modo leve no `.env` (`CACHE_BACKEND=locmem` e `RESULTS_BUS=memory`):
@@ -114,6 +122,9 @@ docs/       Plano, ADRs e guia de identidade visual
 | `GET /api/v1/results/{eleicao}/{turno}/` | Feeds disponíveis no turno |
 | `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/` | Último resultado oficial, com procedência |
 | `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/stream/` | Atualizações ao vivo (SSE) |
+| `GET /api/v1/search/?q=` | Busca agrupada (candidaturas e partidos) |
+| `GET /api/v1/candidates/?cargo=&uf=&partido=&q=` | Candidaturas em ordem alfabética |
+| `GET /api/v1/candidates/{sq_candidato}/` | Candidatura completa, com bens, chapa, resultado e fontes |
 | `GET /api/v1/schema/` | OpenAPI (habilitado em desenvolvimento) |
 
 ## Documentação
