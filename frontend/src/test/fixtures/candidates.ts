@@ -44,6 +44,17 @@ export function detail(overrides: Partial<CandidacyDetail> = {}): CandidacyDetai
       ],
     },
     results: [],
+    person_id: 42,
+    previous_candidacies: 2,
+    proposals: [
+      {
+        order: 1,
+        url: '/api/v1/candidates/900001/proposals/1.pdf',
+        size_bytes: 1_572_864,
+        source_url: 'https://cdn.tse.jus.br/estatistica/sead/odsele/proposta_governo/proposta_governo_2026_SP.zip',
+        fetched_at: '2026-10-11T15:00:00Z',
+      },
+    ],
     provenance: [
       {
         source_name: 'Tribunal Superior Eleitoral (TSE)',

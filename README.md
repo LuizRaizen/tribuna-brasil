@@ -79,11 +79,17 @@ docker compose exec backend python manage.py carregar_eleicoes_2026
 docker compose exec backend python manage.py coletar_resultados --cargo presidente --local br
 ```
 
-Candidaturas, informações complementares e bens (Portal de Dados Abertos do TSE; roda sozinha todo
-dia às 06h30):
+Candidaturas, informações complementares, bens e histórico de candidaturas desde 2004 (Portal de Dados
+Abertos do TSE; roda sozinha todo dia às 06h30):
 
 ```bash
 docker compose exec backend python manage.py importar_candidaturas --ano 2026
+```
+
+Propostas de governo (PDFs oficiais, por UF; `BR` é presidente). Não rodam sozinhas por causa do volume:
+
+```bash
+docker compose exec backend python manage.py importar_propostas --ano 2026 --uf BR,SP,RJ
 ```
 
 O painel fica em http://localhost:5173/apuracao, a busca em `/busca` e as candidaturas em
@@ -135,7 +141,12 @@ docs/       Plano, ADRs e guia de identidade visual
 | `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/stream/` | Atualizações ao vivo (SSE) |
 | `GET /api/v1/search/?q=` | Busca agrupada (candidaturas e partidos) |
 | `GET /api/v1/candidates/?cargo=&uf=&partido=&q=` | Candidaturas em ordem alfabética |
-| `GET /api/v1/candidates/{sq_candidato}/` | Candidatura completa, com bens, chapa, resultado e fontes |
+| `GET /api/v1/candidates/{sq_candidato}/` | Candidatura completa, com bens, chapa, resultado, propostas e fontes |
+| `GET /api/v1/candidates/{sq_candidato}/proposals/{n}.pdf` | PDF oficial da proposta de governo |
+| `GET /api/v1/people/{id}/` | Trajetória da pessoa: candidaturas desde 2004, com fontes |
+| `GET/POST /api/v1/watchlist/` · `GET/DELETE /api/v1/watchlist/{tipo}/{id}/` | Acompanhamento (privado, exige login) |
+| `GET /api/v1/notifications/` · `GET .../unread-count/` · `POST .../read/` | Avisos de mudanças (exige login) |
+| `POST /api/v1/corrections/` | Pedido de correção de informação (sem login, com limite) |
 | `GET /api/v1/schema/` | OpenAPI (habilitado em desenvolvimento) |
 
 ## Documentação

@@ -1,15 +1,4 @@
-import { expect, test } from './fixtures'
-
-const ELECTION = {
-  slug: 'eleicoes-gerais-2026',
-  name: 'Eleições Gerais 2026',
-  year: 2026,
-  kind: 'general',
-  rounds: [
-    { number: 1, date: '2026-10-04', opens_at: '2026-10-04T08:00:00-03:00', closes_at: '2026-10-04T17:00:00-03:00' },
-    { number: 2, date: '2026-10-25', opens_at: '2026-10-25T08:00:00-03:00', closes_at: '2026-10-25T17:00:00-03:00' },
-  ],
-}
+import { ELECTION, expect, test } from './fixtures'
 
 const FEEDS = [
   { office: { slug: 'presidente', name: 'Presidente' }, region: { code: 'br', name: 'Brasil', kind: 'br' }, has_data: true, last_generated_at: null },

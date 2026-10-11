@@ -99,3 +99,74 @@ class DeclaredAsset(models.Model):
 
     def __str__(self) -> str:
         return f"{self.kind}: {self.value}"
+
+
+class HistoricalCandidacy(models.Model):
+    """Candidatura de outra eleição (desde 2004), do arquivo "Histórico de candidaturas" do TSE.
+
+    Guardada como publicada: o TSE tem lacunas (ex.: situação "#NULO" em turnos já decididos) e
+    o Tribuna não as preenche por inferência (escopo §44).
+    """
+
+    person = models.ForeignKey(
+        "people.Person", on_delete=models.CASCADE, related_name="historical_candidacies"
+    )
+    tse_id = models.CharField("sequencial no TSE", max_length=20)
+    year = models.PositiveSmallIntegerField("ano")
+    round = models.PositiveSmallIntegerField("turno")
+    election_name = models.CharField("eleição", max_length=200)
+    is_supplementary = models.BooleanField("eleição suplementar", default=False)
+    election_date = models.DateField("data", null=True, blank=True)
+    office_code = models.CharField(max_length=4)
+    office_name = models.CharField("cargo", max_length=80)
+    uf = models.CharField(max_length=2)
+    place_name = models.CharField("local", max_length=120)
+    ballot_number = models.CharField(max_length=8, blank=True)
+    ballot_name = models.CharField(max_length=120, blank=True)
+    party_acronym = models.CharField(max_length=30, blank=True)
+    party_name = models.CharField(max_length=200, blank=True)
+    registration_status = models.CharField("situação da candidatura", max_length=80, blank=True)
+    result = models.CharField("situação após o turno", max_length=80, blank=True)
+
+    class Meta:
+        verbose_name = "candidatura anterior"
+        verbose_name_plural = "candidaturas anteriores"
+        ordering = ("person", "-year", "round")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["person", "tse_id", "year", "round", "office_code"],
+                name="uniq_historical_candidacy",
+            )
+        ]
+        indexes = [models.Index(fields=["person", "-year"])]
+
+    def __str__(self) -> str:
+        return f"{self.year} {self.office_name} ({self.place_name})"
+
+
+def proposal_upload_to(instance: "Proposal", filename: str) -> str:
+    return f"propostas/{instance.candidacy.contest.election.year}/{filename}"
+
+
+class Proposal(models.Model):
+    """Proposta de governo registrada no TSE (PDF oficial, sem resumo nem interpretação)."""
+
+    candidacy = models.ForeignKey(Candidacy, on_delete=models.CASCADE, related_name="proposals")
+    order = models.PositiveSmallIntegerField("ordem")
+    file = models.FileField(upload_to=proposal_upload_to, max_length=300)
+    size_bytes = models.PositiveIntegerField()
+    content_hash = models.CharField("SHA-256", max_length=64)
+    source_url = models.URLField("pacote oficial", max_length=500)
+    source_member = models.CharField("arquivo no pacote", max_length=200)
+    fetched_at = models.DateTimeField("coletado em")
+
+    class Meta:
+        verbose_name = "proposta de governo"
+        verbose_name_plural = "propostas de governo"
+        ordering = ("candidacy", "order")
+        constraints = [
+            models.UniqueConstraint(fields=["candidacy", "order"], name="uniq_proposal_order")
+        ]
+
+    def __str__(self) -> str:
+        return f"Proposta {self.order} de {self.candidacy}"

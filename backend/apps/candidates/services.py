@@ -19,17 +19,21 @@ from apps.ingestion.connectors.tse_candidaturas.rows import (
     AssetRecord,
     CandidacyRecord,
     FileRejected,
+    HistoryRecord,
     assets_fingerprint,
     parse_assets,
     parse_candidacies,
+    parse_history,
 )
 from apps.ingestion.http import SourceError
+from apps.notifications.models import Notification
+from apps.notifications.services import Event, notify
 from apps.parties.models import Party
 from apps.people.models import Person
 from apps.sources import services as sources
 from apps.sources.models import DataSnapshot, ExternalRecord, Source, SyncRun
 
-from .models import Candidacy, DeclaredAsset
+from .models import Candidacy, DeclaredAsset, HistoricalCandidacy
 from .search import apply_search_fields
 
 logger = structlog.get_logger(__name__)
@@ -61,7 +65,9 @@ class ImportReport:
     unchanged: int = 0
     rejected: int = 0
     assets_replaced: int = 0
+    history_rows: int = 0
     errors: list[str] = field(default_factory=list)
+    events: list[Event] = field(default_factory=list)
 
 
 def import_candidacies(year: int = 2026) -> ImportReport:
@@ -108,6 +114,7 @@ def import_candidacies(year: int = 2026) -> ImportReport:
             election_codes=ELECTION_CODES[year],
         )
         assets = parse_assets(downloaded["assets"].content, year=year)
+        history = parse_history(downloaded["history"].content, year=year)
     except FileRejected as exc:
         sources.finish_run(run, SyncRun.Status.REJECTED, error=str(exc), rejected=1)
         return ImportReport(SyncRun.Status.REJECTED, errors=[str(exc)])
@@ -125,8 +132,10 @@ def import_candidacies(year: int = 2026) -> ImportReport:
             SyncRun.Status.REJECTED, rejected=len(parsed.rejected), errors=[message]
         )
 
-    report = persist(year, parsed.records, assets, source, snapshots)
+    report = persist(year, parsed.records, assets, history, source, snapshots)
     report.rejected = len(parsed.rejected)
+    # Avisos só depois da gravação confirmada: ninguém é avisado de algo que não foi salvo.
+    notify(report.events)
     # Marca os arquivos como processados por esta execução (bem-sucedida).
     DataSnapshot.objects.filter(pk__in=[s.pk for s in snapshots.values()]).update(sync_run=run)
     sources.finish_run(
@@ -225,6 +234,7 @@ def persist(
     year: int,
     records: dict[str, CandidacyRecord],
     assets: dict[str, list[AssetRecord]],
+    history: list[HistoryRecord],
     source: Source,
     snapshots: dict[str, DataSnapshot],
 ) -> ImportReport:
@@ -321,6 +331,7 @@ def persist(
             getattr(candidacy, f) != v for f, v in values.items()
         )
         if changed:
+            report.events.extend(_change_events(candidacy, person, values))
             candidacy.person = person
             for f, v in values.items():
                 setattr(candidacy, f, v)
@@ -331,6 +342,7 @@ def persist(
         else:
             report.unchanged += 1
     Candidacy.objects.bulk_create(to_create, batch_size=1000)
+    created_ids = {c.pk for c in to_create}
     if to_update:
         Candidacy.objects.bulk_update(
             to_update,
@@ -340,11 +352,104 @@ def persist(
     if orphans:
         Person.objects.filter(pk__in=orphans, candidacies__isnull=True).delete()
 
-    by_id = {c.tse_id: c for c in Candidacy.objects.filter(tse_id__in=list(records))}
+    by_id = {
+        c.tse_id: c
+        for c in Candidacy.objects.select_related("person").filter(tse_id__in=list(records))
+    }
     _link_tickets(records, by_id)
-    report.assets_replaced = _replace_assets(by_id, assets)
+    replaced = _replace_assets(by_id, assets)
+    report.assets_replaced = len(replaced)
+    # Bens de candidaturas recém-criadas não geram aviso (ninguém as acompanhava ainda).
+    report.events.extend(
+        Event(
+            kind=Notification.Kind.ASSETS,
+            title=f"Bens declarados de {display(c.ballot_name)} foram atualizados no TSE",
+            body="A lista de bens declarados à Justiça Eleitoral mudou desde a última consulta.",
+            url=f"/candidaturas/{c.tse_id}#bens",
+            dedupe_key=f"assets:{c.tse_id}:{c.assets_hash}",
+            targets=(c, c.person),
+        )
+        for c in replaced
+        if c.pk not in created_ids
+    )
+    report.history_rows = _replace_history(history, by_id)
     _track(records, by_id, source, snapshots)
     return report
+
+
+def display(name: str) -> str:
+    """Nome de urna legível nos avisos ("FULANO DE TAL" → "Fulano de Tal")."""
+    lower_words = {"da", "das", "de", "do", "dos", "e"}
+    words = name.lower().split()
+    return " ".join(w if i and w in lower_words else w.capitalize() for i, w in enumerate(words))
+
+
+def _change_events(candidacy: Candidacy, person: Person, new: dict[str, Any]) -> list[Event]:
+    """Avisos sobre mudanças oficiais relevantes (situação do registro ou de um turno)."""
+    events = []
+    name = display(candidacy.ballot_name)
+    url = f"/candidaturas/{candidacy.tse_id}"
+    old_status, new_status = candidacy.registration_status, new["registration_status"]
+    if old_status and new_status and old_status != new_status:
+        events.append(
+            Event(
+                kind=Notification.Kind.REGISTRATION,
+                title=f"A situação do registro de {name} mudou",
+                body=f"De “{old_status.capitalize()}” para “{new_status.capitalize()}”, "
+                "segundo o TSE.",
+                url=url,
+                dedupe_key=f"registration:{candidacy.tse_id}:{new_status}",
+                targets=(candidacy, person),
+            )
+        )
+    for number, round_data in new["rounds"].items():
+        old = candidacy.rounds.get(number, {}).get("status", "")
+        status = round_data.get("status", "")
+        if status and status != old:
+            events.append(
+                Event(
+                    kind=Notification.Kind.ROUND_STATUS,
+                    title=f"{name}: situação no {number}º turno atualizada",
+                    body=f"O TSE informa: “{status.capitalize()}”.",
+                    url=url,
+                    dedupe_key=f"round:{candidacy.tse_id}:{number}:{status}",
+                    targets=(candidacy, person),
+                )
+            )
+    return events
+
+
+def _replace_history(history: list[HistoryRecord], by_id: dict[str, Candidacy]) -> int:
+    """Substitui o histórico das pessoas presentes no arquivo (o arquivo é sempre completo)."""
+    rows: dict[tuple[int, str, int, int, str], HistoricalCandidacy] = {}
+    for record in history:
+        current = by_id.get(record.current_tse_id)
+        if current is None:
+            continue
+        key = (current.person_id, record.tse_id, record.year, record.round, record.office_code)
+        rows[key] = HistoricalCandidacy(
+            person_id=current.person_id,
+            tse_id=record.tse_id,
+            year=record.year,
+            round=record.round,
+            election_name=record.election_name,
+            is_supplementary=record.is_supplementary,
+            election_date=record.election_date,
+            office_code=record.office_code,
+            office_name=record.office_name,
+            uf=record.uf,
+            place_name=record.place_name,
+            ballot_number=record.ballot_number,
+            ballot_name=record.ballot_name,
+            party_acronym=record.party_acronym,
+            party_name=record.party_name,
+            registration_status=record.registration_status,
+            result=record.result,
+        )
+    people = {c.person_id for c in by_id.values()}
+    HistoricalCandidacy.objects.filter(person_id__in=people).delete()
+    HistoricalCandidacy.objects.bulk_create(rows.values(), batch_size=2000)
+    return len(rows)
 
 
 def _link_tickets(records: dict[str, CandidacyRecord], by_id: dict[str, Candidacy]) -> None:
@@ -368,14 +473,20 @@ def _link_tickets(records: dict[str, CandidacyRecord], by_id: dict[str, Candidac
         Candidacy.objects.bulk_update(changed, ["ticket_head"], batch_size=1000)
 
 
-def _replace_assets(by_id: dict[str, Candidacy], assets: dict[str, list[AssetRecord]]) -> int:
+def _replace_assets(
+    by_id: dict[str, Candidacy], assets: dict[str, list[AssetRecord]]
+) -> list[Candidacy]:
+    """Substitui os bens que mudaram. Retorna as candidaturas cujos bens foram *atualizados*."""
     replaced: list[Candidacy] = []
+    changed: list[Candidacy] = []
     new_rows: list[DeclaredAsset] = []
     for sq, candidacy in by_id.items():
         items = assets.get(sq, [])
         fingerprint = assets_fingerprint(items) if items else ""
         if fingerprint == candidacy.assets_hash:
             continue
+        if candidacy.assets_hash:
+            changed.append(candidacy)  # já havia bens: é uma atualização, não a primeira carga
         candidacy.assets_hash = fingerprint
         replaced.append(candidacy)
         new_rows.extend(
@@ -393,7 +504,7 @@ def _replace_assets(by_id: dict[str, Candidacy], assets: dict[str, list[AssetRec
         DeclaredAsset.objects.filter(candidacy__in=replaced).delete()
         DeclaredAsset.objects.bulk_create(new_rows, batch_size=2000)
         Candidacy.objects.bulk_update(replaced, ["assets_hash"], batch_size=1000)
-    return len(replaced)
+    return changed
 
 
 def _track(

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { useLocation } from 'react-router'
+import { Link, useLocation } from 'react-router'
+import { useWatchlist } from '@/features/watchlist/api'
 import { Alert } from '@/components/ui/Alert'
 import { Button } from '@/components/ui/Button'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -8,7 +9,7 @@ import { useChangePassword, useEndSessions, useLogout, useSession, useSessions, 
 import { describeUserAgent } from '@/features/auth/describeUserAgent'
 import { FormErrors, fieldError } from '@/features/auth/FormErrors'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { formatDateTime } from '@/lib/format'
+import { displayName, formatDateTime } from '@/lib/format'
 
 function Panel({ id, title, description, children }: { id: string; title: string; description?: string; children: React.ReactNode }) {
   return (
@@ -80,6 +81,44 @@ function SessionsPanel() {
   )
 }
 
+function WatchlistPanel() {
+  const list = useWatchlist(true)
+  const items = list.data?.items ?? []
+  return (
+    <Panel
+      id="acompanhamento"
+      title="Acompanhamento"
+      description="Candidaturas e pessoas que você segue. Esta lista é privada: só você a vê."
+    >
+      {list.isPending && <Skeleton className="h-16 w-full" />}
+      {list.isError && <FormErrors error={list.error} />}
+      {list.data && items.length === 0 && (
+        <p className="text-muted">
+          Você ainda não acompanha nada. Use o botão “Acompanhar” nas páginas de{' '}
+          <Link to="/candidaturas">candidaturas</Link> e pessoas para receber avisos de mudanças.
+        </p>
+      )}
+      {items.length > 0 && (
+        <>
+          <ul className="divide-y divide-line border-y border-line">
+            {items.map((item) => (
+              <li key={`${item.kind}-${item.id}`} className="py-3">
+                <Link to={item.url} className="font-semibold">
+                  {displayName(item.label)}
+                </Link>
+                <span className="block text-sm text-muted">{item.detail}</span>
+              </li>
+            ))}
+          </ul>
+          <Link to="/avisos" className="mt-4 inline-block font-semibold">
+            Ver avisos
+          </Link>
+        </>
+      )}
+    </Panel>
+  )
+}
+
 function PasswordPanel() {
   const change = useChangePassword()
 
@@ -142,12 +181,7 @@ export default function AccountPage() {
       </header>
       {notice && <Alert tone="success" className="mb-8">{notice}</Alert>}
 
-      <Panel id="acompanhamento" title="Acompanhamento" description="Pessoas, eleições e projetos que você segue.">
-        <p className="text-muted">
-          Você ainda não acompanha nada. Quando as páginas de candidaturas e pessoas entrarem no ar, use o botão
-          “Acompanhar” para receber avisos de novas movimentações.
-        </p>
-      </Panel>
+      <WatchlistPanel />
       <SessionsPanel />
       <PasswordPanel />
     </div>

@@ -15,6 +15,10 @@ api_v1: list[URLPattern | URLResolver] = [
     path("auth/", include("allauth.headless.urls")),
     path("", include("apps.elections.api.urls")),
     path("", include("apps.candidates.api.urls")),
+    path("", include("apps.people.api")),
+    path("", include("apps.watchlist.api.urls")),
+    path("", include("apps.notifications.api.urls")),
+    path("", include("apps.feedback.api.urls")),
 ]
 
 urlpatterns = [

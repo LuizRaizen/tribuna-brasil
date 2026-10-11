@@ -9,6 +9,25 @@ export const election: ElectionSummary = {
     { number: 1, date: '2026-10-04', opens_at: '2026-10-04T08:00:00-03:00', closes_at: '2026-10-04T17:00:00-03:00' },
     { number: 2, date: '2026-10-25', opens_at: '2026-10-25T08:00:00-03:00', closes_at: '2026-10-25T17:00:00-03:00' },
   ],
+  offices: ['Presidente', 'Governador', 'Senador', 'Deputado federal', 'Deputado estadual'],
+  provenance: {
+    name: 'Tribunal Superior Eleitoral (TSE)',
+    url: 'https://resultados.tse.jus.br/oficial/comum/config/ele-c.json',
+    checked_at: '2026-10-11T12:00:00Z',
+  },
+}
+
+/** Eleição seguinte (fictícia nas datas de horário) para testar a virada de calendário. */
+export const municipal2028: ElectionSummary = {
+  slug: 'eleicoes-municipais-2028',
+  name: 'Eleições Municipais 2028',
+  year: 2028,
+  kind: 'municipal',
+  rounds: [
+    { number: 1, date: '2028-10-01', opens_at: '2028-10-01T08:00:00-03:00', closes_at: '2028-10-01T17:00:00-03:00' },
+  ],
+  offices: ['Prefeito', 'Vereador'],
+  provenance: election.provenance,
 }
 
 export const feeds: FeedSummary[] = [

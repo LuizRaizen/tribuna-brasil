@@ -368,3 +368,26 @@ Correções vindas dos dados reais do 1º turno:
 Próximos passos sugeridos (Sprint 4 — Pessoas): linha do tempo da pessoa com o histórico de candidaturas
 do TSE (`historico_candidatura_2026.zip`), propostas de governo (PDFs oficiais), prestação de contas
 (doadores e fornecedores), watchlist e notificações, formulário de correção de informação.
+
+## 12. Sprint 4 — Pessoas, acompanhamento e correções (11/10/2026)
+
+Entregue e validado com os arquivos reais do TSE (ver
+[ADR 0007](adr/0007-pessoas-acompanhamento-correcoes.md)):
+
+| Tarefa | Situação |
+|---|---|
+| Trajetória da pessoa desde 2004 (44.591 candidaturas anteriores de 14.646 pessoas) | ✅ |
+| Lacunas do arquivo oficial (1.894) exibidas como "Não informado pelo TSE", sem inferência | ✅ |
+| Turno futuro mostrado como "votação em …"; situação de registro incomum mostrada com o texto oficial | ✅ |
+| Propostas de governo: PDFs oficiais por UF, servidos como publicados (22 de BR e SP no teste local) | ✅ |
+| Acompanhar candidatura ou pessoa (lista privada, sem uso para recomendação) | ✅ |
+| Avisos no app: registro, situação por turno, bens, resultado final, nova proposta; sem duplicatas | ✅ |
+| "Corrigir uma informação" nas páginas de candidatura, pessoa e apuração, com limite e armadilha de robôs | ✅ |
+| Calendário da Home lido da API (nenhuma data fixa no frontend) | ✅ |
+| Prestação de contas (doadores e fornecedores) | ⏭️ Sprint 5 |
+
+Fica para depois: avisos por e-mail (depende da hospedagem) e mandatos exercidos (Câmara e Senado).
+
+Próximos passos sugeridos (Sprint 5): prestação de contas de campanha (arquivo de ~180 MB do TSE, ainda
+parcial até as prestações finais), Câmara e Senado (mandatos, votações, despesas), DataJud (CNJ) e TCU,
+sempre com o contexto exigido pelo escopo para dados judiciais e financeiros.

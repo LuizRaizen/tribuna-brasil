@@ -53,6 +53,9 @@ export interface CandidacyDetail extends Omit<CandidacySummary, 'party'> {
     pct_sections_counted: number
     generated_at: string
   }[]
+  person_id: number
+  previous_candidacies: number
+  proposals: { order: number; url: string; size_bytes: number; source_url: string; fetched_at: string }[]
   provenance: {
     source_name: string
     dataset: string

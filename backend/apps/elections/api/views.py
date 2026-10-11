@@ -5,7 +5,7 @@ from asgiref.sync import sync_to_async
 from django.http import Http404, HttpRequest, HttpResponse, StreamingHttpResponse
 from django.views.decorators.http import require_GET
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_field
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -13,9 +13,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.elections import selectors
+from apps.elections.models import Election
 from apps.elections.services import bus
 from apps.elections.services.presenters import feed_descriptor, to_json
 from apps.elections.services.results import latest_payload
+from apps.sources.models import SyncRun
 
 # Resultados mudam a cada poucos minutos; um cache curto absorve picos sem atrasar a apuração.
 PUBLIC_CACHE = "public, max-age=5, stale-while-revalidate=10"
@@ -28,12 +30,41 @@ class RoundSerializer(serializers.Serializer):
     closes_at = serializers.DateTimeField(source="closes_datetime")
 
 
+# Cargos principais exibidos no resumo da eleição (vice e suplentes vêm junto com o titular).
+MAIN_OFFICES = ["1", "3", "5", "6", "7", "8", "11", "13"]
+
+
 class ElectionSerializer(serializers.Serializer):
     slug = serializers.SlugField()
     name = serializers.CharField()
     year = serializers.IntegerField()
     kind = serializers.CharField()
     rounds = RoundSerializer(many=True)
+    offices = serializers.SerializerMethodField()
+    provenance = serializers.SerializerMethodField()
+
+    def get_offices(self, election: Election) -> list[str]:
+        names = (
+            election.contests.filter(office__tse_code__in=MAIN_OFFICES)
+            .order_by("office__tse_code")
+            .values_list("office__name", flat=True)
+            .distinct()
+        )
+        return list(dict.fromkeys(names))
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_provenance(self, election: Election) -> dict[str, object]:
+        """Procedência do calendário: o índice oficial do TSE, com a data da última carga."""
+        run = (
+            SyncRun.objects.filter(job="configuracao", status=SyncRun.Status.SUCCESS)
+            .order_by("-finished_at")
+            .first()
+        )
+        return {
+            "name": "Tribunal Superior Eleitoral (TSE)",
+            "url": "https://resultados.tse.jus.br/oficial/comum/config/ele-c.json",
+            "checked_at": run.finished_at if run else election.updated_at,
+        }
 
 
 class ElectionListView(APIView):

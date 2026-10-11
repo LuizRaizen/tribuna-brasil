@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     "apps.parties",
     "apps.elections",
     "apps.candidates",
+    "apps.watchlist",
+    "apps.notifications",
+    "apps.feedback",
 ]
 
 MIDDLEWARE = [

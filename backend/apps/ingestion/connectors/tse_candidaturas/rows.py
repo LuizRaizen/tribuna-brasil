@@ -294,6 +294,79 @@ def parse_assets(assets_zip: bytes, *, year: int) -> dict[str, list[AssetRecord]
     return assets
 
 
+@dataclass(frozen=True)
+class HistoryRecord:
+    current_tse_id: str  # candidatura atual (ex.: 2026) que liga o registro à pessoa
+    tse_id: str
+    year: int
+    round: int
+    election_name: str
+    is_supplementary: bool
+    election_date: date | None
+    office_code: str
+    office_name: str
+    uf: str
+    place_name: str
+    ballot_number: str
+    ballot_name: str
+    party_acronym: str
+    party_name: str
+    registration_status: str
+    result: str
+
+
+HISTORY_COLUMNS = {
+    "SQ_CANDIDATO_ATUAL", "ANO_ELEICAO", "NR_TURNO", "DS_ELEICAO", "NM_TIPO_ELEICAO",
+    "DT_ELEICAO", "CD_CARGO", "DS_CARGO", "SG_UF", "NM_UE", "SQ_CANDIDATO", "NR_CANDIDATO",
+    "NM_URNA_CANDIDATO", "SG_PARTIDO", "NM_PARTIDO", "DS_SITUACAO_CANDIDATURA",
+    "DS_SITUACAO_JULGAMENTO", "DS_SIT_TOT_TURNO",
+}  # fmt: skip
+
+
+def _history_date(value: str) -> date | None:
+    text = clean(value)[:10]
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").date() if text else None
+    except ValueError:
+        return None
+
+
+def parse_history(history_zip: bytes, *, year: int) -> list[HistoryRecord]:
+    """Candidaturas anteriores de quem concorre em `year`. Exclui a própria candidatura atual."""
+    records: list[HistoryRecord] = []
+    for row in read_csv(history_zip, f"historico_candidatura_{year}", HISTORY_COLUMNS):
+        current = clean(row["SQ_CANDIDATO_ATUAL"])
+        tse_id = clean(row["SQ_CANDIDATO"])
+        past_year = clean(row["ANO_ELEICAO"])
+        if not (current.isdigit() and tse_id.isdigit() and past_year.isdigit()):
+            continue
+        if tse_id == current and int(past_year) == year:
+            continue  # a candidatura atual já está no cadastro principal
+        records.append(
+            HistoryRecord(
+                current_tse_id=current,
+                tse_id=tse_id,
+                year=int(past_year),
+                round=int(clean(row["NR_TURNO"]) or 1),
+                election_name=clean(row["DS_ELEICAO"]),
+                is_supplementary="SUPLEMENTAR" in clean(row["NM_TIPO_ELEICAO"]).upper(),
+                election_date=_history_date(row["DT_ELEICAO"]),
+                office_code=clean(row["CD_CARGO"]),
+                office_name=clean(row["DS_CARGO"]),
+                uf=clean(row["SG_UF"]).upper()[:2],  # em eleição municipal, SG_UE é o município
+                place_name=clean(row["NM_UE"]),
+                ballot_number=clean(row["NR_CANDIDATO"]),
+                ballot_name=clean(row["NM_URNA_CANDIDATO"]),
+                party_acronym=clean(row["SG_PARTIDO"]),
+                party_name=clean(row["NM_PARTIDO"]),
+                registration_status=clean(row["DS_SITUACAO_CANDIDATURA"])
+                or clean(row["DS_SITUACAO_JULGAMENTO"]),
+                result=clean(row["DS_SIT_TOT_TURNO"]),
+            )
+        )
+    return records
+
+
 def assets_fingerprint(items: list[AssetRecord]) -> str:
     payload = "|".join(f"{a.order}:{a.kind}:{a.description}:{a.value}" for a in items)
     return hashlib.sha256(payload.encode()).hexdigest()

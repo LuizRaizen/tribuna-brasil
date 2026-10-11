@@ -1,6 +1,7 @@
 import { Link, NavLink, useLocation } from 'react-router'
 import { Logo } from '@/components/brand/Logo'
 import { useSession } from '@/features/auth/api'
+import { useUnreadCount } from '@/features/notifications/api'
 import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { cx } from '@/lib/cx'
 
@@ -10,6 +11,32 @@ export const NAV_ITEMS = [
   { to: '/candidaturas', label: 'Candidaturas', end: false },
   { to: '/como-funciona', label: 'Como funciona', end: false },
 ] as const
+
+/** Link para os avisos com o número de não lidos (sem dropdown: funciona em qualquer navegador). */
+function NotificationsBell() {
+  const unread = useUnreadCount(true).data?.unread ?? 0
+  const label = unread === 0 ? 'Avisos' : `Avisos, ${unread} ${unread === 1 ? 'não lido' : 'não lidos'}`
+  return (
+    <Link
+      to="/avisos"
+      aria-label={label}
+      className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-ink no-underline hover:bg-sunken"
+    >
+      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z" strokeLinejoin="round" />
+        <path d="M10 20.5a2.2 2.2 0 0 0 4 0" strokeLinecap="round" />
+      </svg>
+      {unread > 0 && (
+        <span
+          aria-hidden="true"
+          className="absolute top-1 right-1 grid min-w-5 place-items-center rounded-full bg-amarelo px-1 text-[0.6875rem] leading-5 font-bold text-ink"
+        >
+          {unread > 99 ? '99+' : unread}
+        </span>
+      )}
+    </Link>
+  )
+}
 
 export function Header() {
   const session = useSession()
@@ -58,6 +85,7 @@ export function Header() {
             </svg>
             <span className="sr-only md:not-sr-only">Buscar</span>
           </Link>
+          {user && <NotificationsBell />}
           {canInstall && (
             <button
               type="button"

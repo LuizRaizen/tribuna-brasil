@@ -35,7 +35,17 @@ def files_for(year: int) -> dict[str, OpenDataFile]:
         "assets": OpenDataFile(
             "bem_candidato", f"bem_candidato_{year}.zip", f"bem_candidato_{year}"
         ),
+        "history": OpenDataFile(
+            "historico_candidatura",
+            f"historico_candidatura_{year}.zip",
+            f"historico_candidatura_{year}",
+        ),
     }
+
+
+def proposals_file(year: int, uf: str) -> OpenDataFile:
+    """Pacote de PDFs das propostas de governo de uma UF (ou "BR", para presidente)."""
+    return OpenDataFile("proposta_governo", f"proposta_governo_{year}_{uf.upper()}.zip", "")
 
 
 def download(file: OpenDataFile) -> FetchResult:

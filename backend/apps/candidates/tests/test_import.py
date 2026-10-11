@@ -41,7 +41,8 @@ def test_imports_candidacies_people_contests_and_assets(tse_open_data: respx.Moc
     assert "lula" in lula.search_text
 
     assert DeclaredAsset.objects.count() == 49
-    assert DataSnapshot.objects.filter(dataset__startswith="dados-abertos/").count() == 3
+    # Candidaturas, complementar, bens e histórico.
+    assert DataSnapshot.objects.filter(dataset__startswith="dados-abertos/").count() == 4
     assert ExternalRecord.objects.filter(external_id__startswith="candidatura:").count() == 15
     assert SyncRun.objects.get(job="candidaturas").status == SyncRun.Status.SUCCESS
 

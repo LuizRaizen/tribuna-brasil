@@ -61,8 +61,10 @@ try {
         & $python manage.py carregar_eleicoes_2026
         Step "Baixando os resultados do 1º turno (presidente e governadores)"
         & $python manage.py coletar_resultados --turno 1 | Select-Object -Last 3
-        Step "Importando candidaturas e bens declarados (Portal de Dados Abertos do TSE)"
+        Step "Importando candidaturas, bens declarados e histórico (Portal de Dados Abertos do TSE)"
         & $python manage.py importar_candidaturas --ano 2026
+        Step "Baixando propostas de governo (presidente e São Paulo; outras UFs: importar_propostas --uf RJ,MG)"
+        & $python manage.py importar_propostas --ano 2026 --uf BR,SP
         Set-Content -Path $marker -Value (Get-Date -Format s)
     } else {
         Write-Host "Dados já carregados. Use -Recarregar para baixar de novo."

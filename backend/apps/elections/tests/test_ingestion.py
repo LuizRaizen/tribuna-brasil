@@ -155,6 +155,34 @@ def test_payload_rejected_earlier_is_reprocessed_after_a_fix(
     assert collect(br_feed) == Outcome.UNCHANGED
 
 
+def test_final_result_notifies_followers_with_official_situation(
+    tse: respx.MockRouter,
+    br_feed: ResultFeed,
+    django_capture_on_commit_callbacks: Callable[..., Any],
+) -> None:
+    from apps.accounts.models import User
+    from apps.notifications.models import Notification
+    from apps.watchlist.services import follow
+
+    tse.get(BR_URL).mock(
+        side_effect=[
+            httpx.Response(200, content=fixture_bytes(BR_PRESIDENT)),
+            httpx.Response(200, content=fixture_bytes("br-c0001-e006257-u-final.json")),
+        ]
+    )
+    collect(br_feed)  # parcial: cria as candidaturas, sem aviso
+    fan = User.objects.create_user("fan@example.com", "Senha-forte-123456")
+    follow(fan, Candidacy.objects.get(ballot_name="LULA"))
+
+    with django_capture_on_commit_callbacks(execute=True):
+        collect(br_feed)
+
+    notice = Notification.objects.get(user=fan)
+    assert notice.kind == "result_final"
+    assert "2º turno" in notice.body and "Eleit" not in notice.body
+    assert notice.url == "/apuracao?turno=1&cargo=presidente&local=br"
+
+
 def test_overlapping_collection_is_locked(br_feed: ResultFeed) -> None:
     from django.core.cache import cache
 

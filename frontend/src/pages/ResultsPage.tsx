@@ -4,6 +4,7 @@ import { Alert } from '@/components/ui/Alert'
 import { PageLoading } from '@/components/ui/Skeleton'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { FormErrors } from '@/features/auth/FormErrors'
+import { CorrectionForm } from '@/features/feedback/CorrectionForm'
 import { useElections, useFeeds, useLiveResult } from '@/features/results/api'
 import {
   CandidateList,
@@ -233,8 +234,9 @@ export default function ResultsPage() {
             <CandidateList candidates={data.candidates} />
           </section>
 
-          <div className="mt-10 max-w-3xl">
+          <div className="mt-10 flex max-w-3xl flex-col gap-6">
             <ResultProvenance snapshot={data} />
+            <CorrectionForm pageTitle={`Apuração: ${data.office.name}, ${regionLabel(data.region)}`} />
           </div>
         </div>
       )}

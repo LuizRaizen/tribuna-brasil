@@ -1,11 +1,12 @@
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDate } from '@/lib/format'
 import { cx } from '@/lib/cx'
-import { ELECTIONS } from './calendar'
+import type { Election } from './calendar'
 
 /** Linha do tempo das votações: o que já aconteceu e o que vem a seguir. */
-export function ElectionCalendar({ now }: { now: Date }) {
-  const rounds = ELECTIONS.flatMap((election) => election.rounds.map((round) => ({ election, round })))
+export function ElectionCalendar({ now, elections }: { now: Date; elections: Election[] }) {
+  const rounds = elections.flatMap((election) => election.rounds.map((round) => ({ election, round })))
+  if (rounds.length === 0) return null
   const nextIndex = rounds.findIndex(({ round }) => now < round.closesAt)
 
   return (

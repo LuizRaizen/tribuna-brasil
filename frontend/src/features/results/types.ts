@@ -75,4 +75,6 @@ export interface ElectionSummary {
   year: number
   kind: string
   rounds: { number: number; date: string; opens_at: string; closes_at: string }[]
+  offices: string[]
+  provenance: { name: string; url: string; checked_at: string }
 }

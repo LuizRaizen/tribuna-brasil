@@ -15,6 +15,7 @@ FILES = {
     "consulta_cand": "consulta_cand_2026.zip",
     "consulta_cand_complementar": "consulta_cand_complementar_2026.zip",
     "bem_candidato": "bem_candidato_2026.zip",
+    "historico_candidatura": "historico_candidatura_2026.zip",
 }
 
 

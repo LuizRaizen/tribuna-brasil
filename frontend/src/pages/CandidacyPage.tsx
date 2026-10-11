@@ -10,9 +10,11 @@ import { CandidatePhoto } from '@/features/candidates/components'
 import { registrationNeedsContext } from '@/features/candidates/constants'
 import type { CandidacyDetail } from '@/features/candidates/types'
 import { FormErrors } from '@/features/auth/FormErrors'
+import { CorrectionForm } from '@/features/feedback/CorrectionForm'
+import { FollowButton } from '@/features/watchlist/FollowButton'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { ApiError } from '@/services/api'
-import { displayName, formatBRL, formatDate, formatInt, formatPct, sentenceCase } from '@/lib/format'
+import { displayName, formatBRL, formatBytes, formatDate, formatInt, formatPct, sentenceCase } from '@/lib/format'
 
 const GROUP_LABEL = { party: 'Partido isolado', federation: 'Federação', coalition: 'Coligação' } as const
 const ASSETS_PREVIEW = 8
@@ -66,7 +68,7 @@ function OfficialData({ c }: { c: CandidacyDetail }) {
       <Fact label="Situação do registro">{c.registration_status ? sentenceCase(c.registration_status) : 'Não informada'}</Fact>
       {c.rounds.map((r) => (
         <Fact key={r.number} label={`Situação no ${r.number}º turno`}>
-          {r.status ? sentenceCase(r.status) : 'Aguardando totalização'}
+          {r.status ? sentenceCase(r.status) : 'Ainda sem situação divulgada pelo TSE'}
         </Fact>
       ))}
       {c.occupation && <Fact label="Ocupação declarada">{sentenceCase(c.occupation)}</Fact>}
@@ -239,6 +241,14 @@ export default function CandidacyPage() {
               <span className="rounded-full bg-sunken px-3 py-1 text-sm font-semibold">{sentenceCase(c.rounds[0].status)}</span>
             )}
           </div>
+          <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <FollowButton kind="candidacy" id={c.tse_id} label={displayName(c.ballot_name)} />
+            <Link to={`/pessoas/${c.person_id}`} className="font-semibold">
+              {c.previous_candidacies > 0
+                ? `Ver trajetória (${formatInt(c.previous_candidacies)} ${c.previous_candidacies === 1 ? 'candidatura anterior' : 'candidaturas anteriores'})`
+                : 'Ver trajetória'}
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -265,6 +275,26 @@ export default function CandidacyPage() {
           </Section>
         )}
 
+        {c.proposals.length > 0 && (
+          <Section id="propostas" title="Proposta de governo">
+            <ul className="flex flex-col gap-3">
+              {c.proposals.map((p) => (
+                <li key={p.order}>
+                  <a href={p.url} target="_blank" rel="noopener" className="font-semibold">
+                    {c.proposals.length > 1 ? `Documento ${p.order}` : 'Abrir a proposta registrada no TSE'}
+                    <span className="font-normal text-muted"> (PDF, {formatBytes(p.size_bytes)})</span>
+                    <span className="sr-only"> (abre em nova aba)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-muted">
+              Documento oficial entregue pela candidatura à Justiça Eleitoral, exibido como foi publicado. O Tribuna não
+              resume nem avalia propostas.
+            </p>
+          </Section>
+        )}
+
         <Section id="bens" title="Bens declarados">
           <Assets c={c} />
         </Section>
@@ -281,13 +311,14 @@ export default function CandidacyPage() {
               />
             ))}
             <p className="text-sm text-muted">
-              Encontrou uma informação incorreta? Compare com a{' '}
+              Confira também a{' '}
               <a href={c.provenance[0]?.portal_url ?? 'https://dadosabertos.tse.jus.br/'} target="_blank" rel="noopener noreferrer">
                 página oficial do conjunto de dados
                 <span className="sr-only"> (abre em nova aba)</span>
               </a>
-              . O formulário de correção chega na próxima etapa do projeto.
+              .
             </p>
+            <CorrectionForm pageTitle={`${displayName(c.ballot_name)}, ${c.office.name.toLowerCase()}`} />
           </div>
         </Section>
       </div>

@@ -1,17 +1,14 @@
+import type { ElectionSummary } from '@/features/results/types'
 import { calendarDaysBetween } from '@/lib/format'
 
 /**
- * Calendário oficial das próximas eleições.
- *
- * Provisório: no próximo ciclo estes dados passam a vir da API (modelo Election/ElectionRound,
- * ingerido do TSE). Até lá, ficam aqui com a fonte explícita. As datas seguem a Constituição
- * (art. 77 e art. 29): 1º turno no primeiro domingo de outubro e 2º turno no último domingo
- * de outubro.
+ * Fase do calendário eleitoral, calculada a partir das eleições da API (que vêm do índice oficial
+ * do TSE). Nenhuma data fica fixa no código.
  */
 
 export interface ElectionRound {
-  number: 1 | 2
-  /** Abertura e fechamento das seções, horário de Brasília (UTC−3). */
+  number: number
+  /** Abertura e fechamento das seções, horário de Brasília. */
   opensAt: Date
   closesAt: Date
   note?: string
@@ -19,41 +16,38 @@ export interface ElectionRound {
 
 export interface Election {
   name: string
-  kind: 'geral' | 'municipal'
+  kind: string
   offices: string[]
   rounds: ElectionRound[]
   source: { name: string; url: string; checkedAt: Date }
 }
 
-const brt = (isoLocal: string) => new Date(`${isoLocal}-03:00`)
+const RUNOFF_NOTE =
+  'Ocorre para presidente e para governador nos estados em que nenhum candidato obteve mais da metade dos votos válidos.'
 
-export const ELECTIONS: Election[] = [
-  {
-    name: 'Eleições Gerais 2026',
-    kind: 'geral',
-    offices: ['Presidente', 'Governador', 'Senador', 'Deputado federal', 'Deputado estadual ou distrital'],
-    rounds: [
-      { number: 1, opensAt: brt('2026-10-04T08:00:00'), closesAt: brt('2026-10-04T17:00:00') },
-      {
-        number: 2,
-        opensAt: brt('2026-10-25T08:00:00'),
-        closesAt: brt('2026-10-25T17:00:00'),
-        note: 'Ocorre para presidente e para governador nos estados em que nenhum candidato obteve mais da metade dos votos válidos.',
+export function fromApi(elections: ElectionSummary[]): Election[] {
+  return elections
+    .map((e) => ({
+      name: e.name,
+      kind: e.kind,
+      offices: e.offices,
+      rounds: e.rounds
+        .map((r) => ({
+          number: r.number,
+          opensAt: new Date(r.opens_at),
+          closesAt: new Date(r.closes_at),
+          // Regra constitucional (CF, arts. 28 e 77), não um dado inventado.
+          note: r.number === 2 && e.kind === 'general' ? RUNOFF_NOTE : undefined,
+        }))
+        .sort((a, b) => a.number - b.number),
+      source: {
+        name: e.provenance.name,
+        url: e.provenance.url,
+        checkedAt: new Date(e.provenance.checked_at),
       },
-    ],
-    source: { name: 'Tribunal Superior Eleitoral (TSE)', url: 'https://www.tse.jus.br/', checkedAt: brt('2026-10-04T12:00:00') },
-  },
-  {
-    name: 'Eleições Municipais 2028',
-    kind: 'municipal',
-    offices: ['Prefeito', 'Vereador'],
-    rounds: [
-      { number: 1, opensAt: brt('2028-10-01T08:00:00'), closesAt: brt('2028-10-01T17:00:00') },
-      { number: 2, opensAt: brt('2028-10-29T08:00:00'), closesAt: brt('2028-10-29T17:00:00') },
-    ],
-    source: { name: 'Tribunal Superior Eleitoral (TSE)', url: 'https://www.tse.jus.br/', checkedAt: brt('2026-10-04T12:00:00') },
-  },
-]
+    }))
+    .sort((a, b) => (a.rounds[0]?.opensAt.getTime() ?? 0) - (b.rounds[0]?.opensAt.getTime() ?? 0))
+}
 
 export type ElectionStatus =
   | { phase: 'upcoming'; election: Election; round: ElectionRound; daysLeft: number }
@@ -61,10 +55,10 @@ export type ElectionStatus =
   | { phase: 'counting'; election: Election; round: ElectionRound; next?: { round: ElectionRound; daysLeft: number } }
 
 /**
- * Fase atual do calendário. "counting" vale do fechamento das urnas até o fim do dia
- * seguinte; depois disso, a Home passa a apontar a próxima votação.
+ * Fase atual. "counting" vale do fechamento das urnas até o fim do dia seguinte; depois disso,
+ * a Home passa a apontar a próxima votação.
  */
-export function getElectionStatus(now: Date, elections: Election[] = ELECTIONS): ElectionStatus | null {
+export function getElectionStatus(now: Date, elections: Election[]): ElectionStatus | null {
   const rounds = elections.flatMap((election) => election.rounds.map((round) => ({ election, round })))
 
   for (const [i, { election, round }] of rounds.entries()) {
@@ -74,8 +68,7 @@ export function getElectionStatus(now: Date, elections: Election[] = ELECTIONS):
     if (now < round.closesAt) {
       return { phase: 'voting', election, round }
     }
-    const countingWindowEnds = calendarDaysBetween(round.closesAt, now) <= 1
-    if (countingWindowEnds) {
+    if (calendarDaysBetween(round.closesAt, now) <= 1) {
       const following = rounds[i + 1]
       const next =
         following && following.election === election

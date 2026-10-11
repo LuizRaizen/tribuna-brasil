@@ -55,6 +55,12 @@ export const formatBRL = (value: string | number) => currency.format(Number(valu
 export const formatPct = (n: number) => `${percent2.format(n)}%`
 export const formatTime = (d: Date) => timeOnly.format(d)
 
+const decimal1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+export function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${decimal1.format(bytes / (1024 * 1024))} MB`
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
+
 const LOWER_WORDS = new Set(['da', 'das', 'de', 'do', 'dos', 'e'])
 
 /**

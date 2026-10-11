@@ -12,6 +12,7 @@ from apps.audit.models import AuditAction
 from apps.audit.services import record as audit
 from apps.candidates.models import Candidacy
 from apps.candidates.search import apply_search_fields
+from apps.candidates.services import display
 from apps.elections.models import CandidateResult, ResultFeed, ResultSnapshot
 from apps.ingestion.connectors.tse_resultados import client as tse
 from apps.ingestion.connectors.tse_resultados.mapper import (
@@ -21,6 +22,8 @@ from apps.ingestion.connectors.tse_resultados.mapper import (
     parse,
 )
 from apps.ingestion.http import CircuitOpen, NotPublished, SourceUnavailable
+from apps.notifications.models import Notification
+from apps.notifications.services import Event, notify
 from apps.parties.models import Party
 from apps.people.models import Person
 from apps.sources import services as sources
@@ -114,7 +117,36 @@ def _collect(feed: ResultFeed) -> Outcome:
                 AuditAction.SYNC_RUN,
                 metadata={"feed": feed.pk, "generation": data.generation_id, "final": True},
             )
+            if feed.region_id == feed.contest.region_id:
+                events = final_result_events(feed, snapshot)
+                transaction.on_commit(lambda: notify(events))
     return Outcome.CREATED
+
+
+def final_result_events(feed: ResultFeed, snapshot: ResultSnapshot) -> list[Event]:
+    """Avisa quem acompanha cada candidatura que o resultado final da disputa saiu."""
+    contest = feed.contest
+    place = "Brasil" if contest.region.tse_code == "br" else contest.region.name
+    events = []
+    for line in snapshot.lines.select_related("candidacy__person"):
+        candidacy = line.candidacy
+        situation = line.situation or "situação não informada"
+        events.append(
+            Event(
+                kind=Notification.Kind.RESULT_FINAL,
+                title=(
+                    f"Resultado final do {feed.round.number}º turno: {contest.office.name}, {place}"
+                ),
+                body=(
+                    f"{display(candidacy.ballot_name)}: {situation}, segundo a totalização do TSE."
+                ),
+                url=f"/apuracao?turno={feed.round.number}&cargo={contest.office.slug}"
+                f"&local={contest.region.tse_code}",
+                dedupe_key=f"result_final:{feed.pk}:{candidacy.tse_id}",
+                targets=(candidacy, candidacy.person),
+            )
+        )
+    return events
 
 
 @transaction.atomic

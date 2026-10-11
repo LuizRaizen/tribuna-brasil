@@ -1,4 +1,5 @@
-from django.http import Http404
+from django.http import FileResponse, Http404, HttpRequest
+from django.views.decorators.http import require_GET
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import AllowAny
@@ -11,6 +12,7 @@ from apps.core.pagination import DefaultPagination
 from apps.parties.models import Party
 
 from .. import presenters
+from ..models import Proposal
 from ..search import MIN_QUERY_LENGTH, matches_party, search_candidacies
 
 PUBLIC_CACHE = "public, max-age=300"
@@ -65,6 +67,27 @@ class CandidacyDetailView(APIView):
         response = Response(presenters.detail(candidacy))
         response["Cache-Control"] = PUBLIC_CACHE
         return response
+
+
+# O PDF não executa scripts nem carrega nada externo; pode ser exibido pelo leitor do navegador.
+PDF_CSP = "default-src 'none'; object-src 'self'; frame-ancestors 'self'"
+
+
+@require_GET
+def proposal_file(request: HttpRequest, tse_id: str, order: int) -> FileResponse:
+    """Entrega o PDF oficial da proposta de governo, como publicado pelo TSE."""
+    proposal = Proposal.objects.filter(candidacy__tse_id=tse_id, order=order).first()
+    if proposal is None:
+        raise Http404
+    response = FileResponse(
+        proposal.file.open("rb"),
+        content_type="application/pdf",
+        as_attachment=False,
+        filename=f"proposta-de-governo-{tse_id}-{order:02d}.pdf",
+    )
+    response["Content-Security-Policy"] = PDF_CSP
+    response["Cache-Control"] = "public, max-age=86400"
+    return response
 
 
 class SearchView(APIView):

@@ -151,12 +151,17 @@ export default function HowItWorksPage() {
 
           <Section id="correcoes" title="Correções">
             <p>
-              Se você encontrar uma informação incorreta ou desatualizada, poderá informar pelo botão “Corrigir uma
-              informação”, presente em cada página de dados. Cada pedido é revisado e confrontado com a fonte oficial.
+              Se você encontrar uma informação incorreta ou desatualizada, use “Corrigir uma informação”, no fim de cada
+              página de candidatura, pessoa ou apuração. Não é preciso ter conta.
             </p>
-            <p className="text-muted">
-              O formulário de correção entra no ar junto com as primeiras páginas de dados, ainda nesta fase do projeto.
-            </p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>Cada pedido é conferido com a fonte oficial antes de qualquer mudança.</li>
+              <li>
+                Se o erro estiver na própria fonte (por exemplo, no arquivo do TSE), o Tribuna não altera o dado oficial:
+                o pedido é registrado e a divergência é encaminhada ao órgão responsável.
+              </li>
+              <li>O e-mail, quando informado, serve só para avisar o resultado do pedido.</li>
+            </ul>
           </Section>
         </div>
       </div>

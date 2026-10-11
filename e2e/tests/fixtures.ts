@@ -48,10 +48,29 @@ export async function mockAuthApi(page: Page, { loggedIn = false } = {}) {
   )
 }
 
+/** Calendário fictício nas datas reais de 2026 (a Home lê o calendário da API). */
+export const ELECTION = {
+  slug: 'eleicoes-gerais-2026',
+  name: 'Eleições Gerais 2026',
+  year: 2026,
+  kind: 'general',
+  rounds: [
+    { number: 1, date: '2026-10-04', opens_at: '2026-10-04T08:00:00-03:00', closes_at: '2026-10-04T17:00:00-03:00' },
+    { number: 2, date: '2026-10-25', opens_at: '2026-10-25T08:00:00-03:00', closes_at: '2026-10-25T17:00:00-03:00' },
+  ],
+  offices: ['Presidente', 'Governador', 'Senador', 'Deputado federal', 'Deputado estadual'],
+  provenance: {
+    name: 'Tribunal Superior Eleitoral (TSE)',
+    url: 'https://resultados.tse.jus.br/oficial/comum/config/ele-c.json',
+    checked_at: '2026-10-11T12:00:00Z',
+  },
+}
+
 export const test = base.extend<{ api: void }>({
   api: [
     async ({ page }, use) => {
       await mockAuthApi(page)
+      await page.route('**/api/v1/elections/', (r) => r.fulfill({ json: [ELECTION] }))
       await use()
     },
     { auto: true },

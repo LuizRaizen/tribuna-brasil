@@ -152,6 +152,20 @@ def detail(candidacy: Candidacy) -> dict[str, Any]:
             ],
         },
         "results": _results(candidacy),
+        "person_id": candidacy.person_id,
+        "previous_candidacies": candidacy.person.historical_candidacies.values("year", "tse_id")
+        .distinct()
+        .count(),
+        "proposals": [
+            {
+                "order": p.order,
+                "url": f"/api/v1/candidates/{candidacy.tse_id}/proposals/{p.order}.pdf",
+                "size_bytes": p.size_bytes,
+                "source_url": p.source_url,
+                "fetched_at": p.fetched_at,
+            }
+            for p in candidacy.proposals.all()
+        ],
         "provenance": _provenance(candidacy),
     }
 
@@ -160,5 +174,8 @@ def detail_queryset() -> QuerySet[Candidacy]:
     return (
         base_queryset()
         .select_related("ticket_head__contest__office")
-        .prefetch_related(Prefetch("assets", queryset=DeclaredAsset.objects.order_by("order")))
+        .prefetch_related(
+            Prefetch("assets", queryset=DeclaredAsset.objects.order_by("order")),
+            "proposals",
+        )
     )

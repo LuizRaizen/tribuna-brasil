@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { PageLoading } from '@/components/ui/Skeleton'
+import { useElections } from '@/features/results/api'
 import { Link, useNavigate } from 'react-router'
 import { SearchField } from '@/pages/SearchPage'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { getElectionStatus } from '@/features/elections/calendar'
+import { fromApi, getElectionStatus } from '@/features/elections/calendar'
 import { ElectionCalendar } from '@/features/elections/ElectionCalendar'
 import { ElectionHero } from '@/features/elections/ElectionHero'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -22,8 +24,9 @@ const MODULES = [
   },
   {
     title: 'Pessoas públicas',
-    description: 'Uma página por pessoa, com a linha do tempo de candidaturas, mandatos e cargos.',
-    status: 'Em desenvolvimento',
+    description: 'Uma página por pessoa, com a trajetória de candidaturas desde 2004. Mandatos em breve.',
+    status: 'Disponível',
+    to: '/busca',
   },
   {
     title: 'Congresso Nacional',
@@ -77,11 +80,26 @@ export default function HomePage() {
   usePageTitle()
   const navigate = useNavigate()
   const now = useNow()
-  const status = getElectionStatus(now)
+  const api = useElections()
+  const elections = useMemo(() => fromApi(api.data ?? []), [api.data])
+  const status = getElectionStatus(now, elections)
 
   return (
     <>
-      <ElectionHero status={status} />
+      {api.isPending ? (
+        <div className="container-page pt-10 md:pt-16">
+          <PageLoading label="Carregando o calendário eleitoral" />
+        </div>
+      ) : api.isError ? (
+        <section className="container-page pt-10 md:pt-16">
+          <h1 className="max-w-[20ch] text-3xl font-extrabold md:text-[3.25rem] md:leading-[1.05]">Tribuna Brasil</h1>
+          <p className="mt-4 max-w-[58ch] text-lg text-muted">
+            Não foi possível carregar o calendário eleitoral agora. Tente de novo em instantes.
+          </p>
+        </section>
+      ) : (
+        <ElectionHero status={status} />
+      )}
 
       <section aria-labelledby="busca-titulo" className="container-page mt-16 max-w-3xl md:mx-0 md:ml-[max(0px,calc((100vw-72rem)/2))]">
         <h2 id="busca-titulo" className="text-xl font-bold">
@@ -132,7 +150,7 @@ export default function HomePage() {
         </ul>
       </section>
 
-      <ElectionCalendar now={now} />
+      <ElectionCalendar now={now} elections={elections} />
 
       <section aria-labelledby="principios-titulo" className="mt-24 bg-azul-strong text-white">
         <div className="container-page py-14 md:py-20">
