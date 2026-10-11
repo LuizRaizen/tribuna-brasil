@@ -22,7 +22,18 @@ O escopo completo está em [`PROJECT_ESCOPE.txt`](PROJECT_ESCOPE.txt) e o plano 
 
 ## Rodando localmente
 
-### Com Docker (recomendado)
+### Jeito mais rápido (Windows, sem Docker)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\rodar-local.ps1
+```
+
+Instala o que faltar, baixa os dados reais do TSE na primeira vez (alguns minutos), sobe a API e o site
+e abre http://localhost:5173. Usa SQLite e cache em memória (modo leve, só para uso local).
+`scripts\criar-admin.ps1` cria um administrador; `scripts\parar-local.ps1` encerra tudo;
+`-Recarregar` baixa os dados de novo.
+
+### Com Docker
 
 ```bash
 cp .env.example .env        # ajuste DJANGO_SECRET_KEY e POSTGRES_PASSWORD

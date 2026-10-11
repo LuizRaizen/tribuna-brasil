@@ -34,3 +34,4 @@ e2e/playwright-report/
 Thumbs.db
 backend/.pytest_media/
 backups/
+backend/.local/
