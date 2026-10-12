@@ -11,6 +11,7 @@ import { registrationNeedsContext } from '@/features/candidates/constants'
 import type { CandidacyDetail } from '@/features/candidates/types'
 import { FormErrors } from '@/features/auth/FormErrors'
 import { CorrectionForm } from '@/features/feedback/CorrectionForm'
+import { CampaignFinanceSection } from '@/features/finance/CampaignFinanceSection'
 import { FollowButton } from '@/features/watchlist/FollowButton'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { ApiError } from '@/services/api'
@@ -294,6 +295,10 @@ export default function CandidacyPage() {
             </p>
           </Section>
         )}
+
+        <Section id="contas" title="Contas de campanha">
+          <CampaignFinanceSection finance={c.finance} spendingLimit={c.spending_limit} />
+        </Section>
 
         <Section id="bens" title="Bens declarados">
           <Assets c={c} />

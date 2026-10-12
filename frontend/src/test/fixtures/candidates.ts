@@ -1,4 +1,4 @@
-import type { CandidacyDetail, CandidacySummary, SearchResponse } from '@/features/candidates/types'
+import type { CampaignFinance, CandidacyDetail, CandidacySummary, SearchResponse } from '@/features/candidates/types'
 
 /** Dados fictícios de interface; não correspondem a nenhuma candidatura real. */
 export const summary: CandidacySummary = {
@@ -44,6 +44,7 @@ export function detail(overrides: Partial<CandidacyDetail> = {}): CandidacyDetai
       ],
     },
     results: [],
+    finance: null,
     person_id: 42,
     previous_candidacies: 2,
     proposals: [
@@ -67,6 +68,50 @@ export function detail(overrides: Partial<CandidacyDetail> = {}): CandidacyDetai
     ],
     ...overrides,
   }
+}
+
+/** Valores fictícios; a estrutura é a da API de prestação de contas. */
+export const finance: CampaignFinance = {
+  report_type: 'Relatório financeiro',
+  report_date: '2026-10-09',
+  is_final: false,
+  rounds: [1],
+  receipts: {
+    total: '1000000.00',
+    count: 12,
+    by_source: [
+      { label: 'Fundo Especial de Financiamento de Campanha', total: '800000.00', count: 2 },
+      { label: 'Outros recursos', total: '200000.00', count: 10 },
+    ],
+    by_origin: [
+      { label: 'Recursos de partido político', total: '800000.00', count: 2 },
+      { label: 'Recursos de pessoas físicas', total: '200000.00', count: 10 },
+    ],
+    by_nature: [{ label: 'Financeiro', total: '1000000.00', count: 12 }],
+    top_donors: [
+      { name: 'PARTIDO ALFA - NACIONAL', origin: 'Recursos de partido político', total: '800000.00', count: 2 },
+      { name: 'PESSOA DOADORA EXEMPLO', origin: 'Recursos de pessoas físicas', total: '50000.00', count: 1 },
+    ],
+    donors_count: 9,
+  },
+  expenses: {
+    total: '635314.50',
+    count: 30,
+    paid_total: '400000.00',
+    by_category: Array.from({ length: 8 }, (_, i) => ({ label: `Categoria ${i + 1}`, total: `${80000 - i * 1000}.00`, count: 3 })),
+    top_suppliers: [{ name: 'GRAFICA EXEMPLO LTDA', cnpj: '12345678000190', total: '300000.00', count: 4 }],
+    suppliers_count: 7,
+    individual_suppliers: { total: '25000.00', count: 10 },
+  },
+  provenance: {
+    source_name: 'Tribunal Superior Eleitoral (TSE)',
+    dataset: 'Prestação de contas eleitorais, Portal de Dados Abertos do TSE',
+    official_url: 'https://cdn.tse.jus.br/estatistica/sead/odsele/prestacao_contas/prestacao_de_contas_eleitorais_candidatos_2026.zip',
+    portal_url: 'https://dadosabertos.tse.jus.br/dataset/prestacao-de-contas-eleitorais-2026',
+    detail_url: 'https://divulgacandcontas.tse.jus.br/',
+    fetched_at: '2026-10-11T15:00:00Z',
+    source_updated_at: '2026-10-11',
+  },
 }
 
 export const search: SearchResponse = {

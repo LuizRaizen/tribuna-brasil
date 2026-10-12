@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.parties",
     "apps.elections",
     "apps.candidates",
+    "apps.finance",
     "apps.watchlist",
     "apps.notifications",
     "apps.feedback",
@@ -236,6 +237,11 @@ CELERY_BEAT_SCHEDULE = {
     "candidates-import": {
         "task": "candidates.import",
         "schedule": crontab(hour=6, minute=30),
+    },
+    # Prestação de contas: arquivo de ~190 MB, regenerado pelo TSE de madrugada.
+    "finance-import": {
+        "task": "finance.import",
+        "schedule": crontab(hour=7, minute=15),
     },
 }
 

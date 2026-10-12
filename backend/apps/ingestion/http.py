@@ -4,11 +4,13 @@ Uma fonte fora do ar não pode derrubar o sistema (escopo §20): depois de falha
 circuito abre e as coletas daquela fonte são puladas por um período, sem chamadas inúteis.
 """
 
+import hashlib
 import random
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 import httpx
 import structlog
@@ -118,6 +120,80 @@ def fetch(
                     break
             if attempt < attempts:
                 # Backoff exponencial com jitter: evita que vários workers batam juntos na fonte.
+                delay = backoff_base * (2 ** (attempt - 1)) * (1 + _jitter.random() * 0.25)
+                logger.info("fetch.retry", url=url, attempt=attempt, delay=round(delay, 2))
+                sleep(delay)
+    finally:
+        if owns_client:
+            http.close()
+
+    breaker.record_failure()
+    raise SourceUnavailable(f"{url}: {last_error}")
+
+
+@dataclass(frozen=True)
+class FileFetchResult:
+    url: str
+    path: Path
+    sha256: str
+    size_bytes: int
+    fetched_at: datetime
+
+
+def fetch_to_file(
+    url: str,
+    dest: Path,
+    *,
+    breaker: CircuitBreaker,
+    timeout: float = 120.0,
+    attempts: int = 3,
+    backoff_base: float = 2.0,
+    sleep: Callable[[float], None] = time.sleep,
+    client: httpx.Client | None = None,
+) -> FileFetchResult:
+    """Baixa direto para o disco, em blocos, calculando o SHA-256 no caminho.
+
+    Para arquivos grandes (centenas de MB): a memória usada não depende do tamanho do arquivo.
+    """
+    if breaker.is_open:
+        raise CircuitOpen(f"Circuito '{breaker.name}' aberto; coleta adiada.")
+
+    owns_client = client is None
+    http = client or httpx.Client(
+        timeout=timeout, headers={"User-Agent": USER_AGENT}, follow_redirects=True
+    )
+    last_error = ""
+    try:
+        for attempt in range(1, attempts + 1):
+            try:
+                with http.stream("GET", url) as response:
+                    if response.status_code == 404:
+                        breaker.record_success()
+                        raise NotPublished(url)
+                    if response.status_code < 400:
+                        digest = hashlib.sha256()
+                        size = 0
+                        with dest.open("wb") as fh:
+                            for chunk in response.iter_bytes(1 << 20):
+                                fh.write(chunk)
+                                digest.update(chunk)
+                                size += len(chunk)
+                        breaker.record_success()
+                        return FileFetchResult(
+                            url=str(response.url),
+                            path=dest,
+                            sha256=digest.hexdigest(),
+                            size_bytes=size,
+                            fetched_at=timezone.now(),
+                        )
+                    last_error = f"HTTP {response.status_code}"
+                    retryable = response.status_code in RETRYABLE_STATUS
+            except httpx.HTTPError as exc:
+                last_error = f"{type(exc).__name__}: {exc}"
+                retryable = True
+            if not retryable:
+                break
+            if attempt < attempts:
                 delay = backoff_base * (2 ** (attempt - 1)) * (1 + _jitter.random() * 0.25)
                 logger.info("fetch.retry", url=url, attempt=attempt, delay=round(delay, 2))
                 sleep(delay)

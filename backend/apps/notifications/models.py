@@ -11,6 +11,7 @@ class Notification(models.Model):
         ASSETS = "assets", "Bens declarados"
         RESULT_FINAL = "result_final", "Resultado final"
         PROPOSAL = "proposal", "Proposta de governo"
+        FINANCE = "finance", "Prestação de contas"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"

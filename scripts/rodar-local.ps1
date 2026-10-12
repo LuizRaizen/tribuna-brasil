@@ -65,6 +65,8 @@ try {
         & $python manage.py importar_candidaturas --ano 2026
         Step "Baixando propostas de governo (presidente e São Paulo; outras UFs: importar_propostas --uf RJ,MG)"
         & $python manage.py importar_propostas --ano 2026 --uf BR,SP
+        Step "Baixando a prestação de contas de campanha (arquivo de ~190 MB; leva alguns minutos)"
+        & $python manage.py importar_contas --ano 2026
         Set-Content -Path $marker -Value (Get-Date -Format s)
     } else {
         Write-Host "Dados já carregados. Use -Recarregar para baixar de novo."
@@ -75,6 +77,15 @@ try {
 
 # --- Subir os servidores --------------------------------------------------------------------------
 $style = if ($Oculto) { "Hidden" } else { "Normal" }
+# Uma execução anterior ainda aberta seguraria as portas e serviria código antigo: encerra antes.
+& (Join-Path $PSScriptRoot "parar-local.ps1") | Out-Null
+foreach ($port in 8000, 5173) {
+    $busy = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
+    if ($busy) {
+        $owner = (Get-Process -Id $busy[0].OwningProcess -ErrorAction SilentlyContinue).ProcessName
+        throw "A porta $port está em uso por outro programa ($owner). Feche-o e rode o script de novo."
+    }
+}
 Step "Subindo a API (http://localhost:8000) e o site (http://localhost:5173)"
 $api = Start-Process -FilePath $python -WorkingDirectory $backend -WindowStyle $style -PassThru `
     -ArgumentList "-m", "uvicorn", "config.asgi:application", "--host", "127.0.0.1", "--port", "8000"

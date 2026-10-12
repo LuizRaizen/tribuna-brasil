@@ -6,8 +6,12 @@ if (Test-Path $file) {
     }
     Remove-Item $file
 }
-# O Vite inicia processos filhos do Node; encerra os que pertencem a este projeto.
+# O Vite inicia processos filhos do Node, e o python.exe do ambiente virtual inicia um segundo
+# interpretador. Encerrar só o processo registrado deixaria esses filhos vivos, ocupando as portas.
 Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
     Where-Object { $_.CommandLine -match "tribuna-brasil" } |
+    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
+    Where-Object { $_.CommandLine -match "tribuna-brasil" -and $_.CommandLine -match "uvicorn" } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 Write-Host "Tribuna Brasil encerrado."

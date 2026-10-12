@@ -56,6 +56,12 @@ export const formatPct = (n: number) => `${percent2.format(n)}%`
 export const formatTime = (d: Date) => timeOnly.format(d)
 
 const decimal1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+/** "12345678000190" → "12.345.678/0001-90". Outros formatos voltam como vieram. */
+export function formatCnpj(digits: string): string {
+  const d = digits.replace(/\D/g, '')
+  return d.length === 14 ? `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}` : digits
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${decimal1.format(bytes / (1024 * 1024))} MB`
   return `${Math.max(1, Math.round(bytes / 1024))} KB`

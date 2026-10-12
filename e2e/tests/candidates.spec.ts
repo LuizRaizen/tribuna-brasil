@@ -36,6 +36,7 @@ const detail = {
   person_id: 42,
   previous_candidacies: 1,
   proposals: [],
+  finance: null,
   provenance: [
     {
       source_name: 'Tribunal Superior Eleitoral (TSE)',

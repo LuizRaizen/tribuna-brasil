@@ -2,11 +2,12 @@ import gzip
 import hashlib
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import structlog
 from django.contrib.contenttypes.models import ContentType
-from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile, File
 from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 
@@ -92,6 +93,65 @@ def store_snapshot(
             created=False,
         )
     return StoredSnapshot(snapshot, created=True)
+
+
+def store_snapshot_file(
+    *,
+    source: Source,
+    dataset: str,
+    url: str,
+    path: Path,
+    digest: str,
+    size_bytes: int,
+    fetched_at: datetime,
+    sync_run: SyncRun | None = None,
+) -> StoredSnapshot:
+    """Como `store_snapshot`, para arquivos grandes já baixados em disco.
+
+    O arquivo é guardado como veio (um zip já é comprimido; comprimir de novo só gasta CPU).
+    """
+    existing = DataSnapshot.objects.filter(
+        source=source, dataset=dataset, content_hash=digest
+    ).first()
+    if existing:
+        return StoredSnapshot(existing, created=False)
+    snapshot = DataSnapshot(
+        source=source,
+        dataset=dataset,
+        url=url,
+        fetched_at=fetched_at,
+        content_hash=digest,
+        size_bytes=size_bytes,
+        sync_run=sync_run,
+    )
+    with path.open("rb") as fh:
+        snapshot.payload.save(f"{digest}{path.suffix}", File(fh), save=False)
+    try:
+        with transaction.atomic():
+            snapshot.save()
+    except IntegrityError:
+        snapshot.payload.delete(save=False)
+        return StoredSnapshot(
+            DataSnapshot.objects.get(source=source, dataset=dataset, content_hash=digest),
+            created=False,
+        )
+    return StoredSnapshot(snapshot, created=True)
+
+
+def prune_snapshot_payloads(source: Source, dataset: str, *, keep: int) -> int:
+    """Apaga o conteúdo dos snapshots antigos de um conjunto, mantendo os `keep` mais recentes.
+
+    Hash, tamanho, URL e data continuam registrados: a trilha de auditoria não se perde, só o
+    arquivo bruto (que a fonte oficial continua publicando).
+    """
+    old = DataSnapshot.objects.filter(source=source, dataset=dataset).exclude(payload="")
+    pruned = 0
+    for snapshot in old.order_by("-fetched_at")[keep:]:
+        snapshot.payload.delete(save=False)
+        snapshot.payload = ""
+        snapshot.save(update_fields=["payload"])
+        pruned += 1
+    return pruned
 
 
 def read_snapshot(snapshot: DataSnapshot) -> bytes:

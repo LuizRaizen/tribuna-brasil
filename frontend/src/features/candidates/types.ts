@@ -56,6 +56,8 @@ export interface CandidacyDetail extends Omit<CandidacySummary, 'party'> {
   person_id: number
   previous_candidacies: number
   proposals: { order: number; url: string; size_bytes: number; source_url: string; fetched_at: string }[]
+  /** null: o arquivo do TSE consultado não traz prestação de contas desta candidatura. */
+  finance: CampaignFinance | null
   provenance: {
     source_name: string
     dataset: string
@@ -64,6 +66,47 @@ export interface CandidacyDetail extends Omit<CandidacySummary, 'party'> {
     fetched_at: string
     source_updated_at: string | null
   }[]
+}
+
+/** Valores em texto decimal ("1234.56"), como a API envia. Espelha apps/finance/presenters.py. */
+export interface MoneyGroup {
+  label: string
+  total: string
+  count: number
+}
+
+export interface CampaignFinance {
+  report_type: string
+  report_date: string | null
+  is_final: boolean
+  rounds: number[]
+  receipts: {
+    total: string
+    count: number
+    by_source: MoneyGroup[]
+    by_origin: MoneyGroup[]
+    by_nature: MoneyGroup[]
+    top_donors: { name: string; origin: string; total: string; count: number }[]
+    donors_count: number
+  }
+  expenses: {
+    total: string
+    count: number
+    paid_total: string
+    by_category: MoneyGroup[]
+    top_suppliers: { name: string; cnpj: string; total: string; count: number }[]
+    suppliers_count: number
+    individual_suppliers: { total: string; count: number }
+  }
+  provenance: {
+    source_name: string
+    dataset: string
+    official_url: string
+    portal_url: string
+    detail_url: string
+    fetched_at: string
+    source_updated_at: string | null
+  }
 }
 
 export interface PartySummary {
