@@ -2,11 +2,11 @@ import { useId, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { MIN_QUERY_LENGTH, useDebounced, useSearch } from '@/features/candidates/api'
-import { CandidacyRow } from '@/features/candidates/components'
+import { CandidacyRow, CandidatePhoto } from '@/features/candidates/components'
 import { FormErrors } from '@/features/auth/FormErrors'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { cx } from '@/lib/cx'
-import { formatInt } from '@/lib/format'
+import { displayName, formatInt } from '@/lib/format'
 
 export function SearchField({ defaultValue = '' }: { defaultValue?: string }) {
   const id = useId()
@@ -58,7 +58,7 @@ export default function SearchPage() {
   return (
     <div className="container-page max-w-3xl pt-10 md:pt-14">
       <h1 className="text-3xl font-extrabold">Buscar</h1>
-      <p className="mt-2 text-muted">Candidaturas das Eleições Gerais 2026 e partidos.</p>
+      <p className="mt-2 text-muted">Candidaturas das Eleições Gerais 2026, parlamentares e partidos.</p>
       <form role="search" className="mt-6" onInput={onInput} onSubmit={(e) => e.preventDefault()}>
         <SearchField defaultValue={query} />
       </form>
@@ -99,6 +99,24 @@ export default function SearchPage() {
                   </Link>
                 )}
               </>
+            ) : group.kind === 'legislators' ? (
+              <ul className="mt-3 divide-y divide-line">
+                {group.items.map((l) => (
+                  <li key={l.person_id} className="py-3">
+                    <Link to={`/pessoas/${l.person_id}`} className="flex items-center gap-3 text-ink no-underline">
+                      <CandidatePhoto src={l.photo_url} name={l.name} size="sm" />
+                      <span className="min-w-0">
+                        <span className="block font-semibold underline-offset-2 hover:underline">{displayName(l.name)}</span>
+                        <span className="block text-sm text-muted">
+                          {[l.party, l.uf].filter(Boolean).join('-')}
+                          {l.party && ' · '}
+                          {l.in_office ? `Em exercício na ${l.house_name}` : l.house_name}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             ) : (
               <ul className="mt-3 flex flex-wrap gap-2">
                 {group.items.map((p) => (

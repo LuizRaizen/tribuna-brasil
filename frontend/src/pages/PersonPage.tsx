@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { ButtonLink } from '@/components/ui/Button'
 import { ContextNote } from '@/components/ui/ContextNote'
 import { PageLoading } from '@/components/ui/Skeleton'
@@ -7,11 +7,12 @@ import { SourceSeal } from '@/components/ui/SourceSeal'
 import { FormErrors } from '@/features/auth/FormErrors'
 import { CandidatePhoto } from '@/features/candidates/components'
 import { CorrectionForm } from '@/features/feedback/CorrectionForm'
-import { type TimelineEntry, usePerson } from '@/features/people/api'
+import { type PersonDetail, type TimelineEntry, usePerson } from '@/features/people/api'
+import { ExpensesSection, MandatesSection, PropositionsSection, VotesSection } from '@/features/people/ParliamentSections'
 import { FollowButton } from '@/features/watchlist/FollowButton'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { cx } from '@/lib/cx'
-import { brasiliaDay, displayName, formatDate, sentenceCase } from '@/lib/format'
+import { brasiliaDay, displayName, formatDate, formatInt, sentenceCase } from '@/lib/format'
 import { ApiError } from '@/services/api'
 
 const ELECTED = /^eleit/i
@@ -76,8 +77,37 @@ function TimelineItem({ entry, last, today }: { entry: TimelineEntry; last: bool
   )
 }
 
+/** No celular a lista de seções rola de lado: a seção atual precisa ficar à vista. */
+function revealActive(el: HTMLAnchorElement | null) {
+  const list = el?.closest('nav')
+  if (!el || !list) return
+  const left = el.offsetLeft - (list.clientWidth - el.offsetWidth) / 2
+  list.scrollLeft = Math.max(left, 0)
+}
+
+interface Tab {
+  id: string
+  label: string
+  title: string
+  count?: number
+}
+
+/** Abas só aparecem quando há dado oficial para elas. */
+function sectionsFor(person: PersonDetail): Tab[] {
+  const tabs: Tab[] = [{ id: 'trajetoria', label: 'Candidaturas', title: 'Candidaturas', count: person.timeline.length }]
+  const p = person.parliament
+  if (!p) return tabs
+  tabs.push({ id: 'mandatos', label: 'Mandatos', title: 'Mandatos', count: p.mandates.length })
+  if (p.counts.votes > 0) tabs.push({ id: 'votacoes', label: 'Votações', title: 'Votações nominais', count: p.counts.votes })
+  if (p.counts.propositions > 0)
+    tabs.push({ id: 'proposicoes', label: 'Proposições', title: 'Proposições de autoria', count: p.counts.propositions })
+  if (p.expense_years.length > 0) tabs.push({ id: 'despesas', label: 'Despesas da cota', title: 'Despesas da cota parlamentar' })
+  return tabs
+}
+
 export default function PersonPage() {
   const { personId } = useParams()
+  const [params] = useSearchParams()
   const query = usePerson(personId)
   const person = query.data
   const [today] = useState(() => brasiliaDay(new Date()))
@@ -108,32 +138,81 @@ export default function PersonPage() {
   }
 
   const source = person.provenance[0]
+  const parliament = person.parliament
+  const tabs = sectionsFor(person)
+  const current = tabs.find((t) => t.id === params.get('aba')) ?? tabs[0]!
   return (
     <article className="container-page max-w-4xl pt-10 md:pt-14">
       <header className="flex flex-col gap-6 sm:flex-row sm:items-end">
         <CandidatePhoto src={person.photo_url} name={person.ballot_name || person.name} size="lg" />
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-azul">Trajetória eleitoral</p>
+          <p className="font-semibold text-azul">
+            {parliament?.in_office ? `Em exercício na ${parliament.house_name}` : 'Trajetória pública'}
+          </p>
           <h1 className="mt-1 text-3xl font-extrabold md:text-[2.75rem] md:leading-[1.05]">{displayName(person.name)}</h1>
-          {person.ballot_name && <p className="mt-2 text-muted">Nome de urna: {displayName(person.ballot_name)}</p>}
+          {person.ballot_name && <p className="mt-2 text-muted">Nome público: {displayName(person.ballot_name)}</p>}
+          {parliament && (
+            <p className="mt-1 text-sm text-muted">
+              {[parliament.party, parliament.uf].filter(Boolean).join('-')}
+              {parliament.party && ' · '}
+              <a href={parliament.official_url} target="_blank" rel="noopener noreferrer">
+                Página oficial na {parliament.house_name}
+                <span className="sr-only"> (abre em nova aba)</span>
+              </a>
+            </p>
+          )}
         </div>
         <FollowButton kind="person" id={String(person.id)} label={displayName(person.name)} />
       </header>
 
-      <section aria-labelledby="linha-do-tempo" className="mt-12 border-t border-line pt-8">
-        <h2 id="linha-do-tempo" className="text-xl font-extrabold">
-          Candidaturas
+      {tabs.length > 1 && (
+        <nav aria-label="Seções desta página" className="mt-10 -mb-px overflow-x-auto border-b border-line">
+          <ul className="flex gap-1">
+            {tabs.map((t) => (
+              <li key={t.id} className="shrink-0">
+                <Link
+                  to={t.id === tabs[0]!.id ? '?' : `?aba=${t.id}`}
+                  replace
+                  preventScrollReset
+                  ref={t.id === current.id ? revealActive : undefined}
+                  aria-current={t.id === current.id ? 'page' : undefined}
+                  className={cx(
+                    'inline-flex min-h-11 items-center border-b-2 px-3 text-sm font-semibold no-underline',
+                    t.id === current.id ? 'border-azul text-ink' : 'border-transparent text-muted hover:text-ink',
+                  )}
+                >
+                  {t.label}
+                  {t.count !== undefined && <span className="ml-1.5 text-xs font-normal text-muted tabular">{formatInt(t.count)}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
+      <section aria-labelledby="secao-atual" className={cx('pt-8', tabs.length > 1 ? 'mt-0' : 'mt-12 border-t border-line')}>
+        <h2 id="secao-atual" className="mb-6 text-xl font-extrabold">
+          {current.title}
         </h2>
-        <ol className="mt-6">
-          {person.timeline.map((entry, i) => (
-            <TimelineItem key={`${entry.year}-${entry.tse_id ?? entry.office}-${i}`} entry={entry} last={i === person.timeline.length - 1} today={today} />
-          ))}
-        </ol>
-        <ContextNote className="mt-8" title="Sobre esta linha do tempo">
-          Montada com o histórico de candidaturas publicado pelo TSE, que começa em {person.history_starts}. Situações
-          ausentes no arquivo oficial aparecem como “Não informado pelo TSE”: o Tribuna não completa lacunas por conta
-          própria. Mandatos exercidos entram numa próxima etapa, com dados da Câmara e do Senado.
-        </ContextNote>
+        {current.id === 'trajetoria' && (
+          <>
+            <ol>
+              {person.timeline.map((entry, i) => (
+                <TimelineItem key={`${entry.year}-${entry.tse_id ?? entry.office}-${i}`} entry={entry} last={i === person.timeline.length - 1} today={today} />
+              ))}
+            </ol>
+            {person.timeline.length === 0 && <p className="text-muted">Sem candidaturas no histórico do TSE desde {person.history_starts}.</p>}
+            <ContextNote className="mt-8" title="Sobre esta linha do tempo">
+              Montada com o histórico de candidaturas publicado pelo TSE, que começa em {person.history_starts}. Situações
+              ausentes no arquivo oficial aparecem como “Não informado pelo TSE”: o Tribuna não completa lacunas por conta
+              própria.
+            </ContextNote>
+          </>
+        )}
+        {current.id === 'mandatos' && parliament && <MandatesSection parliament={parliament} />}
+        {current.id === 'votacoes' && <VotesSection personId={person.id} />}
+        {current.id === 'proposicoes' && <PropositionsSection personId={person.id} />}
+        {current.id === 'despesas' && parliament && <ExpensesSection personId={person.id} years={parliament.expense_years} />}
       </section>
 
       <section aria-labelledby="fontes-pessoa" className="mt-12 flex flex-col gap-5 border-t border-line pt-8">

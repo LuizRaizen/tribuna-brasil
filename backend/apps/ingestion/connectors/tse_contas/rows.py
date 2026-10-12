@@ -16,9 +16,7 @@ Privacidade (LGPD, minimização):
 Arquivos de centenas de MB são lidos em fluxo, sem carregar o CSV inteiro na memória.
 """
 
-import csv
 import hashlib
-import io
 import zipfile
 from collections.abc import Iterator
 from dataclasses import dataclass, field
@@ -32,6 +30,7 @@ from apps.ingestion.connectors.tse_candidaturas.rows import (
     parse_date,
     parse_decimal,
 )
+from apps.ingestion.csvfiles import Row, iter_zip_member
 
 TOP_DONORS = 10
 TOP_SUPPLIERS = 10
@@ -90,7 +89,7 @@ class FinanceRecord:
     individual_suppliers: Tally = field(default_factory=Tally)
     payments: Tally = field(default_factory=Tally)
 
-    def note_report(self, row: "Row") -> None:
+    def note_report(self, row: Row) -> None:
         kind = REPORT_TYPES.get(clean(row["TP_PRESTACAO_CONTAS"]).upper())
         if kind:
             self.report_type = kind
@@ -134,32 +133,8 @@ class ParsedFinance:
         return len(self.rejected) / self.total_rows if self.total_rows else 1.0
 
 
-class Row:
-    """Linha do CSV acessada pelo nome da coluna, sem montar um dict por linha (bem mais rápido)."""
-
-    __slots__ = ("_index", "_values")
-
-    def __init__(self, index: dict[str, int], values: list[str]) -> None:
-        self._index = index
-        self._values = values
-
-    def __getitem__(self, column: str) -> str:
-        i = self._index[column]
-        return self._values[i] if i < len(self._values) else ""
-
-
 def _rows(archive: zipfile.ZipFile, name: str, required: set[str]) -> Iterator[Row]:
-    if name not in archive.namelist():
-        raise FileRejected(f"CSV '{name}' ausente no zip")
-    with archive.open(name) as raw:
-        reader = csv.reader(io.TextIOWrapper(raw, encoding="latin-1", newline=""), delimiter=";")
-        header = next(reader, [])
-        missing = required - set(header)
-        if missing:
-            raise FileRejected(f"Colunas ausentes em {name}: {sorted(missing)}")
-        index = {column: i for i, column in enumerate(header)}
-        for values in reader:
-            yield Row(index, values)
+    return iter_zip_member(archive, name, required=required)
 
 
 def _key(name: str) -> str:

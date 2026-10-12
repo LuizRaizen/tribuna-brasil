@@ -18,7 +18,7 @@ const MODULES = [
   },
   {
     title: 'Candidaturas',
-    description: 'Situação do registro, número de urna, chapa, resultado e bens declarados de cada candidatura.',
+    description: 'Situação do registro, chapa, resultado, bens declarados e contas de campanha de cada candidatura.',
     status: 'Disponível',
     to: '/candidaturas',
   },
@@ -30,8 +30,9 @@ const MODULES = [
   },
   {
     title: 'Congresso Nacional',
-    description: 'Projetos, votações, votos nominais e despesas de deputados e senadores.',
-    status: 'Planejado',
+    description: 'Mandatos, votos nominais, proposições e despesas da cota de deputados. Senado em breve.',
+    status: 'Em desenvolvimento',
+    to: '/busca',
   },
   {
     title: 'Processos e contas públicas',

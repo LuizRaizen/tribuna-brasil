@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CorrectionForm } from '@/features/feedback/CorrectionForm'
 import type { PersonDetail } from '@/features/people/api'
+import type { Parliament, VotesPage } from '@/features/people/parliament'
 import { FollowButton } from '@/features/watchlist/FollowButton'
 import { detail } from '@/test/fixtures/candidates'
 import { expectNoA11yViolations, mockApi, renderRoute } from '@/test/utils'
@@ -23,6 +24,7 @@ const person: PersonDetail = {
   ballot_name: 'CANDIDATA ALFA',
   candidacies: [],
   history_starts: 2004,
+  parliament: null,
   timeline: [
     {
       year: 2026, current: true, tse_id: '900001', office: 'Governador', place: 'SÃO PAULO', uf: 'SP', party: 'PA',
@@ -43,6 +45,55 @@ const person: PersonDetail = {
       portal_url: 'https://dadosabertos.tse.jus.br/',
       fetched_at: '2026-10-11T15:00:00Z',
       source_updated_at: null,
+    },
+  ],
+}
+
+const camaraSource = {
+  source_name: 'Câmara dos Deputados',
+  dataset: 'Dados Abertos da Câmara dos Deputados',
+  official_url: 'https://dadosabertos.camara.leg.br/arquivos/votacoesVotos/csv/votacoesVotos-2026.csv',
+  portal_url: 'https://dadosabertos.camara.leg.br/',
+  fetched_at: '2026-10-11T15:00:00Z',
+  source_updated_at: null,
+}
+
+const parliament: Parliament = {
+  house: 'camara',
+  house_name: 'Câmara dos Deputados',
+  external_id: '900',
+  name: 'Candidata Alfa',
+  party: 'PA',
+  uf: 'SP',
+  status: 'Exercício',
+  in_office: true,
+  photo_url: null,
+  official_url: 'https://www.camara.leg.br/deputados/900',
+  mandates: [
+    {
+      house: 'camara', legislature: 57, start: '2023-02-01', end: '2027-01-31', party: 'PA', uf: 'SP', condition: 'Titular',
+      events: [{ at: '2023-02-01T12:05', situation: 'Exercício', description: 'Entrada - Posse de Eleito Titular', party: 'PA' }],
+    },
+  ],
+  counts: { votes: 2, propositions: 0 },
+  expense_years: [],
+  provenance: camaraSource,
+}
+
+const votesPage: VotesPage = {
+  count: 2,
+  next: null,
+  options: [{ vote: 'Sim', count: 1 }, { vote: 'Não', count: 1 }],
+  provenance: camaraSource,
+  results: [
+    {
+      voting_id: '1-10', day: '2026-06-10', organ: 'PLEN', description: 'Aprovado o projeto.', approved: true,
+      proposition: { label: 'PL 1/2026', summary: 'Ementa de exemplo.', url: 'https://www.camara.leg.br/propostas-legislativas/1' },
+      vote: 'Sim', party: 'PA', uf: 'SP', official_url: 'https://dadosabertos.camara.leg.br/api/v2/votacoes/1-10',
+    },
+    {
+      voting_id: '2-20', day: '2026-06-01', organ: 'CCJC', description: 'Rejeitado o requerimento.', approved: false,
+      proposition: null, vote: 'Não', party: 'PA', uf: 'SP', official_url: 'https://dadosabertos.camara.leg.br/api/v2/votacoes/2-20',
     },
   ],
 }
@@ -71,6 +122,44 @@ describe('PersonPage', () => {
     // Sem conta, "Acompanhar" leva ao login e volta para cá.
     expect(screen.getByRole('link', { name: 'Acompanhar' })).toHaveAttribute('href', '/conta/entrar?next=%2Fpessoas%2F42')
     await expectNoA11yViolations(container)
+  })
+
+  it('sem mandato, não mostra abas de atividade parlamentar', async () => {
+    mockApi({ 'GET /api/v1/people/42/': () => ({ status: 200, body: person }) })
+    renderRoute(<PersonPage />, { path: '/pessoas/:personId', initialEntry: '/pessoas/42' })
+    await screen.findByRole('heading', { level: 1 })
+    expect(screen.queryByRole('navigation', { name: 'Seções desta página' })).not.toBeInTheDocument()
+  })
+
+  it('com mandato, separa a atividade em seções e mostra votos sem juízo de valor', async () => {
+    const api = mockApi({
+      'GET /api/v1/people/42/': () => ({ status: 200, body: { ...person, parliament } }),
+      'GET /api/v1/people/42/votes/?page=1': () => ({ status: 200, body: votesPage }),
+      'GET /api/v1/people/42/votes/?page=1&voto=Sim': () => ({
+        status: 200,
+        body: { ...votesPage, count: 1, results: [votesPage.results[0]] },
+      }),
+    })
+    const { container } = renderRoute(<PersonPage />, { path: '/pessoas/:personId', initialEntry: '/pessoas/42' })
+    const nav = await screen.findByRole('navigation', { name: 'Seções desta página' })
+    expect(within(nav).getByRole('link', { name: /Candidaturas/ })).toHaveAttribute('aria-current', 'page')
+    expect(within(nav).queryByRole('link', { name: /Despesas/ })).not.toBeInTheDocument() // sem despesas publicadas
+    expect(screen.getByText('Em exercício na Câmara dos Deputados')).toBeInTheDocument()
+
+    await userEvent.click(within(nav).getByRole('link', { name: /Mandatos/ }))
+    expect(await screen.findByText(/57ª legislatura \(2023–2027\)/)).toBeInTheDocument()
+
+    await userEvent.click(within(nav).getByRole('link', { name: /Votações/ }))
+    expect(await screen.findByText('2 votos nominais, do mais recente para o mais antigo.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /PL 1\/2026/ })).toHaveAttribute('href', 'https://www.camara.leg.br/propostas-legislativas/1')
+    // "Sim" e "Não" com o mesmo estilo: nenhum voto é destacado como melhor.
+    const [sim, nao] = [screen.getByText('Sim'), screen.getByText('Não')]
+    expect(sim.className).toBe(nao.className)
+    await expectNoA11yViolations(container)
+
+    await userEvent.selectOptions(screen.getByLabelText('Voto'), 'Sim')
+    expect(await screen.findByText('1 voto nominal, do mais recente para o mais antigo.')).toBeInTheDocument()
+    expect(api.mock.calls.some(([url]) => String(url).includes('voto=Sim'))).toBe(true)
   })
 
   it('trata pessoa inexistente', async () => {

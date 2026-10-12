@@ -115,8 +115,20 @@ export interface PartySummary {
   name: string
 }
 
+export interface LegislatorSummary {
+  person_id: number
+  name: string
+  party: string
+  uf: string
+  house: 'camara' | 'senado'
+  house_name: string
+  in_office: boolean
+  photo_url: string | null
+}
+
 export type SearchGroup =
   | { kind: 'candidacies'; label: string; total: number; items: CandidacySummary[] }
+  | { kind: 'legislators'; label: string; total: number; items: LegislatorSummary[] }
   | { kind: 'parties'; label: string; total: number; items: PartySummary[] }
 
 export interface SearchResponse {

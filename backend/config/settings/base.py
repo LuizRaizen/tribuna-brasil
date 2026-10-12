@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.elections",
     "apps.candidates",
     "apps.finance",
+    "apps.legislative",
     "apps.watchlist",
     "apps.notifications",
     "apps.feedback",
@@ -93,6 +94,17 @@ TEMPLATES = [
 DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    # Modo leve local: importação e servidor escrevem no mesmo arquivo. WAL deixa leituras
+    # seguirem durante a escrita; IMMEDIATE + timeout fazem a escrita esperar em vez de falhar.
+    DATABASES["default"]["CONN_MAX_AGE"] = 0
+    DATABASES["default"].setdefault("OPTIONS", {}).update(
+        {
+            "timeout": 30,
+            "transaction_mode": "IMMEDIATE",
+            "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
+        }
+    )
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
@@ -238,6 +250,11 @@ CELERY_BEAT_SCHEDULE = {
         "task": "candidates.import",
         "schedule": crontab(hour=6, minute=30),
     },
+    # Câmara: arquivos anuais regenerados de madrugada (votos, proposições, cota parlamentar).
+    "camara-import": {
+        "task": "legislative.import_camara",
+        "schedule": crontab(hour=8, minute=0),
+    },
     # Prestação de contas: arquivo de ~190 MB, regenerado pelo TSE de madrugada.
     "finance-import": {
         "task": "finance.import",
@@ -251,6 +268,13 @@ TSE_RESULTS_BASE_URL = env("TSE_RESULTS_BASE_URL", default="https://resultados.t
 TSE_OPEN_DATA_BASE_URL = env(
     "TSE_OPEN_DATA_BASE_URL", default="https://cdn.tse.jus.br/estatistica/sead/odsele"
 )
+CAMARA_API_BASE_URL = env(
+    "CAMARA_API_BASE_URL", default="https://dadosabertos.camara.leg.br/api/v2"
+)
+CAMARA_FILES_BASE_URL = env(
+    "CAMARA_FILES_BASE_URL", default="https://dadosabertos.camara.leg.br/arquivos"
+)
+CAMARA_CEAP_BASE_URL = env("CAMARA_CEAP_BASE_URL", default="https://www.camara.leg.br/cotas")
 # Chave do HMAC que identifica a mesma pessoa entre fontes (a partir do CPF publicado pelo TSE).
 # Deve ser estável: trocá-la desfaz a ligação entre registros já importados.
 IDENTITY_HASH_KEY = env("IDENTITY_HASH_KEY", default=SECRET_KEY)

@@ -391,3 +391,54 @@ Fica para depois: avisos por e-mail (depende da hospedagem) e mandatos exercidos
 Próximos passos sugeridos (Sprint 5): prestação de contas de campanha (arquivo de ~180 MB do TSE, ainda
 parcial até as prestações finais), Câmara e Senado (mandatos, votações, despesas), DataJud (CNJ) e TCU,
 sempre com o contexto exigido pelo escopo para dados judiciais e financeiros.
+
+## 13. Sprint 5A — Contas de campanha e Câmara dos Deputados (11/10/2026)
+
+Decisões do responsável pelo produto, em 11/10/2026:
+
+- a Sprint 5 foi dividida em 5A (contas de campanha + Câmara) e 5B (Senado, TCU, DataJud);
+- doadores aparecem com nome e valor, sem página nem busca por doador;
+- processos judiciais só serão ligados a uma pessoa por identificador oficial, nunca por nome.
+
+Entregue e validado com os arquivos reais (ver [ADR 0008](adr/0008-contas-de-campanha-e-camara.md)):
+
+| Tarefa | Situação |
+|---|---|
+| Prestação de contas do TSE: 19.223 candidaturas, 1,9 milhão de linhas, 0 rejeitadas, ~100 s | ✅ |
+| Receitas por fonte e origem, maiores doadores, despesas por categoria, maiores fornecedores | ✅ |
+| Privacidade: CPF de doador nunca lido; fornecedor pessoa física só no total | ✅ |
+| Status parcial/final, contexto obrigatório e percentual do limite marcado como cálculo próprio | ✅ |
+| Aviso "Nova atualização de prestação de contas" para quem acompanha | ✅ |
+| Câmara: 648 deputados ligados pelo HMAC do CPF (0 sem CPF), 513 em exercício | ✅ |
+| Mandatos (1.806), votos nominais (471.978), proposições (23.345) e cota parlamentar (2023–2026) | ✅ |
+| Página da pessoa em seções (Candidaturas, Mandatos, Votações, Proposições, Despesas da cota), com filtros | ✅ |
+| Busca com o grupo "Parlamentares" (64 deputados sem candidatura em 2026 ficaram encontráveis) | ✅ |
+| Snapshots brutos grandes com retenção (2 mais recentes) e download em fluxo | ✅ |
+| Marca oficial (estrela) na barra superior, no rodapé e como ícone provisório do navegador e do PWA | ✅ |
+
+Correções vindas dos dados reais e dos testes:
+
+- **Horários da Câmara** vêm sem fuso: passaram a ser tratados como horário de Brasília.
+- **Valores grandes** quebravam no meio do número em três colunas. Agora o número nunca quebra.
+- **Votos:** "Sim" em verde sugeria juízo de valor. Todos os votos passaram a ter o mesmo estilo.
+- **Selos de procedência repetidos** na mesma página tinham o mesmo nome acessível. Cada um ganhou
+  um nome próprio.
+- **Modo local:**
+  - `parar-local.ps1` deixava um processo filho com a porta presa, servindo código antigo;
+  - o SQLite travava com importação e servidor escrevendo juntos (resolvido com WAL, transações
+    `IMMEDIATE` e timeout).
+
+Testes: backend com 165 testes; frontend com 66 unitários e 20 de ponta a ponta (celular e
+computador).
+
+Fica para depois:
+
+- avisos de novas votações e despesas (exigem critério para não virar ruído);
+- legislaturas anteriores à 57ª, além do histórico de mandatos.
+
+Próximos passos (Sprint 5B):
+
+- Senado Federal: mandatos, votações e matérias, reaproveitando `Legislator`, `Mandate`, `Vote` e
+  `Proposition`;
+- TCU: contas julgadas irregulares, na seção "Controle e Contas Públicas";
+- DataJud (CNJ): só processos ligados por identificador oficial, com o aviso do escopo.

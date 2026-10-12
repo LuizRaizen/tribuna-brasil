@@ -9,6 +9,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from apps.core.pagination import DefaultPagination
+from apps.legislative.presenters import search_legislators
 from apps.parties.models import Party
 
 from .. import presenters
@@ -119,6 +120,16 @@ class SearchView(APIView):
                     "label": "Candidaturas",
                     "total": total,
                     "items": [presenters.summary(c) for c in candidacies[:SEARCH_GROUP_LIMIT]],
+                }
+            )
+        legislators = search_legislators(query)
+        if legislators:
+            groups.append(
+                {
+                    "kind": "legislators",
+                    "label": "Parlamentares",
+                    "total": len(legislators),
+                    "items": legislators[:SEARCH_GROUP_LIMIT],
                 }
             )
         if parties:

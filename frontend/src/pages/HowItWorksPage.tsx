@@ -112,6 +112,16 @@ export default function HowItWorksPage() {
               </li>
               <li>Resultados de apuração: ordem de votos recebidos, como divulgado pelo TSE.</li>
               <li>“Eleito” só aparece quando a situação oficial divulgada pelo TSE diz isso.</li>
+              <li>
+                Contas de campanha e despesas da cota parlamentar: do maior valor para o menor; em caso de empate, ordem
+                alfabética.
+              </li>
+              <li>Votações e proposições: da mais recente para a mais antiga.</li>
+              <li>
+                Votos aparecem todos com o mesmo destaque visual: nenhuma cor ou ícone sugere que um voto seja melhor que
+                outro.
+              </li>
+              <li>Cálculos feitos pelo Tribuna (como o percentual do limite de gastos) vêm marcados como tais.</li>
             </ul>
           </Section>
 
@@ -142,6 +152,16 @@ export default function HowItWorksPage() {
             <p>
               Bens declarados são autodeclarações da candidatura ao TSE e aparecem acompanhados desse aviso: não são
               avaliação de mercado nem resultado de auditoria.
+            </p>
+            <p>
+              Nas contas de campanha, o TSE publica também o CPF de quem doou. O Tribuna nem lê essa informação: mostra o
+              nome e o valor da doação, sem página nem busca por doador. Pessoas físicas contratadas por campanhas ou pagas
+              com a cota parlamentar aparecem só no total, sem nome. Empresas aparecem com nome e CNPJ, que são dados
+              cadastrais públicos.
+            </p>
+            <p>
+              O CPF de parlamentares publicado pela Câmara recebe o mesmo tratamento do TSE: vira um código irreversível,
+              usado apenas para ligar mandatos e candidaturas da mesma pessoa.
             </p>
             <p>
               Da sua conta guardamos o e-mail e a senha, protegida com Argon2id. A sessão usa um cookie inacessível a

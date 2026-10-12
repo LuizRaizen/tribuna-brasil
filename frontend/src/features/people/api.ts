@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { CandidacySummary } from '@/features/candidates/types'
+import type { Parliament } from './parliament'
 import { ApiError, errorsFrom, rawRequest } from '@/services/api'
 
 export interface TimelineEntry {
@@ -28,6 +29,8 @@ export interface PersonDetail {
   candidacies: CandidacySummary[]
   timeline: TimelineEntry[]
   history_starts: number
+  /** null: a pessoa não tem mandato registrado nas casas legislativas importadas. */
+  parliament: Parliament | null
   provenance: {
     source_name: string
     dataset: string

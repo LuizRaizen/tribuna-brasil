@@ -14,17 +14,27 @@ export interface Provenance {
 interface SourceSealProps extends Provenance {
   compact?: boolean
   className?: string
+  /** Nome do marco para leitores de tela. Deve ser único na página quando houver vários selos. */
+  label?: string
 }
 
 /**
  * Selo de procedência: acompanha todo dado externo exibido no Tribuna.
  * Responde às três perguntas do usuário: de onde veio, quando foi atualizado e onde conferir.
  */
-export function SourceSeal({ sourceName, officialUrl, fetchedAt, sourceUpdatedAt, compact, className }: SourceSealProps) {
+export function SourceSeal({
+  sourceName,
+  officialUrl,
+  fetchedAt,
+  sourceUpdatedAt,
+  compact,
+  className,
+  label = 'Procedência da informação',
+}: SourceSealProps) {
   const updated = sourceUpdatedAt ?? fetchedAt
   return (
     <aside
-      aria-label="Procedência da informação"
+      aria-label={label}
       className={cx(
         // Verde = "oficial / verificado" em todo o sistema.
         'relative flex gap-3 border-l-[3px] border-verde pl-3 text-sm',

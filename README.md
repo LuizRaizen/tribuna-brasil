@@ -92,6 +92,20 @@ Propostas de governo (PDFs oficiais, por UF; `BR` é presidente). Não rodam soz
 docker compose exec backend python manage.py importar_propostas --ano 2026 --uf BR,SP,RJ
 ```
 
+Prestação de contas de campanha (arquivo de ~190 MB; roda sozinha todo dia às 07h15):
+
+```bash
+docker compose exec backend python manage.py importar_contas --ano 2026
+```
+
+Câmara dos Deputados: deputados e mandatos, votos nominais, proposições e cota parlamentar (roda sozinha
+todo dia às 08h00, só com o ano corrente). A primeira carga consulta o perfil de cada deputado na API e
+leva cerca de 15 minutos:
+
+```bash
+docker compose exec backend python manage.py importar_camara --anos 2023,2024,2025,2026
+```
+
 O painel fica em http://localhost:5173/apuracao, a busca em `/busca` e as candidaturas em
 `/candidaturas`. No Admin, em "Feeds de resultados", é possível
 ligar ou desligar feeds e disparar uma coleta; "Sincronizações" mostra cada coleta e seu resultado.
@@ -139,11 +153,14 @@ docs/       Plano, ADRs e guia de identidade visual
 | `GET /api/v1/results/{eleicao}/{turno}/` | Feeds disponíveis no turno |
 | `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/` | Último resultado oficial, com procedência |
 | `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/stream/` | Atualizações ao vivo (SSE) |
-| `GET /api/v1/search/?q=` | Busca agrupada (candidaturas e partidos) |
+| `GET /api/v1/search/?q=` | Busca agrupada (candidaturas, parlamentares e partidos) |
 | `GET /api/v1/candidates/?cargo=&uf=&partido=&q=` | Candidaturas em ordem alfabética |
-| `GET /api/v1/candidates/{sq_candidato}/` | Candidatura completa, com bens, chapa, resultado, propostas e fontes |
+| `GET /api/v1/candidates/{sq_candidato}/` | Candidatura completa: bens, chapa, resultado, propostas, contas de campanha e fontes |
 | `GET /api/v1/candidates/{sq_candidato}/proposals/{n}.pdf` | PDF oficial da proposta de governo |
-| `GET /api/v1/people/{id}/` | Trajetória da pessoa: candidaturas desde 2004, com fontes |
+| `GET /api/v1/people/{id}/` | Pessoa: candidaturas desde 2004, mandatos e resumo parlamentar, com fontes |
+| `GET /api/v1/people/{id}/votes/?voto=&q=` | Votos nominais (mais recente primeiro) |
+| `GET /api/v1/people/{id}/propositions/?papel=autor\|coautor&tipo=` | Proposições de autoria e coautoria |
+| `GET /api/v1/people/{id}/expenses/?ano=` | Cota parlamentar: por mês, categoria e fornecedor |
 | `GET/POST /api/v1/watchlist/` · `GET/DELETE /api/v1/watchlist/{tipo}/{id}/` | Acompanhamento (privado, exige login) |
 | `GET /api/v1/notifications/` · `GET .../unread-count/` · `POST .../read/` | Avisos de mudanças (exige login) |
 | `POST /api/v1/corrections/` | Pedido de correção de informação (sem login, com limite) |

@@ -70,6 +70,55 @@ test('busca leva à página da candidatura com dados oficiais e fonte', async ({
   expect(overflow).toBeLessThanOrEqual(0)
 })
 
+test('parlamentar: seções da atividade, votos e despesas da cota', async ({ page }) => {
+  const source = { source_name: 'Câmara dos Deputados', dataset: 'Dados Abertos da Câmara dos Deputados', official_url: 'https://dadosabertos.camara.leg.br/arquivos/votacoesVotos/csv/votacoesVotos-2026.csv', portal_url: 'https://dadosabertos.camara.leg.br/', fetched_at: '2026-10-11T15:00:00Z', source_updated_at: null }
+  await page.route('**/api/v1/people/77/', (r) =>
+    r.fulfill({
+      json: {
+        id: 77, name: 'DEPUTADA EXEMPLO', full_name: 'DEPUTADA EXEMPLO', social_name: '', photo_url: null, ballot_name: 'Deputada Exemplo',
+        candidacies: [], timeline: [], history_starts: 2004, provenance: [{ ...source, fetched_at: null }],
+        parliament: {
+          house: 'camara', house_name: 'Câmara dos Deputados', external_id: '900', name: 'Deputada Exemplo', party: 'PA', uf: 'SP',
+          status: 'Exercício', in_office: true, photo_url: null, official_url: 'https://www.camara.leg.br/deputados/900',
+          mandates: [{ house: 'camara', legislature: 57, start: '2023-02-01', end: '2027-01-31', party: 'PA', uf: 'SP', condition: 'Titular', events: [] }],
+          counts: { votes: 1, propositions: 0 }, expense_years: [2026], provenance: source,
+        },
+      },
+    }),
+  )
+  await page.route('**/api/v1/people/77/votes/?page=1', (r) =>
+    r.fulfill({
+      json: {
+        count: 1, next: null, options: [{ vote: 'Sim', count: 1 }], provenance: source,
+        results: [{ voting_id: '1-1', day: '2026-06-10', organ: 'PLEN', description: 'Aprovado o projeto, com uma descrição longa o bastante para testar a quebra de linha no celular sem estourar a largura.', approved: true, proposition: { label: 'PL 1/2026', summary: 'Ementa.', url: 'https://www.camara.leg.br/propostas-legislativas/1' }, vote: 'Sim', party: 'PA', uf: 'SP', official_url: 'https://dadosabertos.camara.leg.br/api/v2/votacoes/1-1' }],
+      },
+    }),
+  )
+  await page.route('**/api/v1/people/77/expenses/?ano=2026', (r) =>
+    r.fulfill({
+      json: {
+        years: [2026], year: 2026, total: '45210.33',
+        by_category: [{ label: 'COMBUSTÍVEIS E LUBRIFICANTES', total: '30000.00', count: 40 }, { label: 'TELEFONIA', total: '15210.33', count: 9 }],
+        by_month: [{ month: 1, total: '20000.00' }, { month: 2, total: '25210.33' }],
+        top_suppliers: [{ name: 'POSTO EXEMPLO LTDA', cnpj: '12345678000190', total: '30000.00', count: 40 }],
+        individual_suppliers: { total: '0.00', count: 0 }, provenance: { ...source, official_url: 'https://www.camara.leg.br/cotas/Ano-2026.csv.zip' },
+      },
+    }),
+  )
+
+  await page.goto('/pessoas/77')
+  const nav = page.getByRole('navigation', { name: 'Seções desta página' })
+  await nav.getByRole('link', { name: /Votações/ }).click()
+  await expect(page).toHaveURL(/aba=votacoes/)
+  await expect(page.getByText('1 voto nominal, do mais recente para o mais antigo.')).toBeVisible()
+  await nav.getByRole('link', { name: /Despesas da cota/ }).click()
+  await expect(page.getByText('R$ 45.210,33')).toBeVisible()
+  await expect(page.getByText('CNPJ 12.345.678/0001-90')).toBeVisible()
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  expect(overflow).toBeLessThanOrEqual(0)
+})
+
 test('da candidatura para a trajetória da pessoa; acompanhar pede login', async ({ page }) => {
   await page.route('**/api/v1/candidates/900001/', (r) => r.fulfill({ json: detail }))
   await page.route('**/api/v1/people/42/', (r) =>

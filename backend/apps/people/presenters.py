@@ -4,6 +4,7 @@ from typing import Any
 
 from apps.candidates.models import Candidacy, HistoricalCandidacy
 from apps.candidates.presenters import OPEN_DATA_PAGE, photo_url, summary
+from apps.legislative.presenters import summary as parliament_summary
 
 from .models import Person
 
@@ -80,13 +81,16 @@ def detail(person: Person) -> dict[str, Any]:
         .order_by("-contest__election__year", "contest__office__tse_code")
     )
     latest = current[0] if current else None
+    parliament = parliament_summary(person)
     return {
         "id": person.pk,
         "name": person.social_name or person.full_name,
         "full_name": person.full_name,
         "social_name": person.social_name,
-        "photo_url": photo_url(latest) if latest else None,
-        "ballot_name": latest.ballot_name if latest else "",
+        # Sem candidatura em 2026, a foto e o nome públicos vêm da casa legislativa.
+        "photo_url": photo_url(latest) if latest else (parliament or {}).get("photo_url"),
+        "ballot_name": latest.ballot_name if latest else (parliament or {}).get("name", ""),
+        "parliament": parliament,
         "candidacies": [summary(c) for c in current],
         "timeline": _timeline(person, current),
         "history_starts": HISTORY_STARTS,

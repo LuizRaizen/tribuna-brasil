@@ -67,6 +67,8 @@ try {
         & $python manage.py importar_propostas --ano 2026 --uf BR,SP
         Step "Baixando a prestação de contas de campanha (arquivo de ~190 MB; leva alguns minutos)"
         & $python manage.py importar_contas --ano 2026
+        Step "Importando deputados, votos, proposições e cota parlamentar (Câmara; na primeira vez leva uns 15 minutos)"
+        & $python manage.py importar_camara --anos 2026
         Set-Content -Path $marker -Value (Get-Date -Format s)
     } else {
         Write-Host "Dados já carregados. Use -Recarregar para baixar de novo."

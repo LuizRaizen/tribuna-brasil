@@ -1,5 +1,6 @@
 import gzip
 import hashlib
+import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -105,10 +106,12 @@ def store_snapshot_file(
     size_bytes: int,
     fetched_at: datetime,
     sync_run: SyncRun | None = None,
+    compress: bool = False,
 ) -> StoredSnapshot:
     """Como `store_snapshot`, para arquivos grandes já baixados em disco.
 
-    O arquivo é guardado como veio (um zip já é comprimido; comprimir de novo só gasta CPU).
+    Zips são guardados como vieram (comprimir de novo só gasta CPU). CSVs grandes usam
+    `compress=True`: são comprimidos em fluxo, sem carregar o arquivo na memória.
     """
     existing = DataSnapshot.objects.filter(
         source=source, dataset=dataset, content_hash=digest
@@ -124,8 +127,16 @@ def store_snapshot_file(
         size_bytes=size_bytes,
         sync_run=sync_run,
     )
-    with path.open("rb") as fh:
-        snapshot.payload.save(f"{digest}{path.suffix}", File(fh), save=False)
+    if compress:
+        packed = path.with_name(path.name + ".gz")
+        with path.open("rb") as src, gzip.open(packed, "wb") as dst:
+            shutil.copyfileobj(src, dst, 1 << 20)
+        with packed.open("rb") as fh:
+            snapshot.payload.save(f"{digest}{path.suffix}.gz", File(fh), save=False)
+        packed.unlink()
+    else:
+        with path.open("rb") as fh:
+            snapshot.payload.save(f"{digest}{path.suffix}", File(fh), save=False)
     try:
         with transaction.atomic():
             snapshot.save()
