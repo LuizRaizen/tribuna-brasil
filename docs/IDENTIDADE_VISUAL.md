@@ -85,10 +85,14 @@ dourado. A fita que se dobra sem se partir remete à unidade; a estrela, à Rep�
   deixar um leve halo claro; para esse uso, peça uma versão vetorial (SVG) ao autor da marca.
 - **Tamanho mínimo:** 24 px. Na barra superior, 36 px.
 
-**Pendente:** o favicon e os ícones do PWA ainda usam o símbolo anterior: o losango sobre campo verde,
-com a tribuna em azul ([`frontend/public/favicon.svg`](../frontend/public/favicon.svg); ícones gerados
-com `npm run icons`). Eles serão trocados quando houver uma versão vetorial da estrela, porque o PNG
-atual tem só 194 px.
+**Ícones (provisórios desde 11/10/2026):** o favicon e os ícones do PWA usam a estrela recortada de
+`docs/marca/tribuna-icone-provisorio-original.png` (1024 px).
+- Os ícones transparentes (aba do navegador e PWA) ocupam toda a área.
+- O ícone da Apple e o recortável (maskable) usam o fundo claro `#f7f8fa`, com a arte dentro da zona
+  segura.
+
+Quando chegar a versão em alta qualidade, substitua `frontend/public/pwa-512x512.png` (transparente,
+512 px) e rode `npm run icons`. O símbolo anterior (o losango) foi aposentado.
 
 ## Assinaturas
 
