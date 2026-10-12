@@ -13,7 +13,7 @@ export interface SectionProvenance {
 }
 
 export interface Mandate {
-  house: 'camara' | 'senado'
+  house: House
   legislature: number
   start: string | null
   end: string | null
@@ -23,9 +23,19 @@ export interface Mandate {
   events: { at: string; situation: string; description: string; party: string }[]
 }
 
+export type House = 'camara' | 'senado'
+
+/** "na Câmara dos Deputados" / "no Senado Federal": a preposição muda com a casa. */
+export const IN_HOUSE: Record<House, string> = {
+  camara: 'na Câmara dos Deputados',
+  senado: 'no Senado Federal',
+}
+
 export interface Parliament {
-  house: 'camara' | 'senado'
+  house: House
   house_name: string
+  /** Casas em que a pessoa teve mandato (ex.: deputado e depois senador). */
+  houses: House[]
   external_id: string
   name: string
   party: string
@@ -42,12 +52,17 @@ export interface Parliament {
 
 export interface VoteItem {
   voting_id: string
+  house: House
   day: string | null
   organ: string
   description: string
   approved: boolean | null
+  /** Votação secreta: a casa registra só a presença ("Votou"), não o voto. */
+  secret: boolean
   proposition: { label: string; summary: string; url: string } | null
   vote: string
+  /** Significado do registro, por extenso (ex.: "P-NRV" → "Presente, sem registro de voto"). */
+  vote_label: string
   party: string
   uf: string
   official_url: string
@@ -55,6 +70,7 @@ export interface VoteItem {
 
 export interface PropositionItem {
   id: string
+  house: House
   label: string
   kind: string
   summary: string
@@ -69,11 +85,12 @@ interface Page<T> {
   count: number
   next: string | null
   results: T[]
-  provenance: SectionProvenance | null
+  /** Uma procedência por casa em que a pessoa tem mandato. */
+  provenance: SectionProvenance[]
 }
 
 export interface VotesPage extends Page<VoteItem> {
-  options: { vote: string; count: number }[]
+  options: { vote: string; label: string; count: number }[]
 }
 
 export interface PropositionsPage extends Page<PropositionItem> {

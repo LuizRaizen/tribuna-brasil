@@ -149,6 +149,36 @@ def store_snapshot_file(
     return StoredSnapshot(snapshot, created=True)
 
 
+def record_fetch_without_payload(
+    *,
+    source: Source,
+    dataset: str,
+    url: str,
+    digest: str,
+    size_bytes: int,
+    fetched_at: datetime,
+    sync_run: SyncRun | None = None,
+) -> StoredSnapshot:
+    """Registra a coleta (hash, tamanho, URL, data) **sem guardar o conteúdo**.
+
+    Para fontes cujo conteúdo bruto traz dados pessoais de quem não é figura pública (ex.: listas
+    do TCU com CPF de milhares de gestores): a trilha de auditoria fica, os dados pessoais não.
+    """
+    snapshot, created = DataSnapshot.objects.get_or_create(
+        source=source,
+        dataset=dataset,
+        content_hash=digest,
+        defaults={
+            "url": url,
+            "fetched_at": fetched_at,
+            "size_bytes": size_bytes,
+            "sync_run": sync_run,
+            "payload": "",
+        },
+    )
+    return StoredSnapshot(snapshot, created=created)
+
+
 def prune_snapshot_payloads(source: Source, dataset: str, *, keep: int) -> int:
     """Apaga o conteúdo dos snapshots antigos de um conjunto, mantendo os `keep` mais recentes.
 

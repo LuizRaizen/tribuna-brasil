@@ -442,3 +442,44 @@ Próximos passos (Sprint 5B):
   `Proposition`;
 - TCU: contas julgadas irregulares, na seção "Controle e Contas Públicas";
 - DataJud (CNJ): só processos ligados por identificador oficial, com o aviso do escopo.
+
+## 14. Sprint 5B — Senado, TCU e DataJud (12/10/2026)
+
+Entregue e validado com os dados reais (ver [ADR 0009](adr/0009-senado-tcu-datajud.md)):
+
+| Tarefa | Situação |
+|---|---|
+| Senado: 245 senadores da legislatura, 81 em exercício (as 81 cadeiras) | ✅ |
+| Ligação sem CPF só por nome + nascimento + UF exatos e únicos: 60 senadores ligados, homônimo não ligado | ✅ |
+| Votações nominais (423, 240 secretas) com 34.263 votos; siglas com o significado por extenso | ✅ |
+| Votação secreta explicada ("o Senado registra só a presença") | ✅ |
+| Proposições (18.900 autorias) e cota CEAPS (R$ 120,6 mi) | ✅ |
+| Atividade por pessoa (deputado e depois senador aparece com as duas casas) | ✅ |
+| TCU: listas eleitoral (9.201), geral (47.978) e inabilitados (779), ligadas pelo HMAC do CPF | ✅ |
+| Só 375 registros guardados (pessoas já no Tribuna); CPF e listas brutas nunca guardados | ✅ |
+| Seção "Controle e contas públicas" com contexto (não é condenação; quem decide é a Justiça Eleitoral) | ✅ |
+| DataJud: processo de registro de cada candidatura, por número oficial; sigilosos nunca exibidos | ✅ |
+| Avisos de novo registro no TCU para quem acompanha | ✅ |
+
+Descobertas nos dados reais:
+
+- **Senado sem JSON por padrão:** a API responde em XML sem `Accept: application/json`, e o
+  serviço de votos por senador foi desativado em 02/2026.
+- **DataJud lento:**
+  - levou 30 a 40 s por consulta, com limite de taxa (HTTP 429);
+  - lotes de 100 números estouravam o tempo. A consulta passou a ser **por tribunal**, paginada,
+    casando o número localmente, com espera longa entre tentativas;
+  - o filtro por data de ajuizamento não funciona em todos os tribunais (TRE-BA devolvia 90 mil
+    documentos), por isso o filtro é a data de atualização.
+- **Lacunas da fonte:** números informados pelo TSE e ausentes no DataJud (ex.: TRE-AL) são
+  contados por tribunal e relatados, nunca escondidos.
+- **CEAPS identifica pelo nome:** 19 nomes não coincidem com um senador da legislatura. São 18
+  mandatos encerrados em 01/2023 e um nome que difere do nome parlamentar. Não são atribuídos.
+- **Texto:** "na Câmara", mas "no Senado". A preposição passou a variar com a casa.
+
+Fica para depois:
+
+- processos judiciais além do registro de candidatura (o DataJud não traz as partes; ligar por nome
+  foi descartado);
+- assembleias legislativas;
+- correção manual de pessoas duplicadas entre fontes sem CPF.

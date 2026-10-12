@@ -25,6 +25,7 @@ const person: PersonDetail = {
   candidacies: [],
   history_starts: 2004,
   parliament: null,
+  oversight: null,
   timeline: [
     {
       year: 2026, current: true, tse_id: '900001', office: 'Governador', place: 'SÃO PAULO', uf: 'SP', party: 'PA',
@@ -61,6 +62,7 @@ const camaraSource = {
 const parliament: Parliament = {
   house: 'camara',
   house_name: 'Câmara dos Deputados',
+  houses: ['camara'],
   external_id: '900',
   name: 'Candidata Alfa',
   party: 'PA',
@@ -83,16 +85,16 @@ const parliament: Parliament = {
 const votesPage: VotesPage = {
   count: 2,
   next: null,
-  options: [{ vote: 'Sim', count: 1 }, { vote: 'Não', count: 1 }],
-  provenance: camaraSource,
+  options: [{ vote: 'Sim', label: 'Sim', count: 1 }, { vote: 'Não', label: 'Não', count: 1 }],
+  provenance: [camaraSource],
   results: [
     {
-      voting_id: '1-10', day: '2026-06-10', organ: 'PLEN', description: 'Aprovado o projeto.', approved: true,
+      voting_id: '1-10', house: 'camara', secret: false, vote_label: 'Sim', day: '2026-06-10', organ: 'PLEN', description: 'Aprovado o projeto.', approved: true,
       proposition: { label: 'PL 1/2026', summary: 'Ementa de exemplo.', url: 'https://www.camara.leg.br/propostas-legislativas/1' },
       vote: 'Sim', party: 'PA', uf: 'SP', official_url: 'https://dadosabertos.camara.leg.br/api/v2/votacoes/1-10',
     },
     {
-      voting_id: '2-20', day: '2026-06-01', organ: 'CCJC', description: 'Rejeitado o requerimento.', approved: false,
+      voting_id: '2-20', house: 'camara', secret: false, vote_label: 'Não', day: '2026-06-01', organ: 'CCJC', description: 'Rejeitado o requerimento.', approved: false,
       proposition: null, vote: 'Não', party: 'PA', uf: 'SP', official_url: 'https://dadosabertos.camara.leg.br/api/v2/votacoes/2-20',
     },
   ],
@@ -160,6 +162,49 @@ describe('PersonPage', () => {
     await userEvent.selectOptions(screen.getByLabelText('Voto'), 'Sim')
     expect(await screen.findByText('1 voto nominal, do mais recente para o mais antigo.')).toBeInTheDocument()
     expect(api.mock.calls.some(([url]) => String(url).includes('voto=Sim'))).toBe(true)
+  })
+
+  it('votação secreta do Senado: mostra o significado do registro e explica o sigilo', async () => {
+    const secret = {
+      ...votesPage,
+      count: 1,
+      options: [{ vote: 'Votou', label: 'Votou (votação secreta)', count: 1 }],
+      results: [
+        {
+          ...votesPage.results[0]!,
+          voting_id: '7104', house: 'senado' as const, secret: true, vote: 'Votou', vote_label: 'Votou (votação secreta)',
+        },
+      ],
+    }
+    mockApi({
+      'GET /api/v1/people/42/': () => ({ status: 200, body: { ...person, parliament: { ...parliament, house: 'senado', houses: ['senado'] } } }),
+      'GET /api/v1/people/42/votes/?page=1': () => ({ status: 200, body: secret }),
+    })
+    renderRoute(<PersonPage />, { path: '/pessoas/:personId', initialEntry: '/pessoas/42?aba=votacoes' })
+    expect(await screen.findByText('Votou (votação secreta)', { selector: 'span' })).toBeInTheDocument()
+    expect(screen.getByText(/o Senado registra só a presença, não o voto/)).toBeInTheDocument()
+    // Preposição certa: "no Senado" (e "na Câmara").
+    expect(screen.getByText('Em exercício no Senado Federal')).toBeInTheDocument()
+    expect(screen.getByText(/10 de junho de 2026 · Senado Federal/)).toBeInTheDocument()
+  })
+
+  it('mostra a seção de controle só quando há registro do TCU', async () => {
+    const oversight = {
+      items: [
+        {
+          process_number: '000.000/2020-0', lists: [{ kind: 'eleitoral' as const, label: 'Contas julgadas irregulares para fins eleitorais' }],
+          ruling: '1/2022-PL', ruling_date: null, final_on: '2022-07-16', electoral_effects_until: '2030-07-16',
+          disqualification_until: null, uf: 'SP', municipality: '', rulings_url: '', tracking_url: '',
+        },
+      ],
+      provenance: { ...camaraSource, source_name: 'Tribunal de Contas da União (TCU)' },
+    }
+    mockApi({ 'GET /api/v1/people/42/': () => ({ status: 200, body: { ...person, oversight } }) })
+    renderRoute(<PersonPage />, { path: '/pessoas/:personId', initialEntry: '/pessoas/42' })
+    const nav = await screen.findByRole('navigation', { name: 'Seções desta página' })
+    await userEvent.click(within(nav).getByRole('link', { name: /Controle e contas/ }))
+    expect(await screen.findByRole('heading', { name: 'Controle e contas públicas' })).toBeInTheDocument()
+    expect(screen.getByText(/só a Justiça Eleitoral decide sobre inelegibilidade/)).toBeInTheDocument()
   })
 
   it('trata pessoa inexistente', async () => {

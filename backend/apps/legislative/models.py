@@ -75,6 +75,8 @@ class Voting(models.Model):
     organ = models.CharField("órgão", max_length=40, blank=True)
     description = models.TextField(blank=True)
     approved = models.BooleanField(null=True)
+    # Votação secreta (Senado): a casa registra só a presença ("Votou"), não o voto.
+    secret = models.BooleanField("votação secreta", default=False)
     proposition_external_id = models.CharField(max_length=20, blank=True)
     proposition_label = models.CharField(max_length=60, blank=True)
     proposition_summary = models.TextField(blank=True)

@@ -57,7 +57,8 @@ select = ["E", "F", "W", "I", "B", "UP", "DJ", "S", "SIM", "RUF"]
 ignore = ["RUF012"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["S101", "S105", "S106"]
+# Testes carregam respostas de API no formato real, em linhas longas.
+"**/tests/**" = ["S101", "S105", "S106", "E501"]
 "conftest.py" = ["S101", "S105"]
 "config/settings/*" = ["F405", "F403"]
 

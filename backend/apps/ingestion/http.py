@@ -88,6 +88,9 @@ def fetch(
     backoff_base: float = 0.5,
     sleep: Callable[[float], None] = time.sleep,
     client: httpx.Client | None = None,
+    method: str = "GET",
+    headers: dict[str, str] | None = None,
+    json_body: object = None,
 ) -> FetchResult:
     if breaker.is_open:
         raise CircuitOpen(f"Circuito '{breaker.name}' aberto; coleta adiada.")
@@ -100,7 +103,7 @@ def fetch(
     try:
         for attempt in range(1, attempts + 1):
             try:
-                response = http.get(url)
+                response = http.request(method, url, headers=headers, json=json_body)
             except httpx.HTTPError as exc:
                 last_error = f"{type(exc).__name__}: {exc}"
             else:

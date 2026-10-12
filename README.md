@@ -106,6 +106,16 @@ leva cerca de 15 minutos:
 docker compose exec backend python manage.py importar_camara --anos 2023,2024,2025,2026
 ```
 
+Senado Federal (roda todo dia às 08h40; a primeira carga consulta os 245 senadores e leva ~25 min),
+listas públicas do TCU (09h10) e processos de registro de candidatura no DataJud/CNJ (09h40; a
+primeira carga leva ~1 h, porque o DataJud responde devagar):
+
+```bash
+docker compose exec backend python manage.py importar_senado --anos 2023,2024,2025,2026
+docker compose exec backend python manage.py importar_tcu
+docker compose exec backend python manage.py importar_processos --completo
+```
+
 O painel fica em http://localhost:5173/apuracao, a busca em `/busca` e as candidaturas em
 `/candidaturas`. No Admin, em "Feeds de resultados", é possível
 ligar ou desligar feeds e disparar uma coleta; "Sincronizações" mostra cada coleta e seu resultado.
@@ -155,9 +165,9 @@ docs/       Plano, ADRs e guia de identidade visual
 | `GET /api/v1/results/{eleicao}/{turno}/{cargo}/{local}/stream/` | Atualizações ao vivo (SSE) |
 | `GET /api/v1/search/?q=` | Busca agrupada (candidaturas, parlamentares e partidos) |
 | `GET /api/v1/candidates/?cargo=&uf=&partido=&q=` | Candidaturas em ordem alfabética |
-| `GET /api/v1/candidates/{sq_candidato}/` | Candidatura completa: bens, chapa, resultado, propostas, contas de campanha e fontes |
+| `GET /api/v1/candidates/{sq_candidato}/` | Candidatura completa: bens, chapa, resultado, propostas, contas de campanha, processo de registro (DataJud) e fontes |
 | `GET /api/v1/candidates/{sq_candidato}/proposals/{n}.pdf` | PDF oficial da proposta de governo |
-| `GET /api/v1/people/{id}/` | Pessoa: candidaturas desde 2004, mandatos e resumo parlamentar, com fontes |
+| `GET /api/v1/people/{id}/` | Pessoa: candidaturas desde 2004, mandatos (Câmara e Senado), registros no TCU, com fontes |
 | `GET /api/v1/people/{id}/votes/?voto=&q=` | Votos nominais (mais recente primeiro) |
 | `GET /api/v1/people/{id}/propositions/?papel=autor\|coautor&tipo=` | Proposições de autoria e coautoria |
 | `GET /api/v1/people/{id}/expenses/?ano=` | Cota parlamentar: por mês, categoria e fornecedor |

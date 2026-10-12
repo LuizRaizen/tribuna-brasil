@@ -12,6 +12,7 @@ import type { CandidacyDetail } from '@/features/candidates/types'
 import { FormErrors } from '@/features/auth/FormErrors'
 import { CorrectionForm } from '@/features/feedback/CorrectionForm'
 import { CampaignFinanceSection } from '@/features/finance/CampaignFinanceSection'
+import { RegistrationProcessSection } from '@/features/judicial/RegistrationProcessSection'
 import { FollowButton } from '@/features/watchlist/FollowButton'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { ApiError } from '@/services/api'
@@ -263,6 +264,12 @@ export default function CandidacyPage() {
             </ContextNote>
           )}
         </Section>
+
+        {c.registration_process_detail && (
+          <Section id="processo-registro" title="Processo de registro da candidatura">
+            <RegistrationProcessSection process={c.registration_process_detail} />
+          </Section>
+        )}
 
         {c.results.length > 0 && (
           <Section id="resultado" title="Resultado">

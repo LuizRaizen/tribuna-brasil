@@ -8,6 +8,8 @@ import { FormErrors } from '@/features/auth/FormErrors'
 import { CandidatePhoto } from '@/features/candidates/components'
 import { CorrectionForm } from '@/features/feedback/CorrectionForm'
 import { type PersonDetail, type TimelineEntry, usePerson } from '@/features/people/api'
+import { OversightSection } from '@/features/oversight/OversightSection'
+import { IN_HOUSE } from '@/features/people/parliament'
 import { ExpensesSection, MandatesSection, PropositionsSection, VotesSection } from '@/features/people/ParliamentSections'
 import { FollowButton } from '@/features/watchlist/FollowButton'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -95,6 +97,14 @@ interface Tab {
 /** Abas só aparecem quando há dado oficial para elas. */
 function sectionsFor(person: PersonDetail): Tab[] {
   const tabs: Tab[] = [{ id: 'trajetoria', label: 'Candidaturas', title: 'Candidaturas', count: person.timeline.length }]
+  if (person.oversight) {
+    tabs.push({
+      id: 'controle',
+      label: 'Controle e contas',
+      title: 'Controle e contas públicas',
+      count: person.oversight.items.length,
+    })
+  }
   const p = person.parliament
   if (!p) return tabs
   tabs.push({ id: 'mandatos', label: 'Mandatos', title: 'Mandatos', count: p.mandates.length })
@@ -147,7 +157,7 @@ export default function PersonPage() {
         <CandidatePhoto src={person.photo_url} name={person.ballot_name || person.name} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-azul">
-            {parliament?.in_office ? `Em exercício na ${parliament.house_name}` : 'Trajetória pública'}
+            {parliament?.in_office ? `Em exercício ${IN_HOUSE[parliament.house]}` : 'Trajetória pública'}
           </p>
           <h1 className="mt-1 text-3xl font-extrabold md:text-[2.75rem] md:leading-[1.05]">{displayName(person.name)}</h1>
           {person.ballot_name && <p className="mt-2 text-muted">Nome público: {displayName(person.ballot_name)}</p>}
@@ -156,7 +166,7 @@ export default function PersonPage() {
               {[parliament.party, parliament.uf].filter(Boolean).join('-')}
               {parliament.party && ' · '}
               <a href={parliament.official_url} target="_blank" rel="noopener noreferrer">
-                Página oficial na {parliament.house_name}
+                Página oficial {IN_HOUSE[parliament.house]}
                 <span className="sr-only"> (abre em nova aba)</span>
               </a>
             </p>
@@ -209,6 +219,7 @@ export default function PersonPage() {
             </ContextNote>
           </>
         )}
+        {current.id === 'controle' && person.oversight && <OversightSection oversight={person.oversight} />}
         {current.id === 'mandatos' && parliament && <MandatesSection parliament={parliament} />}
         {current.id === 'votacoes' && <VotesSection personId={person.id} />}
         {current.id === 'proposicoes' && <PropositionsSection personId={person.id} />}

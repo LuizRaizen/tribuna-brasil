@@ -20,16 +20,29 @@ const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', '
 const day = (iso: string) => formatDate(new Date(`${iso.slice(0, 10)}T12:00:00-03:00`))
 const plural = (n: number, one: string, many: string) => `${formatInt(n)} ${n === 1 ? one : many}`
 
-function Provenance({ p, section }: { p: SectionProvenance | null | undefined; section: string }) {
-  if (!p?.fetched_at) return null
+const HOUSE_NAME = { camara: 'Câmara dos Deputados', senado: 'Senado Federal' } as const
+
+function Provenance({
+  p,
+  section,
+}: {
+  p: SectionProvenance | SectionProvenance[] | null | undefined
+  section: string
+}) {
+  const items = (Array.isArray(p) ? p : p ? [p] : []).filter((s) => s.fetched_at)
+  if (items.length === 0) return null
   return (
-    <SourceSeal
-      sourceName={`${p.source_name}, ${p.dataset}`}
-      officialUrl={p.official_url}
-      fetchedAt={new Date(p.fetched_at)}
-      className="mt-8"
-      label={`Procedência: ${section}`}
-    />
+    <div className="mt-8 flex flex-col gap-4">
+      {items.map((s) => (
+        <SourceSeal
+          key={s.source_name}
+          sourceName={`${s.source_name}, ${s.dataset}`}
+          officialUrl={s.official_url}
+          fetchedAt={new Date(s.fetched_at!)}
+          label={items.length > 1 ? `Procedência: ${section}, ${s.source_name}` : `Procedência: ${section}`}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -76,10 +89,10 @@ export function MandatesSection({ parliament }: { parliament: Parliament }) {
           <li key={`${m.house}-${m.legislature}`} className="py-4">
             <p className="font-bold">
               {legislatureLabel(m)}
-              <span className="font-normal text-muted">, {m.house === 'camara' ? 'Câmara dos Deputados' : 'Senado Federal'}</span>
+              <span className="font-normal text-muted">, {HOUSE_NAME[m.house]}</span>
             </p>
             <p className="text-sm text-muted">
-              {[m.condition, [m.party, m.uf].filter(Boolean).join('-')].filter(Boolean).join('. ') || 'Condição não informada pela Câmara'}
+              {[m.condition, [m.party, m.uf].filter(Boolean).join('-')].filter(Boolean).join('. ') || 'Condição não informada pela casa'}
             </p>
             {m.events.length > 0 && (
               <details className="mt-2 text-sm">
@@ -98,8 +111,9 @@ export function MandatesSection({ parliament }: { parliament: Parliament }) {
         ))}
       </ol>
       <ContextNote className="mt-6">
-        Histórico de mandatos publicado pela Câmara dos Deputados. As datas de cada legislatura são as oficiais; entradas e
-        saídas (posse, licença, afastamento) aparecem como a Câmara as registra.
+        Histórico de mandatos publicado por cada casa legislativa. As datas de cada legislatura são as oficiais; entradas e
+        saídas (posse, licença, afastamento) aparecem como a casa as registra. No Senado, um mandato dura duas
+        legislaturas (oito anos).
       </ContextNote>
       <Provenance p={parliament.provenance} section="mandatos" />
     </>
@@ -127,7 +141,7 @@ export function VotesSection({ personId }: { personId: number }) {
           <option value="">Todos</option>
           {first?.options.map((o) => (
             <option key={o.vote} value={o.vote}>
-              {(o.vote || 'Sem registro') + ` (${formatInt(o.count)})`}
+              {o.label + ` (${formatInt(o.count)})`}
             </option>
           ))}
         </Select>
@@ -164,7 +178,9 @@ export function VotesSection({ personId }: { personId: number }) {
             <div className="min-w-0">
               <p className="text-sm text-muted">
                 {v.day ? day(v.day) : 'Data não informada'}
-                {v.organ && ` · ${v.organ}`}
+                {` · ${HOUSE_NAME[v.house]}`}
+                {v.organ && v.organ !== 'PLEN' && ` · ${v.organ}`}
+                {v.organ === 'PLEN' && ' · Plenário'}
                 {v.approved !== null && ` · ${v.approved ? 'Aprovada' : 'Rejeitada'}`}
               </p>
               {v.proposition ? (
@@ -177,11 +193,16 @@ export function VotesSection({ personId }: { personId: number }) {
                 </p>
               ) : null}
               {v.description && <p className="mt-1 text-sm break-words">{v.description}</p>}
+              {v.secret && (
+                <p className="mt-1 text-sm text-muted">
+                  Votação secreta: o Senado registra só a presença, não o voto de cada senador.
+                </p>
+              )}
             </div>
             <p className="sm:text-right">
               {/* Mesmo estilo para qualquer voto: cor sugeriria que um voto é melhor que outro. */}
               <span className="inline-block rounded-full border border-line-strong px-3 py-1 text-sm font-semibold">
-                {v.vote || 'Sem registro de voto'}
+                {v.vote_label}
               </span>
               <span className="mt-1 block text-xs text-muted">
                 {[v.party, v.uf].filter(Boolean).join('-')} na votação ·{' '}
@@ -197,8 +218,9 @@ export function VotesSection({ personId }: { personId: number }) {
       {first && items.length === 0 && <p className="mt-4 text-muted">Nenhum voto encontrado com esses filtros.</p>}
       <LoadMore hasNext={Boolean(query.hasNextPage)} loading={query.isFetchingNextPage} onClick={() => query.fetchNextPage()} />
       <ContextNote className="mt-6">
-        Votos nominais registrados pela Câmara dos Deputados. Um voto isolado não resume a atuação de ninguém: a
-        votação pode ser sobre um requerimento, um destaque ou o texto principal. Veja o contexto completo na fonte.
+        Votos nominais registrados pela casa legislativa. Um voto isolado não resume a atuação de ninguém: a votação
+        pode ser sobre um requerimento, um destaque ou o texto principal. Ausências e licenças aparecem com o motivo
+        registrado pela casa. Veja o contexto completo na fonte.
       </ContextNote>
       <Provenance p={first?.provenance} section="votações" />
     </>
@@ -242,6 +264,7 @@ export function PropositionsSection({ personId }: { personId: number }) {
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <a href={p.url} target="_blank" rel="noopener noreferrer" className="font-semibold">
                 {p.label}
+                <span className="font-normal text-muted"> · {HOUSE_NAME[p.house]}</span>
                 <span className="sr-only"> (abre em nova aba)</span>
               </a>
               <span className="rounded-full bg-sunken px-2.5 py-0.5 text-xs font-semibold">
@@ -251,7 +274,7 @@ export function PropositionsSection({ personId }: { personId: number }) {
             {p.summary && <p className="mt-1 text-sm break-words">{p.summary}</p>}
             <p className="mt-1 text-sm text-muted">
               {p.presented_at && `Apresentada em ${day(p.presented_at)}. `}
-              {p.status ? `Situação: ${sentenceCase(p.status)}` : 'Situação não informada pela Câmara'}
+              {p.status ? `Situação: ${sentenceCase(p.status)}` : 'Situação não informada pela casa'}
             </p>
           </li>
         ))}
@@ -259,8 +282,9 @@ export function PropositionsSection({ personId }: { personId: number }) {
       {first && items.length === 0 && <p className="mt-4 text-muted">Nenhuma proposição com esses filtros.</p>}
       <LoadMore hasNext={Boolean(query.hasNextPage)} loading={query.isFetchingNextPage} onClick={() => query.fetchNextPage()} />
       <ContextNote className="mt-6">
-        Proposições em que a pessoa aparece como autora ou coautora, segundo a Câmara. Inclui projetos de lei, de lei
-        complementar, de decreto legislativo e propostas de emenda à Constituição apresentados de 2023 em diante.
+        Proposições em que a pessoa aparece como autora ou coautora, segundo a casa legislativa: projetos de lei, de lei
+        complementar, de decreto legislativo e de resolução e propostas de emenda à Constituição com tramitação desde
+        2023. No Senado, autor principal é o primeiro nome da autoria publicada.
       </ContextNote>
       <Provenance p={first?.provenance} section="proposições" />
     </>
@@ -275,7 +299,7 @@ export function ExpensesSection({ personId, years }: { personId: number; years: 
   const data = query.data
   if (query.isPending) return <PageLoading label="Carregando despesas" />
   if (query.isError) return <FormErrors error={query.error} />
-  if (!data?.year || !data.total) return <p className="text-muted">A Câmara não publicou despesas da cota para esta pessoa.</p>
+  if (!data?.year || !data.total) return <p className="text-muted">A casa legislativa não publicou despesas da cota para esta pessoa.</p>
 
   const months = data.by_month ?? []
   const maxMonth = Math.max(...months.map((m) => Number(m.total)), 1)
@@ -346,9 +370,9 @@ export function ExpensesSection({ personId, years }: { personId: number; years: 
       )}
 
       <ContextNote>
-        A Cota para o Exercício da Atividade Parlamentar reembolsa despesas ligadas ao mandato, dentro de regras e limites
-        definidos pela Câmara. Os valores são os líquidos publicados, incluindo devoluções (que aparecem negativas). Usar a
-        cota não indica irregularidade; cada documento pode ser conferido na fonte.
+        A cota parlamentar (CEAP na Câmara, CEAPS no Senado) reembolsa despesas ligadas ao mandato, dentro de regras e
+        limites definidos por cada casa. Os valores são os publicados, incluindo devoluções (que aparecem negativas). Usar
+        a cota não indica irregularidade; cada documento pode ser conferido na fonte.
       </ContextNote>
       <Provenance p={data.provenance} section="despesas da cota" />
     </div>

@@ -189,7 +189,8 @@ def test_person_api_exposes_parliament_and_activity(imported: Any) -> None:
 
     votes = http.get(f"/api/v1/people/{person.pk}/votes/").json()
     assert votes["count"] == parliament["counts"]["votes"] > 0
-    assert votes["provenance"]["source_name"] == "Câmara dos Deputados"
+    assert votes["provenance"][0]["source_name"] == "Câmara dos Deputados"
+    assert first_vote_label_matches(votes["results"])
     first = votes["results"][0]
     assert first["official_url"].endswith(first["voting_id"])
     days = [v["day"] for v in votes["results"]]
@@ -215,6 +216,11 @@ def test_search_finds_legislators_without_candidacy(imported: Any) -> None:
     item = group["items"][0]
     assert item["name"] == f"Deputado {NEW}" and item["house"] == "camara"
     assert item["person_id"] == Legislator.objects.get(external_id=NEW).person_id
+
+
+def first_vote_label_matches(results: list[dict[str, Any]]) -> bool:
+    """Na Câmara o voto já vem por extenso: o rótulo é o próprio voto (vazio vira texto claro)."""
+    return all(r["vote_label"] == (r["vote"] or "Sem registro de voto") for r in results)
 
 
 def test_people_without_mandate_have_no_activity_endpoints(imported: Any) -> None:

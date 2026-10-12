@@ -3,7 +3,7 @@ import { ApiError, errorsFrom, rawRequest } from '@/services/api'
 
 export interface Notice {
   id: number
-  kind: 'registration' | 'round_status' | 'assets' | 'result_final' | 'proposal' | 'finance'
+  kind: 'registration' | 'round_status' | 'assets' | 'result_final' | 'proposal' | 'finance' | 'oversight'
   title: string
   body: string
   url: string

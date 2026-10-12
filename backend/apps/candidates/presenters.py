@@ -8,6 +8,7 @@ from django.db.models import Prefetch, QuerySet
 
 from apps.elections.models import CandidateResult
 from apps.finance.presenters import finance as campaign_finance
+from apps.judicial.presenters import registration_process
 from apps.sources.services import provenance_of
 
 from .models import Candidacy, DeclaredAsset
@@ -168,6 +169,7 @@ def detail(candidacy: Candidacy) -> dict[str, Any]:
             for p in candidacy.proposals.all()
         ],
         "finance": campaign_finance(candidacy),
+        "registration_process_detail": registration_process(candidacy),
         "provenance": _provenance(candidacy),
     }
 
@@ -175,7 +177,7 @@ def detail(candidacy: Candidacy) -> dict[str, Any]:
 def detail_queryset() -> QuerySet[Candidacy]:
     return (
         base_queryset()
-        .select_related("ticket_head__contest__office", "finance")
+        .select_related("ticket_head__contest__office", "finance", "judicial_process")
         .prefetch_related(
             Prefetch("assets", queryset=DeclaredAsset.objects.order_by("order")),
             "proposals",

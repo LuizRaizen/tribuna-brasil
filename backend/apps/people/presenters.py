@@ -5,6 +5,7 @@ from typing import Any
 from apps.candidates.models import Candidacy, HistoricalCandidacy
 from apps.candidates.presenters import OPEN_DATA_PAGE, photo_url, summary
 from apps.legislative.presenters import summary as parliament_summary
+from apps.oversight.presenters import oversight
 
 from .models import Person
 
@@ -91,6 +92,7 @@ def detail(person: Person) -> dict[str, Any]:
         "photo_url": photo_url(latest) if latest else (parliament or {}).get("photo_url"),
         "ballot_name": latest.ballot_name if latest else (parliament or {}).get("name", ""),
         "parliament": parliament,
+        "oversight": oversight(person),
         "candidacies": [summary(c) for c in current],
         "timeline": _timeline(person, current),
         "history_starts": HISTORY_STARTS,

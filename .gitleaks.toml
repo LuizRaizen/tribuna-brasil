@@ -7,6 +7,8 @@ title = "Tribuna Brasil"
 useDefault = true
 
 [allowlist]
+# Chave PÚBLICA da API do DataJud, publicada pelo CNJ em https://datajud-wiki.cnj.jus.br/api-publica/acesso
+regexes = ['''cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==''']
 description = "Credenciais fictícias em testes automatizados"
 paths = [
   '''(^|/)tests?/''',

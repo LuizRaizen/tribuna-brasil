@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { MIN_QUERY_LENGTH, useDebounced, useSearch } from '@/features/candidates/api'
 import { CandidacyRow, CandidatePhoto } from '@/features/candidates/components'
 import { FormErrors } from '@/features/auth/FormErrors'
+import { IN_HOUSE } from '@/features/people/parliament'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { cx } from '@/lib/cx'
 import { displayName, formatInt } from '@/lib/format'
@@ -110,7 +111,7 @@ export default function SearchPage() {
                         <span className="block text-sm text-muted">
                           {[l.party, l.uf].filter(Boolean).join('-')}
                           {l.party && ' · '}
-                          {l.in_office ? `Em exercício na ${l.house_name}` : l.house_name}
+                          {l.in_office ? `Em exercício ${IN_HOUSE[l.house]}` : l.house_name}
                         </span>
                       </span>
                     </Link>

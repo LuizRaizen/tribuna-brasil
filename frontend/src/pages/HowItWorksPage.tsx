@@ -132,6 +132,18 @@ export default function HowItWorksPage() {
               usamos linguagem descritiva: “há registro de processo público relacionado a…”.
             </p>
             <p>Processos sob sigilo não são exibidos.</p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>
+                Processos judiciais vêm do DataJud, do Conselho Nacional de Justiça, que não informa quem são as partes.
+                Por isso o Tribuna só mostra processos ligados à pessoa por um número oficial, como o processo de registro
+                de candidatura informado pelo TSE. Nenhum processo é atribuído a alguém pela semelhança de nomes.
+              </li>
+              <li>
+                Registros do Tribunal de Contas da União (contas julgadas irregulares, lista para fins eleitorais e
+                inabilitações) são ligados pelo CPF publicado pelo próprio TCU. Só a Justiça Eleitoral decide sobre
+                inelegibilidade.
+              </li>
+            </ul>
             <ContextNote>{JUDICIAL_DISCLAIMER}</ContextNote>
           </Section>
 
@@ -161,7 +173,13 @@ export default function HowItWorksPage() {
             </p>
             <p>
               O CPF de parlamentares publicado pela Câmara recebe o mesmo tratamento do TSE: vira um código irreversível,
-              usado apenas para ligar mandatos e candidaturas da mesma pessoa.
+              usado apenas para ligar mandatos e candidaturas da mesma pessoa. O Senado não publica CPF: um senador só é
+              ligado a uma candidatura quando nome completo, data de nascimento e estado de nascimento coincidem
+              exatamente.
+            </p>
+            <p>
+              As listas do TCU trazem o CPF de dezenas de milhares de gestores. O Tribuna guarda apenas os registros de
+              quem já tem candidatura ou mandato aqui, e nunca guarda o CPF nem a lista completa.
             </p>
             <p>
               Da sua conta guardamos o e-mail e a senha, protegida com Argon2id. A sessão usa um cookie inacessível a

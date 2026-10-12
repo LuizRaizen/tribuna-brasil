@@ -69,6 +69,12 @@ try {
         & $python manage.py importar_contas --ano 2026
         Step "Importando deputados, votos, proposições e cota parlamentar (Câmara; na primeira vez leva uns 15 minutos)"
         & $python manage.py importar_camara --anos 2026
+        Step "Importando senadores, votações e cota (Senado; na primeira vez leva uns 25 minutos)"
+        & $python manage.py importar_senado --anos 2026
+        Step "Lendo as listas públicas do TCU (guarda só quem já está no Tribuna)"
+        & $python manage.py importar_tcu
+        Step "Consultando no DataJud (CNJ) os processos de registro de candidatura"
+        & $python manage.py importar_processos
         Set-Content -Path $marker -Value (Get-Date -Format s)
     } else {
         Write-Host "Dados já carregados. Use -Recarregar para baixar de novo."

@@ -1,4 +1,5 @@
 /** Contrato de /api/v1/candidates e /api/v1/search (espelha apps/candidates/presenters.py). */
+import type { RegistrationProcess } from '@/features/judicial/RegistrationProcessSection'
 
 export interface CandidacySummary {
   tse_id: string
@@ -58,6 +59,8 @@ export interface CandidacyDetail extends Omit<CandidacySummary, 'party'> {
   proposals: { order: number; url: string; size_bytes: number; source_url: string; fetched_at: string }[]
   /** null: o arquivo do TSE consultado não traz prestação de contas desta candidatura. */
   finance: CampaignFinance | null
+  /** Andamento no DataJud (CNJ), pelo número do processo de registro informado pelo TSE. */
+  registration_process_detail: RegistrationProcess | null
   provenance: {
     source_name: string
     dataset: string

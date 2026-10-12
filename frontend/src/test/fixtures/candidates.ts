@@ -45,6 +45,7 @@ export function detail(overrides: Partial<CandidacyDetail> = {}): CandidacyDetai
     },
     results: [],
     finance: null,
+    registration_process_detail: null,
     person_id: 42,
     previous_candidacies: 2,
     proposals: [

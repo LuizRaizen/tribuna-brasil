@@ -37,6 +37,7 @@ const detail = {
   previous_candidacies: 1,
   proposals: [],
   finance: null,
+  registration_process_detail: null,
   provenance: [
     {
       source_name: 'Tribunal Superior Eleitoral (TSE)',
@@ -76,9 +77,9 @@ test('parlamentar: seções da atividade, votos e despesas da cota', async ({ pa
     r.fulfill({
       json: {
         id: 77, name: 'DEPUTADA EXEMPLO', full_name: 'DEPUTADA EXEMPLO', social_name: '', photo_url: null, ballot_name: 'Deputada Exemplo',
-        candidacies: [], timeline: [], history_starts: 2004, provenance: [{ ...source, fetched_at: null }],
+        candidacies: [], timeline: [], history_starts: 2004, provenance: [{ ...source, fetched_at: null }], oversight: null,
         parliament: {
-          house: 'camara', house_name: 'Câmara dos Deputados', external_id: '900', name: 'Deputada Exemplo', party: 'PA', uf: 'SP',
+          house: 'camara', house_name: 'Câmara dos Deputados', houses: ['camara'], external_id: '900', name: 'Deputada Exemplo', party: 'PA', uf: 'SP',
           status: 'Exercício', in_office: true, photo_url: null, official_url: 'https://www.camara.leg.br/deputados/900',
           mandates: [{ house: 'camara', legislature: 57, start: '2023-02-01', end: '2027-01-31', party: 'PA', uf: 'SP', condition: 'Titular', events: [] }],
           counts: { votes: 1, propositions: 0 }, expense_years: [2026], provenance: source,
@@ -89,8 +90,8 @@ test('parlamentar: seções da atividade, votos e despesas da cota', async ({ pa
   await page.route('**/api/v1/people/77/votes/?page=1', (r) =>
     r.fulfill({
       json: {
-        count: 1, next: null, options: [{ vote: 'Sim', count: 1 }], provenance: source,
-        results: [{ voting_id: '1-1', day: '2026-06-10', organ: 'PLEN', description: 'Aprovado o projeto, com uma descrição longa o bastante para testar a quebra de linha no celular sem estourar a largura.', approved: true, proposition: { label: 'PL 1/2026', summary: 'Ementa.', url: 'https://www.camara.leg.br/propostas-legislativas/1' }, vote: 'Sim', party: 'PA', uf: 'SP', official_url: 'https://dadosabertos.camara.leg.br/api/v2/votacoes/1-1' }],
+        count: 1, next: null, options: [{ vote: 'Sim', label: 'Sim', count: 1 }], provenance: [source],
+        results: [{ voting_id: '1-1', house: 'camara', secret: false, vote_label: 'Sim', day: '2026-06-10', organ: 'PLEN', description: 'Aprovado o projeto, com uma descrição longa o bastante para testar a quebra de linha no celular sem estourar a largura.', approved: true, proposition: { label: 'PL 1/2026', summary: 'Ementa.', url: 'https://www.camara.leg.br/propostas-legislativas/1' }, vote: 'Sim', party: 'PA', uf: 'SP', official_url: 'https://dadosabertos.camara.leg.br/api/v2/votacoes/1-1' }],
       },
     }),
   )

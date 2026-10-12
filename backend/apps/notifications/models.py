@@ -12,6 +12,7 @@ class Notification(models.Model):
         RESULT_FINAL = "result_final", "Resultado final"
         PROPOSAL = "proposal", "Proposta de governo"
         FINANCE = "finance", "Prestação de contas"
+        OVERSIGHT = "oversight", "Controle e contas públicas"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"

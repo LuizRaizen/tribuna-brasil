@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "apps.candidates",
     "apps.finance",
     "apps.legislative",
+    "apps.oversight",
+    "apps.judicial",
     "apps.watchlist",
     "apps.notifications",
     "apps.feedback",
@@ -255,6 +257,20 @@ CELERY_BEAT_SCHEDULE = {
         "task": "legislative.import_camara",
         "schedule": crontab(hour=8, minute=0),
     },
+    "senado-import": {
+        "task": "legislative.import_senado",
+        "schedule": crontab(hour=8, minute=40),
+    },
+    # TCU: listas públicas (contas irregulares, fins eleitorais, inabilitados), uma vez por dia.
+    "tcu-import": {
+        "task": "oversight.import_tcu",
+        "schedule": crontab(hour=9, minute=10),
+    },
+    # DataJud: andamento dos processos de registro de candidatura.
+    "datajud-import": {
+        "task": "judicial.import_registration_processes",
+        "schedule": crontab(hour=9, minute=40),
+    },
     # Prestação de contas: arquivo de ~190 MB, regenerado pelo TSE de madrugada.
     "finance-import": {
         "task": "finance.import",
@@ -275,6 +291,21 @@ CAMARA_FILES_BASE_URL = env(
     "CAMARA_FILES_BASE_URL", default="https://dadosabertos.camara.leg.br/arquivos"
 )
 CAMARA_CEAP_BASE_URL = env("CAMARA_CEAP_BASE_URL", default="https://www.camara.leg.br/cotas")
+SENADO_API_BASE_URL = env("SENADO_API_BASE_URL", default="https://legis.senado.leg.br/dadosabertos")
+SENADO_CEAPS_BASE_URL = env(
+    "SENADO_CEAPS_BASE_URL", default="https://www.senado.gov.br/transparencia/LAI/verba"
+)
+TCU_CERTIDOES_BASE_URL = env(
+    "TCU_CERTIDOES_BASE_URL", default="https://certidoes.apps.tcu.gov.br/api/publico"
+)
+TCU_ORDS_BASE_URL = env("TCU_ORDS_BASE_URL", default="https://contas.tcu.gov.br/ords/condenacao")
+DATAJUD_BASE_URL = env("DATAJUD_BASE_URL", default="https://api-publica.datajud.cnj.jus.br")
+# Chave pública do DataJud, publicada pelo CNJ na wiki da API (não é segredo; o CNJ pode trocá-la:
+# https://datajud-wiki.cnj.jus.br/api-publica/acesso).
+DATAJUD_API_KEY = env(
+    "DATAJUD_API_KEY",
+    default="cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==",  # nosec B105
+)
 # Chave do HMAC que identifica a mesma pessoa entre fontes (a partir do CPF publicado pelo TSE).
 # Deve ser estável: trocá-la desfaz a ligação entre registros já importados.
 IDENTITY_HASH_KEY = env("IDENTITY_HASH_KEY", default=SECRET_KEY)

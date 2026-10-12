@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import type { CandidacySummary } from '@/features/candidates/types'
+import type { Oversight } from '@/features/oversight/OversightSection'
 import type { Parliament } from './parliament'
 import { ApiError, errorsFrom, rawRequest } from '@/services/api'
 
@@ -31,6 +32,8 @@ export interface PersonDetail {
   history_starts: number
   /** null: a pessoa não tem mandato registrado nas casas legislativas importadas. */
   parliament: Parliament | null
+  /** null: nenhum registro desta pessoa nas listas públicas do TCU. */
+  oversight: Oversight | null
   provenance: {
     source_name: string
     dataset: string

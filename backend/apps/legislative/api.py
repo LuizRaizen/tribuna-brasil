@@ -10,21 +10,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.pagination import DefaultPagination
-from apps.ingestion.connectors.camara import client
 from apps.people.models import Person
 
 from . import presenters
-from .models import Legislator
 
 PUBLIC_CACHE = "public, max-age=600"
 
 
-def _legislator(person_id: int) -> Legislator:
+def _parliamentarian(person_id: int) -> Person:
     person = Person.objects.filter(pk=person_id).first()
-    legislator = presenters.legislators_of(person).first() if person else None
-    if legislator is None:
+    if person is None or not presenters.legislators_of(person).exists():
         raise Http404
-    return legislator
+    return person
 
 
 def _public(response: Response) -> Response:
@@ -38,25 +35,23 @@ class VotesView(APIView):
     @extend_schema(
         operation_id="people_votes",
         parameters=[
-            OpenApiParameter("voto", str, description="Ex.: Sim, Não, Abstenção"),
+            OpenApiParameter("voto", str, description="Registro exato, ex.: Sim, Não, P-NRV"),
             OpenApiParameter("q", str, description="Texto na votação ou na proposição"),
         ],
         responses=OpenApiTypes.OBJECT,
     )
     def get(self, request: Request, person_id: int) -> Response:
-        legislator = _legislator(person_id)
+        person = _parliamentarian(person_id)
         qs = presenters.votes_queryset(
-            legislator,
+            person,
             vote=request.query_params.get("voto", "").strip(),
             q=request.query_params.get("q", "").strip()[:100],
         )
         paginator = DefaultPagination()
         page = paginator.paginate_queryset(qs, request, view=self) or []
         response = paginator.get_paginated_response([presenters.vote_item(v) for v in page])
-        response.data["options"] = presenters.vote_options(legislator)
-        response.data["provenance"] = presenters.dataset_provenance(
-            [client.yearly_files(y)["votos"].dataset for y in range(2023, 2027)]
-        )
+        response.data["options"] = presenters.vote_options(person)
+        response.data["provenance"] = presenters.activity_provenance(person, "votes")
         return _public(response)
 
 
@@ -72,19 +67,17 @@ class PropositionsView(APIView):
         responses=OpenApiTypes.OBJECT,
     )
     def get(self, request: Request, person_id: int) -> Response:
-        legislator = _legislator(person_id)
+        person = _parliamentarian(person_id)
         qs = presenters.propositions_queryset(
-            legislator,
+            person,
             role=request.query_params.get("papel", ""),
             kind=request.query_params.get("tipo", "")[:10],
         )
         paginator = DefaultPagination()
         page = paginator.paginate_queryset(qs, request, view=self) or []
         response = paginator.get_paginated_response([presenters.proposition_item(a) for a in page])
-        response.data["kinds"] = presenters.proposition_kinds(legislator)
-        response.data["provenance"] = presenters.dataset_provenance(
-            [client.yearly_files(y)["autores"].dataset for y in range(2023, 2027)]
-        )
+        response.data["kinds"] = presenters.proposition_kinds(person)
+        response.data["provenance"] = presenters.activity_provenance(person, "propositions")
         return _public(response)
 
 
@@ -97,14 +90,14 @@ class ExpensesView(APIView):
         responses=OpenApiTypes.OBJECT,
     )
     def get(self, request: Request, person_id: int) -> Response:
-        legislator = _legislator(person_id)
-        years = sorted(set(legislator.expenses.values_list("year", flat=True)), reverse=True)
+        person = _parliamentarian(person_id)
+        years = presenters.expense_years(person)
         requested = request.query_params.get("ano", "")
         year = int(requested) if requested.isdigit() and int(requested) in years else None
         year = year or (years[0] if years else None)
         if year is None:
             return _public(Response({"years": [], "year": None}))
-        return _public(Response({"years": years, **presenters.expenses(legislator, year)}))
+        return _public(Response({"years": years, **presenters.expenses(person, year)}))
 
 
 urlpatterns = [

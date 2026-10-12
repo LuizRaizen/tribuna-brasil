@@ -30,14 +30,15 @@ const MODULES = [
   },
   {
     title: 'Congresso Nacional',
-    description: 'Mandatos, votos nominais, proposições e despesas da cota de deputados. Senado em breve.',
-    status: 'Em desenvolvimento',
+    description: 'Mandatos, votos nominais, proposições e despesas da cota de deputados e senadores.',
+    status: 'Disponível',
     to: '/busca',
   },
   {
     title: 'Processos e contas públicas',
-    description: 'Registros públicos do Judiciário e do TCU, sempre com o contexto necessário para a leitura.',
-    status: 'Planejado',
+    description: 'Registros do TCU e andamento do registro de candidatura no Judiciário, sempre com contexto.',
+    status: 'Disponível',
+    to: '/busca',
   },
   {
     title: 'História da República',
