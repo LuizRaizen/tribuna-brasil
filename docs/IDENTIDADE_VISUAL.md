@@ -74,13 +74,21 @@ A versão textual acessível é sempre "Tribuna Brasil" (`aria-label`).
 
 ## Marca (símbolo)
 
-A bandeira reinterpretada: losango amarelo de cantos arredondados sobre campo verde. No lugar do globo,
-a **tribuna** (barra) sobre a **cuba do plenário**, em azul. Lê-se como Brasil à distância e como
-"fala pública sobre base institucional" de perto.
+**Marca oficial (desde 11/10/2026):** estrela de cinco pontas formada por uma fita contínua em verde e
+dourado. A fita que se dobra sem se partir remete à unidade; a estrela, à República.
 
-Arquivo-fonte: [`frontend/public/favicon.svg`](../frontend/public/favicon.svg) (a geometria é a mesma de
-`LogoMark` em `components/brand/Logo.tsx`). Ícones PWA: `npm run icons`, com fundo verde nos ícones
-recortáveis (maskable).
+- **Original:** [`docs/marca/tribuna-logo-original.png`](marca/tribuna-logo-original.png), com fundo
+  claro. Não use direto na interface.
+- **Versão de uso:** `frontend/src/assets/brand/tribuna-estrela.png`, recortada com fundo transparente
+  e quadrada. É usada por `LogoMark`, à esquerda do nome na barra superior e no rodapé.
+- **Fundo:** use sobre fundos claros (`surface`, `canvas`). Em fundo azul escuro, a borda recortada pode
+  deixar um leve halo claro; para esse uso, peça uma versão vetorial (SVG) ao autor da marca.
+- **Tamanho mínimo:** 24 px. Na barra superior, 36 px.
+
+**Pendente:** o favicon e os ícones do PWA ainda usam o símbolo anterior: o losango sobre campo verde,
+com a tribuna em azul ([`frontend/public/favicon.svg`](../frontend/public/favicon.svg); ícones gerados
+com `npm run icons`). Eles serão trocados quando houver uma versão vetorial da estrela, porque o PNG
+atual tem só 194 px.
 
 ## Assinaturas
 
