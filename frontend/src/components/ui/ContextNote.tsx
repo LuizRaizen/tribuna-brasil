@@ -1,3 +1,4 @@
+import { InfoIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
 import { cx } from '@/lib/cx'
 
@@ -15,10 +16,7 @@ export function ContextNote({ title = 'Para ler com contexto', children, classNa
   return (
     <aside className={cx('rounded-control bg-sunken px-4 py-3 text-sm', className)} aria-label={title}>
       <p className="flex items-center gap-2 font-semibold">
-        <svg viewBox="0 0 20 20" className="size-4.5 shrink-0 text-muted" aria-hidden="true">
-          <circle cx="10" cy="10" r="8.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M10 9v5M10 6v.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        </svg>
+        <InfoIcon className="size-5 shrink-0 text-muted" aria-hidden="true" />
         {title}
       </p>
       <div className="mt-1 text-muted">{children}</div>

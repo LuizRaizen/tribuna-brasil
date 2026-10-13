@@ -10,8 +10,8 @@ export function ElectionCalendar({ now, elections }: { now: Date; elections: Ele
   const nextIndex = rounds.findIndex(({ round }) => now < round.closesAt)
 
   return (
-    <section aria-labelledby="calendario-titulo" className="container-page mt-24">
-      <h2 id="calendario-titulo" className="text-2xl font-extrabold">
+    <section aria-labelledby="calendario-titulo" className="container-page mt-20 md:mt-28">
+      <h2 id="calendario-titulo" className="text-2xl font-extrabold md:text-3xl">
         Calendário eleitoral
       </h2>
       <ol className="mt-8 max-w-2xl">

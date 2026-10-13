@@ -32,11 +32,21 @@ function Section({ id, title, children }: { id: string; title: string; children:
   )
 }
 
-function Fact({ label, children }: { label: string; children: ReactNode }) {
+function Fact({ label, wide = false, children }: { label: string; wide?: boolean; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5 border-b border-line py-3 sm:grid sm:grid-cols-[13rem_1fr] sm:gap-4">
+    <div className={wide ? 'sm:col-span-2' : undefined}>
       <dt className="text-sm text-muted">{label}</dt>
-      <dd>{children}</dd>
+      <dd className="mt-0.5">{children}</dd>
+    </div>
+  )
+}
+
+/** Grupo de dados com subtítulo: rótulo acima do valor, em duas colunas, sem filete em cada linha. */
+function FactGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="border-t border-line pt-5 first:border-t-0 first:pt-0">
+      <h3 className="text-base font-bold">{title}</h3>
+      <dl className="mt-4 grid gap-x-10 gap-y-5 sm:grid-cols-2">{children}</dl>
     </div>
   )
 }
@@ -52,43 +62,48 @@ function OfficialData({ c }: { c: CandidacyDetail }) {
     .filter(Boolean)
     .join(', ')
   return (
-    <dl>
-      <Fact label="Nome civil">{displayName(person.full_name)}</Fact>
-      {person.social_name && <Fact label="Nome social">{displayName(person.social_name)}</Fact>}
-      <Fact label="Cargo">
-        {c.office.name}, {placeName(c)}
-      </Fact>
-      <Fact label="Partido">
-        {c.party.acronym} ({c.party.number}), {displayName(c.party.name)}
-      </Fact>
-      {c.group.kind !== 'party' && (
-        <Fact label={GROUP_LABEL[c.group.kind]}>
-          {displayName(c.group.name)}
-          {c.group.composition && <span className="block text-sm text-muted">{c.group.composition}</span>}
+    <div className="flex flex-col gap-8">
+      <FactGroup title="Candidatura">
+        <Fact label="Cargo">
+          {c.office.name}, {placeName(c)}
         </Fact>
-      )}
-      <Fact label="Situação do registro">{c.registration_status ? sentenceCase(c.registration_status) : 'Não informada'}</Fact>
-      {c.rounds.map((r) => (
-        <Fact key={r.number} label={`Situação no ${r.number}º turno`}>
-          {r.status ? sentenceCase(r.status) : 'Ainda sem situação divulgada pelo TSE'}
+        <Fact label="Partido">
+          {c.party.acronym} ({c.party.number}), {displayName(c.party.name)}
         </Fact>
-      ))}
-      {c.occupation && <Fact label="Ocupação declarada">{sentenceCase(c.occupation)}</Fact>}
-      {c.education && <Fact label="Grau de instrução">{sentenceCase(c.education)}</Fact>}
-      {person.birth_date && <Fact label="Data de nascimento">{formatDate(new Date(`${person.birth_date}T12:00:00-03:00`))}</Fact>}
-      {birthplace && <Fact label="Naturalidade">{birthplace}</Fact>}
-      {person.gender && <Fact label="Gênero">{sentenceCase(person.gender)}</Fact>}
-      {c.spending_limit && <Fact label="Limite de gastos de campanha">{formatBRL(c.spending_limit)}</Fact>}
-      {c.registration_process && (
-        <Fact label="Processo de registro">
-          <span className="font-mono tabular">{c.registration_process}</span>
-          <span className="block text-sm text-muted">
-            Processo da Justiça Eleitoral que analisa o pedido de registro da candidatura. Não se refere a ações
-            judiciais contra a pessoa.
-          </span>
-        </Fact>
-      )}
-    </dl>
+        {c.group.kind !== 'party' && (
+          <Fact label={GROUP_LABEL[c.group.kind]} wide>
+            {displayName(c.group.name)}
+            {c.group.composition && <span className="block text-sm text-muted">{c.group.composition}</span>}
+          </Fact>
+        )}
+        <Fact label="Situação do registro">{c.registration_status ? sentenceCase(c.registration_status) : 'Não informada'}</Fact>
+        {c.rounds.map((r) => (
+          <Fact key={r.number} label={`Situação no ${r.number}º turno`}>
+            {r.status ? sentenceCase(r.status) : 'Ainda sem situação divulgada pelo TSE'}
+          </Fact>
+        ))}
+        {c.spending_limit && <Fact label="Limite de gastos de campanha">{formatBRL(c.spending_limit)}</Fact>}
+        {c.registration_process && (
+          <Fact label="Processo de registro" wide>
+            <span className="font-mono tabular">{c.registration_process}</span>
+            <span className="block max-w-[60ch] text-sm text-muted">
+              Processo da Justiça Eleitoral que analisa o pedido de registro da candidatura. Não se refere a ações
+              judiciais contra a pessoa.
+            </span>
+          </Fact>
+        )}
+      </FactGroup>
+
+      <FactGroup title="Pessoa">
+        <Fact label="Nome civil">{displayName(person.full_name)}</Fact>
+        {person.social_name && <Fact label="Nome social">{displayName(person.social_name)}</Fact>}
+        {person.birth_date && <Fact label="Data de nascimento">{formatDate(new Date(`${person.birth_date}T12:00:00-03:00`))}</Fact>}
+        {birthplace && <Fact label="Naturalidade">{birthplace}</Fact>}
+        {person.gender && <Fact label="Gênero">{sentenceCase(person.gender)}</Fact>}
+        {c.occupation && <Fact label="Ocupação declarada">{sentenceCase(c.occupation)}</Fact>}
+        {c.education && <Fact label="Grau de instrução">{sentenceCase(c.education)}</Fact>}
+      </FactGroup>
+    </div>
   )
 }
 

@@ -1,3 +1,4 @@
+import { CaretRightIcon } from '@phosphor-icons/react'
 import { useId, useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router'
 import { Alert } from '@/components/ui/Alert'
@@ -52,9 +53,7 @@ export function CorrectionForm({ pageTitle }: { pageTitle: string }) {
   return (
     <details className="group rounded-panel border border-line bg-surface">
       <summary className="flex min-h-12 cursor-pointer items-center gap-2 px-4 font-semibold text-azul marker:content-none">
-        <svg viewBox="0 0 16 16" className="size-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <path d="m6 3 5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <CaretRightIcon className="size-4 transition-transform group-open:rotate-90" weight="bold" aria-hidden="true" />
         Corrigir uma informação
       </summary>
       <div className="border-t border-line px-4 pt-4 pb-5">

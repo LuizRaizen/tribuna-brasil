@@ -1,3 +1,4 @@
+import { MagnifyingGlassIcon } from '@phosphor-icons/react'
 import { useId, useState, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -16,17 +17,11 @@ export function SearchField({ defaultValue = '' }: { defaultValue?: string }) {
       <label htmlFor={id} className="sr-only">
         Buscar por nome, número de urna ou partido
       </label>
-      <svg
-        viewBox="0 0 24 24"
+      <MagnifyingGlassIcon
         className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
+        weight="bold"
         aria-hidden="true"
-      >
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-      </svg>
+      />
       <input
         id={id}
         name="q"
@@ -35,7 +30,7 @@ export function SearchField({ defaultValue = '' }: { defaultValue?: string }) {
         enterKeyHint="search"
         defaultValue={defaultValue}
         placeholder="Nome, número de urna ou partido"
-        className="block min-h-14 w-full rounded-panel border border-line-strong bg-surface pr-4 pl-12 text-lg hover:border-ink focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-azul"
+        className="block min-h-14 w-full rounded-panel border border-line-strong bg-surface pr-4 pl-12 text-lg shadow-[var(--shadow-raised)] transition-colors placeholder:text-muted hover:border-ink focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-azul"
       />
     </div>
   )

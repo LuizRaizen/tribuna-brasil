@@ -17,7 +17,12 @@ export function RootLayout() {
       </a>
       <OfflineBanner />
       <Header />
-      <main id="conteudo" tabIndex={-1} className="flex-1 focus:outline-none">
+      {/* Folga antes do rodapé, exceto quando a página termina numa faixa de largura total (data-bleed-end). */}
+      <main
+        id="conteudo"
+        tabIndex={-1}
+        className="flex-1 pb-20 focus:outline-none md:pb-28 has-[>[data-bleed-end]:last-child]:pb-0"
+      >
         <Suspense fallback={<div className="container-page"><PageLoading /></div>}>
           <Outlet />
         </Suspense>

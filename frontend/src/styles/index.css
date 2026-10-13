@@ -95,13 +95,36 @@
   --radius-control: 0.625rem;
   --radius-panel: 1rem;
 
+  /* Sombras tingidas com a tinta azulada, nunca preto puro. */
+  --shadow-raised: 0 1px 2px rgb(15 27 45 / 0.05), 0 6px 16px -8px rgb(15 27 45 / 0.12);
+  --shadow-overlay: 0 16px 40px -16px rgb(15 27 45 / 0.35);
+
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }
+
+/*
+ * Camadas (z-index): 30 = cabeçalho e navegação inferior fixos; 40 = avisos flutuantes;
+ * 50 = link "Pular para o conteúdo". Não use valores fora desta escala.
+ */
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    /* Âncoras e foco nunca ficam escondidos sob o cabeçalho fixo nem sob a navegação inferior. */
+    scroll-padding-block: 5.5rem 1rem;
+    -webkit-tap-highlight-color: transparent;
+
+    @media (width < 48rem) {
+      scroll-padding-block-end: 5.5rem;
+    }
+  }
+
+  a,
+  button,
+  summary,
+  [role='button'] {
+    touch-action: manipulation;
   }
 
   body {
@@ -123,12 +146,16 @@
     text-wrap: pretty;
   }
 
+  /* Sublinhado sempre presente (o link não depende só da cor), discreto em repouso e firme no hover. */
   a {
     @apply text-azul underline decoration-1 underline-offset-3;
+    text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
+    transition: text-decoration-color 150ms ease;
   }
 
   a:hover {
     @apply decoration-2;
+    text-decoration-color: currentColor;
   }
 
   :focus-visible {
@@ -150,6 +177,59 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+}
+
+/*
+ * Troca de página: um crossfade curto (View Transitions, disparado pelo React Router com
+ * `viewTransition`). Cabeçalho e navegação inferior têm nome próprio e ficam parados;
+ * só o conteúdo troca. Navegadores sem suporte trocam a página sem animação.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-out-quart);
+}
+
+::view-transition-group(site-header),
+::view-transition-group(bottom-nav) {
+  animation: none;
+}
+
+/*
+ * Cabeçalho fixo ganha sombra assim que a página rola (animação ligada à rolagem, só opacidade).
+ * Decorativo: sem suporte, o filete inferior já separa o cabeçalho do conteúdo.
+ */
+@keyframes header-lift {
+  to {
+    opacity: 1;
+  }
+}
+
+@utility header-shadow {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 1rem;
+    translate: 0 100%;
+    pointer-events: none;
+    background: linear-gradient(rgb(15 27 45 / 0.07), transparent);
+    opacity: 0;
+  }
+
+  @supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
+    &::after {
+      animation: header-lift linear both;
+      animation-timeline: scroll(block root);
+      animation-range: 0 4rem;
     }
   }
 }

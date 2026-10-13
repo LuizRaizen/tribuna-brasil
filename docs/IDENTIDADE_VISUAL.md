@@ -113,12 +113,42 @@ Quando chegar a versão em alta qualidade, substitua `frontend/public/pwa-512x51
 | Oficial / realizado / final | `verde-soft` + `verde` |
 | Planejado / indisponível | `sunken` + `muted` |
 
+## Ícones
+
+Uma só família: **Phosphor** (`@phosphor-icons/react`), importando os nomes com sufixo `Icon`
+(`BellIcon`, não `Bell`). Peso `regular` em repouso, `bold` em ícones pequenos dentro de texto e
+`fill` para o item ativo da navegação. Ícones são sempre `aria-hidden`; o nome vem do texto ou do
+`aria-label`. Não desenhe SVG de ícone à mão. A exceção é o selo serrilhado do `SourceSeal`, que é
+assinatura da marca.
+
+## Profundidade
+
+Cartões só quando a elevação diz algo (área clicável, aviso flutuante). Sombras tingidas com a tinta
+azulada: `--shadow-raised` (botão principal, campo de busca, cartão em hover) e `--shadow-overlay`
+(avisos flutuantes). Nunca sombra preta pura.
+
 ## Movimento
 
 Um único momento orquestrado: a entrada dos dígitos da urna na Home. O resto só se move em resposta a
-ações do usuário. `prefers-reduced-motion` desativa todas as animações.
+ações do usuário:
+
+- troca de página: crossfade de 180 ms (View Transitions, `viewTransition` nos links do React Router);
+  cabeçalho e navegação inferior não participam;
+- cabeçalho: sombra suave aparece nos primeiros 64 px de rolagem (animação ligada à rolagem);
+- botões: afundam 2% ao pressionar;
+- barras de apuração: crescem com `transform`, nunca com `width`.
+
+Anime só `transform` e `opacity`. `prefers-reduced-motion` desativa todas as animações, inclusive a
+troca de página.
 
 ## Acessibilidade (piso, não meta)
 
 Contraste AA em todos os pares de texto, foco visível de 3 px em azul, alvos de toque com no mínimo
 44 px, navegação inferior no celular, link "Pular para o conteúdo", estado nunca comunicado só por cor.
+`scroll-padding` no `html` garante que o foco e as âncoras nunca fiquem escondidos sob o cabeçalho fixo
+ou a navegação inferior.
+
+## Revisão visual
+
+`node e2e/scripts/screenshots.mjs <pasta> [filtro]`, com `npm run preview` rodando no frontend, captura
+9 páginas em 375 e 1280 px com a API simulada. Use antes e depois de qualquer mudança de interface.

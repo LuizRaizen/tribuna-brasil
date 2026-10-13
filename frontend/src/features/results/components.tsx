@@ -1,3 +1,4 @@
+import { CheckIcon, ClockIcon } from '@phosphor-icons/react'
 import { Link } from 'react-router'
 import { BallotDigits } from '@/components/ui/BallotDigits'
 import { ContextNote } from '@/components/ui/ContextNote'
@@ -16,16 +17,11 @@ export function TotalizationBadge({ status }: { status: ResultSnapshot['status']
         final ? 'bg-final-soft text-final' : 'bg-partial-soft text-partial',
       )}
     >
-      <svg viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-        {final ? (
-          <path d="M3.5 8.5l3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
-        ) : (
-          <>
-            <circle cx="8" cy="8" r="6" />
-            <path d="M8 4.5V8l2.5 1.5" strokeLinecap="round" />
-          </>
-        )}
-      </svg>
+      {final ? (
+        <CheckIcon className="size-4" weight="bold" aria-hidden="true" />
+      ) : (
+        <ClockIcon className="size-4" weight="bold" aria-hidden="true" />
+      )}
       {final ? 'Resultado final' : 'Resultado parcial'}
     </span>
   )
@@ -51,7 +47,11 @@ export function CountingMeter({ sections }: { sections: ResultSnapshot['sections
         aria-valuetext={`${formatPct(pct)} das seções apuradas`}
         className="mt-4 h-2.5 w-full max-w-md overflow-hidden rounded-full bg-azul-soft"
       >
-        <div className="h-full rounded-full bg-azul transition-[width] duration-700" style={{ width: `${pct}%` }} />
+        {/* Escala em vez de largura: a atualização ao vivo anima só transform. */}
+        <div
+          className="h-full origin-left rounded-full bg-azul transition-transform duration-700 ease-out"
+          style={{ transform: `scaleX(${pct / 100})` }}
+        />
       </div>
     </div>
   )
@@ -76,9 +76,7 @@ function CandidateRow({ candidate, rank }: { candidate: CandidateResult; rank: n
           </Link>
           {candidate.elected && (
             <span className="inline-flex items-center gap-1 rounded-full bg-final-soft px-2 py-0.5 text-xs font-semibold text-final">
-              <svg viewBox="0 0 16 16" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M3.5 8.5l3 3 6-7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <CheckIcon className="size-3.5" weight="bold" aria-hidden="true" />
               Eleito
             </span>
           )}
@@ -102,8 +100,8 @@ function CandidateRow({ candidate, rank }: { candidate: CandidateResult; rank: n
       {/* Barra fina, uma única cor para todas as candidaturas: escala fixa de 0 a 100% dos válidos. */}
       <div className="col-span-2 h-2 rounded-r-[4px] bg-transparent sm:col-span-4 sm:col-start-2" aria-hidden="true">
         <div
-          className="h-full min-w-px rounded-r-[4px] bg-azul transition-[width] duration-700"
-          style={{ width: `${Math.min(100, candidate.pct_valid)}%` }}
+          className="h-full origin-left rounded-r-[4px] bg-azul transition-transform duration-700 ease-out"
+          style={{ transform: `scaleX(${Math.min(100, Math.max(0.2, candidate.pct_valid)) / 100})` }}
         />
       </div>
     </li>

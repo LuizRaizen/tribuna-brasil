@@ -1,3 +1,4 @@
+import { BellIcon, MagnifyingGlassIcon } from '@phosphor-icons/react'
 import { Link, NavLink, useLocation } from 'react-router'
 import { Logo } from '@/components/brand/Logo'
 import { useSession } from '@/features/auth/api'
@@ -22,10 +23,7 @@ function NotificationsBell() {
       aria-label={label}
       className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-control text-ink no-underline hover:bg-sunken"
     >
-      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-        <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z" strokeLinejoin="round" />
-        <path d="M10 20.5a2.2 2.2 0 0 0 4 0" strokeLinecap="round" />
-      </svg>
+      <BellIcon className="size-5.5" aria-hidden="true" />
       {unread > 0 && (
         <span
           aria-hidden="true"
@@ -46,10 +44,10 @@ export function Header() {
   const onAuthPage = useLocation().pathname.startsWith('/conta/')
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur-md supports-[not(backdrop-filter:blur(0))]:bg-surface">
+    <header className="header-shadow sticky top-0 z-30 border-b border-line bg-surface/90 backdrop-blur-md [view-transition-name:site-header] supports-[not(backdrop-filter:blur(0))]:bg-surface">
       <div aria-hidden="true" className="filete-nacional h-[3px]" />
       <div className="container-page flex h-16 items-center gap-6">
-        <Link to="/" className="no-underline" aria-label="Tribuna Brasil, página inicial">
+        <Link to="/" viewTransition className="no-underline" aria-label="Tribuna Brasil, página inicial" translate="no">
           <Logo />
         </Link>
 
@@ -60,10 +58,11 @@ export function Header() {
                 <NavLink
                   to={item.to}
                   end={item.end}
+                  viewTransition
                   className={({ isActive }) =>
                     cx(
-                      'inline-flex min-h-11 items-center rounded-control px-3 text-sm font-semibold no-underline',
-                      isActive ? 'text-ink bg-sunken' : 'text-muted hover:text-ink',
+                      'inline-flex min-h-11 items-center rounded-control px-3 text-sm font-semibold no-underline transition-colors',
+                      isActive ? 'bg-azul-soft text-azul' : 'text-muted hover:bg-sunken hover:text-ink',
                     )
                   }
                 >
@@ -77,12 +76,10 @@ export function Header() {
         <div className="ml-auto flex items-center gap-2">
           <Link
             to="/busca"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-control px-2 text-sm font-semibold text-ink no-underline hover:bg-sunken md:px-3"
+            viewTransition
+            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-control px-2 text-sm font-semibold text-ink no-underline transition-colors hover:bg-sunken md:px-3"
           >
-            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-            </svg>
+            <MagnifyingGlassIcon className="size-5" weight="bold" aria-hidden="true" />
             <span className="sr-only md:not-sr-only">Buscar</span>
           </Link>
           {user && <NotificationsBell />}
@@ -111,7 +108,8 @@ export function Header() {
           ) : onAuthPage ? null : (
             <Link
               to="/conta/entrar"
-              className="inline-flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-semibold text-ink no-underline hover:border-ink"
+              viewTransition
+              className="inline-flex min-h-11 items-center rounded-control border border-line-strong bg-surface px-4 text-sm font-semibold text-ink no-underline transition-colors hover:border-ink"
             >
               Entrar
             </Link>

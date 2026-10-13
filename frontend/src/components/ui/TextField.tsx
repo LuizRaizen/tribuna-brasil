@@ -1,3 +1,4 @@
+import { WarningCircleIcon } from '@phosphor-icons/react'
 import { useId, useState, type InputHTMLAttributes } from 'react'
 import { cx } from '@/lib/cx'
 
@@ -54,10 +55,7 @@ export function TextField({ label, hint, error, type = 'text', className, ...res
       </div>
       {error && (
         <p id={errorId} className="flex items-start gap-1.5 text-sm text-danger">
-          <svg viewBox="0 0 16 16" className="mt-0.5 size-4 shrink-0" aria-hidden="true">
-            <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M8 4.5v4M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+          <WarningCircleIcon className="mt-0.5 size-4 shrink-0" weight="bold" aria-hidden="true" />
           {error}
         </p>
       )}

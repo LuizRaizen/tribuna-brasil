@@ -483,3 +483,25 @@ Fica para depois:
   foi descartado);
 - assembleias legislativas;
 - correção manual de pessoas duplicadas entre fontes sem CPF.
+
+## 15. Acabamento da interface (12/10/2026)
+
+Rodada de refinamento visual antes da próxima sprint, em modo **preservar**: rotas, rótulos de navegação,
+marca, cores, tipografia e textos ficaram iguais. Detalhes em [IDENTIDADE_VISUAL.md](IDENTIDADE_VISUAL.md).
+
+| Tarefa | Situação |
+|---|---|
+| Ícones de uma só família (Phosphor), no lugar dos SVGs desenhados à mão; ativo = ícone preenchido | ✅ |
+| Troca de página com crossfade curto (View Transitions); cabeçalho e navegação inferior ficam parados | ✅ |
+| Cabeçalho ganha sombra ao rolar (animação ligada à rolagem, só opacidade) | ✅ |
+| Estado ativo da navegação em azul, como pede a identidade | ✅ |
+| Home: áreas como blocos clicáveis; selo só na área que ainda não está no ar | ✅ |
+| Candidatura: "Dados oficiais" em dois grupos (Candidatura, Pessoa) em duas colunas | ✅ |
+| Rodapé com navegação e as fontes oficiais (lista única em `lib/officialSources.ts`) | ✅ |
+| Barras da apuração animam `transform`, não `width` | ✅ |
+| `scroll-padding` para foco e âncoras não ficarem sob o cabeçalho e a barra inferior | ✅ |
+| Botões com retorno ao pressionar; sombras tingidas com a tinta da marca | ✅ |
+| `e2e/scripts/screenshots.mjs` com API simulada (9 páginas, 375 e 1280 px) para revisão visual | ✅ |
+
+Mantido de propósito: tema claro único (decisão de 04/10/2026), mesmo com a recomendação geral de modo
+escuro.

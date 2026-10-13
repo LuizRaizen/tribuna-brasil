@@ -1,4 +1,6 @@
+import { ArrowRightIcon } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
+import { cx } from '@/lib/cx'
 import { PageLoading } from '@/components/ui/Skeleton'
 import { useElections } from '@/features/results/api'
 import { Link, useNavigate } from 'react-router'
@@ -103,27 +105,29 @@ export default function HomePage() {
         <ElectionHero status={status} />
       )}
 
-      <section aria-labelledby="busca-titulo" className="container-page mt-16 max-w-3xl md:mx-0 md:ml-[max(0px,calc((100vw-72rem)/2))]">
-        <h2 id="busca-titulo" className="text-xl font-bold">
-          Encontre uma candidatura
-        </h2>
-        <form
-          role="search"
-          action="/busca"
-          className="mt-3"
-          onSubmit={(event) => {
-            event.preventDefault()
-            const q = String(new FormData(event.currentTarget).get('q') ?? '').trim()
-            navigate(q ? `/busca?q=${encodeURIComponent(q)}` : '/busca')
-          }}
-        >
-          <SearchField />
-        </form>
+      <section aria-labelledby="busca-titulo" className="container-page mt-14 md:mt-16">
+        <div className="max-w-2xl">
+          <h2 id="busca-titulo" className="text-xl font-bold">
+            Encontre uma candidatura
+          </h2>
+          <form
+            role="search"
+            action="/busca"
+            className="mt-3"
+            onSubmit={(event) => {
+              event.preventDefault()
+              const q = String(new FormData(event.currentTarget).get('q') ?? '').trim()
+              navigate(q ? `/busca?q=${encodeURIComponent(q)}` : '/busca', { viewTransition: true })
+            }}
+          >
+            <SearchField />
+          </form>
+        </div>
       </section>
 
-      <section aria-labelledby="modulos-titulo" className="container-page mt-24">
+      <section aria-labelledby="modulos-titulo" className="container-page mt-20 md:mt-28">
         <div className="max-w-2xl">
-          <h2 id="modulos-titulo" className="text-2xl font-extrabold">
+          <h2 id="modulos-titulo" className="text-2xl font-extrabold md:text-3xl">
             O que você vai encontrar aqui
           </h2>
           <p className="mt-3 text-muted">
@@ -131,30 +135,56 @@ export default function HomePage() {
             integrados e verificados.
           </p>
         </div>
-        <ul className="mt-8 grid border-t border-line md:grid-cols-2 md:gap-x-12">
-          {MODULES.map((module) => (
-            <li key={module.title} className="flex flex-col gap-2 border-b border-line py-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-lg font-bold">
-                  {'to' in module ? (
-                    <Link to={module.to} className="text-ink">
-                      {module.title}
-                    </Link>
+        {/* Cada área é um bloco inteiro clicável; o selo aparece só quando a área ainda não está no ar. */}
+        <ul className="mt-8 grid gap-3 md:grid-cols-2 md:gap-4">
+          {MODULES.map((module) => {
+            const available = module.status === 'Disponível'
+            return (
+              <li
+                key={module.title}
+                className={cx(
+                  'group relative flex flex-col gap-2 rounded-panel border p-5',
+                  available
+                    ? 'border-line bg-surface transition-[border-color,box-shadow] duration-150 has-[a:hover]:border-line-strong has-[a:hover]:shadow-[var(--shadow-raised)]'
+                    : 'border-dashed border-line-strong/60 bg-transparent',
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-lg font-bold">
+                    {'to' in module ? (
+                      <Link
+                        to={module.to}
+                        viewTransition
+                        className="text-ink no-underline after:absolute after:inset-0 after:rounded-panel group-hover:underline"
+                      >
+                        {module.title}
+                      </Link>
+                    ) : (
+                      <span className="text-muted">{module.title}</span>
+                    )}
+                  </h3>
+                  {available ? (
+                    <ArrowRightIcon
+                      className="mt-1 size-5 shrink-0 text-azul transition-transform duration-150 group-has-[a:hover]:translate-x-0.5"
+                      weight="bold"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    module.title
+                    <StatusBadge status={MODULE_BADGE[module.status]} className="shrink-0">
+                      {module.status}
+                    </StatusBadge>
                   )}
-                </h3>
-                <StatusBadge status={MODULE_BADGE[module.status]}>{module.status}</StatusBadge>
-              </div>
-              <p className="max-w-[52ch] text-muted">{module.description}</p>
-            </li>
-          ))}
+                </div>
+                <p className="text-sm text-muted">{module.description}</p>
+              </li>
+            )
+          })}
         </ul>
       </section>
 
       <ElectionCalendar now={now} elections={elections} />
 
-      <section aria-labelledby="principios-titulo" className="mt-24 bg-azul-strong text-white">
+      <section aria-labelledby="principios-titulo" data-bleed-end className="mt-20 bg-azul-strong text-white md:mt-28">
         <div className="container-page py-14 md:py-20">
           <h2 id="principios-titulo" className="max-w-[24ch] text-2xl font-extrabold md:text-3xl">
             Informação pública para você decidir por conta própria.
@@ -167,8 +197,13 @@ export default function HomePage() {
               </div>
             ))}
           </dl>
-          <Link to="/como-funciona" className="mt-10 inline-block font-semibold text-white">
+          <Link
+            to="/como-funciona"
+            viewTransition
+            className="group mt-10 inline-flex min-h-11 items-center gap-2 font-semibold text-white"
+          >
             Leia como o Tribuna funciona
+            <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" weight="bold" aria-hidden="true" />
           </Link>
         </div>
       </section>

@@ -1,3 +1,4 @@
+import { BellIcon } from '@phosphor-icons/react'
 import { useLocation } from 'react-router'
 import { Button, ButtonLink } from '@/components/ui/Button'
 import { useSession } from '@/features/auth/api'
@@ -26,7 +27,7 @@ export function FollowButton({ kind, id, label }: FollowButtonProps) {
     const next = encodeURIComponent(location.pathname)
     return (
       <ButtonLink to={`/conta/entrar?next=${next}`} variant="secondary">
-        <BellIcon />
+        <Bell />
         Acompanhar
       </ButtonLink>
     )
@@ -42,7 +43,7 @@ export function FollowButton({ kind, id, label }: FollowButtonProps) {
         disabled={status.isPending}
         onClick={() => toggle.mutate(!following)}
       >
-        <BellIcon filled={following} />
+        <Bell filled={following} />
         {following ? 'Acompanhando' : 'Acompanhar'}
       </Button>
       {toggle.isError && <FormErrors error={toggle.error} />}
@@ -50,11 +51,6 @@ export function FollowButton({ kind, id, label }: FollowButtonProps) {
   )
 }
 
-function BellIcon({ filled = false }: { filled?: boolean }) {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z" strokeLinejoin="round" />
-      <path d="M10 20.5a2.2 2.2 0 0 0 4 0" strokeLinecap="round" />
-    </svg>
-  )
+function Bell({ filled = false }: { filled?: boolean }) {
+  return <BellIcon className="size-5" weight={filled ? 'fill' : 'regular'} aria-hidden="true" />
 }
