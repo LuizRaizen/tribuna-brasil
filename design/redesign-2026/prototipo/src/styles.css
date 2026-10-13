@@ -1,0 +1,271 @@
+@import 'tailwindcss';
+
+/*
+ * Tribuna Brasil, redesign 2026: "Modernismo cívico".
+ * Layout: grade de 12 colunas em 75rem; leitura em 66ch; mapa e dados ocupam o espaço que a leitura não usa.
+ *
+ * A cor tem papel, nunca enfeite:
+ *   azul-anil   domina a interface (ações, links, foco, seleção);
+ *   verde-mata  significa "oficial / verificado / final";
+ *   amarelo-ouro é pontuação (próxima votação, destaque curto), sempre com texto escuro;
+ *   cinza-azulado é a base; partidos nunca tingem a interface.
+ * Tema claro único (decisão de produto de 04/10/2026); os tokens já permitem um escuro futuro.
+ */
+:root {
+  color-scheme: light;
+
+  /* Base */
+  --canvas: #f4f6f9;
+  --surface: #ffffff;
+  --sunken: #ebeff4;
+  --ink: #0e1a2b;
+  --ink-2: #3e4c5e;
+  --ink-3: #566376;
+  --line: #dce2e9;
+  --line-2: #c5ceda;
+  --line-strong: #7f8b9b;
+
+  /* Marca */
+  --azul: #143f8f;
+  --azul-700: #0f3170;
+  --azul-900: #0a2152;
+  --azul-100: #d6e2f5;
+  --azul-50: #eaf0fa;
+  --verde: #0b7a47;
+  --verde-50: #e3f3ea;
+  --ouro: #f0c02f;
+  --ouro-50: #fff5d0;
+  --ouro-ink: #6b4d00;
+  --danger: #b42318;
+  --danger-50: #fdecea;
+
+  /* Dados (validados com o validador da skill de dataviz) */
+  --dado-1: #3566c2; /* série única / categoria 1 */
+  --dado-2: #e3a90f; /* categoria 2: sempre com rótulo visível (contraste < 3:1) */
+  --seq-1: #9db8e5;
+  --seq-2: #7598d6;
+  --seq-3: #4e78c4;
+  --seq-4: #2c5aa9;
+  --seq-5: #123c8c;
+  --seq-vazio: #e4e8ee;
+  /*
+   * Candidaturas nas pesquisas: violeta e petróleo. Nenhuma das duas remete a partido (sem vermelho,
+   * azul, verde ou amarelo). Ordem fixa pelo número de urna; a cor segue a pessoa em todos os gráficos.
+   * Validado: CVD ΔE 18,6, visão normal ΔE 24,1, contraste ≥ 3:1 no branco. Sempre com rótulo e forma.
+   */
+  --cand-1: #6250d6;
+  --cand-1-50: #eeebfb;
+  --cand-2: #00897b;
+  --cand-2-50: #e0f2ef;
+  --outros: #9aa5b4; /* brancos, nulos e indecisos: neutro, sempre rotulado */
+
+  --shadow-raised: 0 1px 2px rgb(14 26 43 / 0.05), 0 8px 20px -10px rgb(14 26 43 / 0.16);
+  --shadow-overlay: 0 24px 48px -16px rgb(14 26 43 / 0.32), 0 2px 6px rgb(14 26 43 / 0.06);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-strong: var(--line-strong);
+  --color-azul: var(--azul);
+  --color-azul-700: var(--azul-700);
+  --color-azul-900: var(--azul-900);
+  --color-azul-100: var(--azul-100);
+  --color-azul-50: var(--azul-50);
+  --color-verde: var(--verde);
+  --color-verde-50: var(--verde-50);
+  --color-ouro: var(--ouro);
+  --color-ouro-50: var(--ouro-50);
+  --color-ouro-ink: var(--ouro-ink);
+  --color-danger: var(--danger);
+  --color-danger-50: var(--danger-50);
+  --color-dado-1: var(--dado-1);
+  --color-dado-2: var(--dado-2);
+  --color-cand-1: var(--cand-1);
+  --color-cand-1-50: var(--cand-1-50);
+  --color-cand-2: var(--cand-2);
+  --color-cand-2-50: var(--cand-2-50);
+  --color-outros: var(--outros);
+}
+
+@theme {
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Atkinson Hyperlegible Next', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
+
+  /* Escala de 1,25 a partir de 17 px, arredondada para pixels inteiros. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.4;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.4;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.25;
+  --text-2xl: 1.875rem;
+  --text-2xl--line-height: 1.15;
+  --text-3xl: 2.375rem;
+  --text-3xl--line-height: 1.08;
+  --text-4xl: 3rem;
+  --text-4xl--line-height: 1.02;
+  --text-5xl: 3.75rem;
+  --text-5xl--line-height: 1;
+
+  /* Raios: controles 10, painéis 16, retratos e etiquetas totalmente redondos. */
+  --radius-control: 0.625rem;
+  --radius-panel: 1rem;
+
+  --breakpoint-sm: 37.5rem; /* 600: duas colunas de cartões */
+  --breakpoint-md: 56.25rem; /* 900: navegação completa no cabeçalho */
+  --breakpoint-lg: 64rem; /* 1024: mapa ao lado dos resultados */
+  --breakpoint-xl: 80rem; /* 1280 */
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-block: 6rem 1rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-canvas font-sans text-base text-ink antialiased;
+    min-height: 100dvh;
+    font-optical-sizing: auto;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-stretch: 108%;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: var(--azul);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+    transition: text-decoration-color 150ms ease;
+  }
+  a:hover {
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 2px;
+  }
+  :focus-visible {
+    outline: 3px solid var(--azul);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--ouro-50);
+    color: var(--ink);
+  }
+  button,
+  a,
+  summary,
+  [role='button'] {
+    touch-action: manipulation;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 75rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (width >= 37.5rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Filete nacional: verde amplo, amarelo médio, azul curto. Não reproduz a bandeira como faixa. */
+@utility filete {
+  background: linear-gradient(90deg, var(--verde) 0 58%, var(--ouro) 58% 84%, var(--azul) 84% 100%);
+}
+
+/*
+ * Módulo Bulcão: o único ornamento do sistema. Azulejo de quarto de círculo, em referência aos
+ * painéis modulares de Athos Bulcão em Brasília. Usado só em faixas institucionais (princípios,
+ * rodapé) e em estados vazios, nunca atrás de dados.
+ */
+@utility modulo-bulcao {
+  background-color: var(--azul-900);
+  background-image:
+    radial-gradient(circle at 0 0, rgb(255 255 255 / 0.04) 0 70%, transparent 70.5%),
+    radial-gradient(circle at 100% 100%, rgb(240 192 47 / 0.08) 0 34%, transparent 34.5%);
+  background-size: 64px 64px;
+}
+
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Entrada orquestrada única: os dígitos da urna acendem um a um. */
+@keyframes digit-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.12em);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes panel-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--sunken) 30%, #f6f8fb 50%, var(--sunken) 70%) 0 0 / 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 6px;
+}

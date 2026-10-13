@@ -1,0 +1,217 @@
+{
+  "contest": {
+    "election": "eleicoes-gerais-2026",
+    "office": "presidente",
+    "region": "br",
+    "round": 2
+  },
+  "curated_at": "2026-10-13",
+  "curation_note": "Pesquisas nacionais registradas no TSE para o 2º turno de presidente, transcritas da divulgação feita por veículos de imprensa que citam o número de registro. Conferir cada registro no PesqEle (TSE).",
+  "polls": [
+    {
+      "registration": "BR-09503/2026",
+      "institute": "Real Time Big Data",
+      "contractor": "",
+      "self_funded": true,
+      "field_start": "2026-09-26",
+      "field_end": "2026-09-30",
+      "published_on": "2026-10-01",
+      "sample_size": 2000,
+      "margin_of_error": 2.0,
+      "confidence_level": 95.0,
+      "method": "",
+      "valid": { "13": 49.0, "22": 51.0 },
+      "total": null,
+      "source": {
+        "name": "Gazeta do Povo",
+        "url": "https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/real-time-big-data-presidente-outubro-2026/"
+      }
+    },
+    {
+      "registration": "BR-00999/2026",
+      "institute": "AtlasIntel",
+      "contractor": "Bloomberg",
+      "self_funded": false,
+      "field_start": "2026-09-27",
+      "field_end": "2026-10-02",
+      "published_on": "2026-10-03",
+      "sample_size": 4945,
+      "margin_of_error": 1.0,
+      "confidence_level": 95.0,
+      "method": "digital",
+      "valid": { "13": 50.1, "22": 49.9 },
+      "total": null,
+      "source": {
+        "name": "CNN Brasil",
+        "url": "https://www.cnnbrasil.com.br/eleicoes/atlas-lula-tem-501-dos-votos-validos-no-2o-turno-flavio-499/"
+      }
+    },
+    {
+      "registration": "BR-02197/2026",
+      "institute": "Quaest",
+      "contractor": "Globo",
+      "self_funded": false,
+      "field_start": "2026-10-02",
+      "field_end": "2026-10-03",
+      "published_on": "2026-10-03",
+      "sample_size": 3702,
+      "margin_of_error": 2.0,
+      "confidence_level": 95.0,
+      "method": "",
+      "valid": null,
+      "total": {
+        "candidates": { "13": 42.0, "22": 44.0 },
+        "others": [
+          { "kind": "blank_null", "label": "Branco, nulo ou não vai votar", "pct": 13.0 },
+          { "kind": "undecided", "label": "Indecisos", "pct": 1.0 }
+        ]
+      },
+      "source": {
+        "name": "CNN Brasil",
+        "url": "https://www.cnnbrasil.com.br/eleicoes/quaest-2-turno/"
+      }
+    },
+    {
+      "registration": "BR-02949/2026",
+      "institute": "Datafolha",
+      "contractor": "",
+      "self_funded": false,
+      "field_start": "2026-10-06",
+      "field_end": "2026-10-08",
+      "published_on": "2026-10-08",
+      "sample_size": 2520,
+      "margin_of_error": 2.0,
+      "confidence_level": 95.0,
+      "method": "",
+      "valid": { "13": 48.0, "22": 52.0 },
+      "total": {
+        "candidates": { "13": 45.0, "22": 49.0 },
+        "others": [
+          { "kind": "blank_null", "label": "Branco, nulo ou nenhum", "pct": 5.0 },
+          { "kind": "undecided", "label": "Indecisos", "pct": 1.0 }
+        ]
+      },
+      "source": {
+        "name": "Brasil de Fato",
+        "url": "https://www.brasildefato.com.br/2026/10/08/datafolha-segundo-turno-flavio-bolsonaro-49-lula-45/"
+      }
+    },
+    {
+      "registration": "BR-03663/2026",
+      "institute": "AtlasIntel",
+      "contractor": "",
+      "self_funded": true,
+      "field_start": "2026-10-03",
+      "field_end": "2026-10-08",
+      "published_on": "2026-10-09",
+      "sample_size": 5026,
+      "margin_of_error": 1.0,
+      "confidence_level": 95.0,
+      "method": "",
+      "valid": { "13": 47.2, "22": 52.8 },
+      "total": {
+        "candidates": { "13": 45.7, "22": 51.1 },
+        "others": [
+          { "kind": "blank_null_undecided", "label": "Branco, nulo ou não sabe", "pct": 3.2 }
+        ]
+      },
+      "source": {
+        "name": "Gazeta do Povo",
+        "url": "https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/atlasintel-presidente-outubro-2026-segundo-turno/"
+      }
+    },
+    {
+      "registration": "BR-00933/2026",
+      "institute": "Ipespe",
+      "contractor": "",
+      "self_funded": true,
+      "field_start": "2026-10-06",
+      "field_end": "2026-10-08",
+      "published_on": "2026-10-10",
+      "sample_size": 1500,
+      "margin_of_error": 2.6,
+      "confidence_level": 95.45,
+      "method": "digital",
+      "valid": { "13": 47.3, "22": 52.7 },
+      "total": null,
+      "source": {
+        "name": "CNN Brasil",
+        "url": "https://www.cnnbrasil.com.br/eleicoes/ipespe-flavio-tem-527-dos-votos-validos-no-2o-turno-lula-473/"
+      }
+    },
+    {
+      "registration": "BR-07877/2026",
+      "institute": "Gerp",
+      "contractor": "",
+      "self_funded": true,
+      "field_start": "2026-10-08",
+      "field_end": "2026-10-12",
+      "published_on": "2026-10-13",
+      "sample_size": 2400,
+      "margin_of_error": 2.0,
+      "confidence_level": 95.55,
+      "method": "telefone",
+      "valid": { "13": 45.0, "22": 55.0 },
+      "total": null,
+      "source": {
+        "name": "CNN Brasil",
+        "url": "https://cnnbrasil.com.br/eleicoes/gerp-flavio-tem-55-dos-votos-validos-no-2o-turno-lula-45"
+      }
+    },
+    {
+      "registration": "BR-07997/2026",
+      "institute": "Nexus",
+      "contractor": "Banco BTG Pactual",
+      "self_funded": false,
+      "field_start": "2026-10-10",
+      "field_end": "2026-10-12",
+      "published_on": "2026-10-13",
+      "sample_size": 2002,
+      "margin_of_error": 2.0,
+      "confidence_level": 95.0,
+      "method": "telefone",
+      "valid": { "13": 48.0, "22": 52.0 },
+      "total": {
+        "candidates": { "13": 45.0, "22": 48.0 },
+        "others": [
+          { "kind": "blank_null", "label": "Nenhum, branco ou nulo", "pct": 5.0 },
+          { "kind": "undecided", "label": "Indecisos", "pct": 2.0 }
+        ]
+      },
+      "source": {
+        "name": "Gazeta do Povo",
+        "url": "https://www.gazetadopovo.com.br/eleicoes/2026/pesquisa-eleitoral-2026/nexus-btg-pactual-presidente-outubro-2026-segundo-turno/"
+      }
+    }
+  ],
+  "scheduled": [
+    {
+      "registration": "BR-08729/2026",
+      "institute": "Quaest",
+      "contractor": "Globo e O Globo",
+      "field_start": "2026-10-10",
+      "field_end": "2026-10-13",
+      "expected_on": "2026-10-14",
+      "sample_size": 2154,
+      "margin_of_error": 2.0,
+      "source": {
+        "name": "O Tempo",
+        "url": "https://www.otempo.com.br/eleicoes/2026/pesquisas/2026/10/12/quaest-e-datafolha-divulgam-novas-pesquisas-do-2-turno-das-eleicoes-2026-nesta-semana"
+      }
+    },
+    {
+      "registration": "BR-00466/2026",
+      "institute": "Datafolha",
+      "contractor": "Folha de S.Paulo",
+      "field_start": "2026-10-13",
+      "field_end": "2026-10-15",
+      "expected_on": "2026-10-15",
+      "sample_size": 2520,
+      "margin_of_error": 2.0,
+      "source": {
+        "name": "O Tempo",
+        "url": "https://www.otempo.com.br/eleicoes/2026/pesquisas/2026/10/12/quaest-e-datafolha-divulgam-novas-pesquisas-do-2-turno-das-eleicoes-2026-nesta-semana"
+      }
+    }
+  ]
+}
