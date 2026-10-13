@@ -7,11 +7,13 @@ interface BallotDigitsProps {
   size?: 'sm' | 'lg' | 'hero'
   /** Anima a entrada dos dígitos um a um (respeita prefers-reduced-motion). */
   animate?: boolean
+  /** Dígitos claros para fundos escuros (faixas institucionais). */
+  tone?: 'ink' | 'inverse'
   className?: string
 }
 
 const sizes = {
-  sm: { wrap: 'text-lg gap-1', digit: 'w-[1.45em] h-[1.75em] border-[1.5px]' },
+  sm: { wrap: 'text-base gap-[3px]', digit: 'w-[1.5em] h-[1.8em] border-[1.5px]' },
   lg: { wrap: 'text-3xl gap-1.5', digit: 'w-[1.3em] h-[1.6em] border-2' },
   hero: { wrap: 'text-[clamp(3.5rem,14vw,7rem)] gap-[0.08em]', digit: 'w-[1.12em] h-[1.42em] border-[3px]' },
 }
@@ -20,7 +22,7 @@ const sizes = {
  * Dígitos em caixas, como no visor da urna eletrônica brasileira.
  * Elemento de identidade do Tribuna: usado para números de candidatura e contagens.
  */
-export function BallotDigits({ value, label, size = 'lg', animate = false, className }: BallotDigitsProps) {
+export function BallotDigits({ value, label, size = 'lg', animate = false, tone = 'ink', className }: BallotDigitsProps) {
   const digits = String(value).split('')
   const { wrap, digit: digitClass } = sizes[size]
   return (
@@ -30,9 +32,10 @@ export function BallotDigits({ value, label, size = 'lg', animate = false, class
           key={`${i}-${digit}`}
           aria-hidden="true"
           className={cx(
-            'grid place-items-center rounded-[0.12em] border-ink bg-surface text-ink',
+            'grid place-items-center rounded-[0.12em]',
+            tone === 'inverse' ? 'border-white/80 bg-white/5 text-white' : 'border-ink bg-surface text-ink',
             digitClass,
-            animate && 'motion-safe:animate-[digit-in_420ms_var(--ease-out-quart)_both]',
+            animate && 'motion-safe:animate-[digit-in_460ms_var(--ease-out)_both]',
           )}
           style={animate ? { animationDelay: `${120 + i * 110}ms` } : undefined}
         >

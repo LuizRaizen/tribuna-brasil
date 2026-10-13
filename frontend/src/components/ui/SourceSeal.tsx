@@ -1,5 +1,6 @@
-import { formatDateTime } from '@/lib/format'
+import { SealCheckIcon } from '@phosphor-icons/react'
 import { cx } from '@/lib/cx'
+import { formatDateTime } from '@/lib/format'
 
 export interface Provenance {
   /** Órgão ou base oficial, por extenso. */
@@ -21,6 +22,7 @@ interface SourceSealProps extends Provenance {
 /**
  * Selo de procedência: acompanha todo dado externo exibido no Tribuna.
  * Responde às três perguntas do usuário: de onde veio, quando foi atualizado e onde conferir.
+ * Verde = "oficial / verificado" em todo o sistema.
  */
 export function SourceSeal({
   sourceName,
@@ -35,20 +37,15 @@ export function SourceSeal({
   return (
     <aside
       aria-label={label}
-      className={cx(
-        // Verde = "oficial / verificado" em todo o sistema.
-        'relative flex gap-3 border-l-[3px] border-verde pl-3 text-sm',
-        compact ? 'items-center' : 'items-start',
-        className,
-      )}
+      className={cx('flex gap-3 text-sm', compact ? 'items-center' : 'items-start rounded-control bg-verde-50/60 p-3', className)}
     >
-      <SealIcon className={cx('shrink-0 text-verde', compact ? 'size-5' : 'mt-0.5 size-6')} />
+      <SealCheckIcon className={cx('shrink-0 text-verde', compact ? 'size-5' : 'mt-0.5 size-6')} weight="duotone" aria-hidden="true" />
       <div className={cx('flex min-w-0', compact ? 'flex-wrap items-baseline gap-x-3 gap-y-0.5' : 'flex-col gap-0.5')}>
         <p>
-          <span className="text-muted">Fonte oficial: </span>
+          <span className="text-ink-3">Fonte oficial: </span>
           <span className="font-semibold">{sourceName}</span>
         </p>
-        <p className="text-muted">
+        <p className="text-ink-3">
           Atualizado em <time dateTime={updated.toISOString()} className="tabular">{formatDateTime(updated)}</time>
         </p>
         <a href={officialUrl} target="_blank" rel="noopener noreferrer" className="w-fit font-semibold">
@@ -57,20 +54,5 @@ export function SourceSeal({
         </a>
       </div>
     </aside>
-  )
-}
-
-function SealIcon({ className }: { className?: string }) {
-  // Selo serrilhado com marca de verificação: remete ao carimbo de documento oficial.
-  const teeth = Array.from({ length: 16 }, (_, i) => {
-    const a = (i / 16) * Math.PI * 2
-    const r = i % 2 === 0 ? 11 : 9.6
-    return `${12 + r * Math.cos(a)},${12 + r * Math.sin(a)}`
-  }).join(' ')
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <polygon points={teeth} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M8 12.2l2.6 2.6L16 9.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }

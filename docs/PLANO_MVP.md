@@ -254,6 +254,7 @@ cobrir a apuração do 2º turno (25/10/2026).
 | E12 | História republicana: presidentes, períodos, eventos | 5–6 |
 | E13 | Transparência do sistema: "Como funciona" e "Correção de informação" | 3 |
 | E14 | Polimento: a11y (axe + manual), performance, E2E, deploy | 6 |
+| E15 | Pesquisas eleitorais registradas no TSE (curadoria com procedência) e redesign 2026 | 5C ✅ |
 
 ---
 
@@ -505,3 +506,54 @@ marca, cores, tipografia e textos ficaram iguais. Detalhes em [IDENTIDADE_VISUAL
 
 Mantido de propósito: tema claro único (decisão de 04/10/2026), mesmo com a recomendação geral de modo
 escuro.
+
+## 16. Redesign aplicado e área de Pesquisas (13/10/2026)
+
+Decisões do responsável pelo produto, em 13/10/2026:
+
+- o redesign "modernismo cívico" (protótipo em `design/redesign-2026/`) foi aprovado e aplicado;
+- nova área **Pesquisas**: as pesquisas confiáveis do 2º turno, com painéis interativos que mudam
+  conforme a pesquisa escolhida;
+- as telas novas entram primeiro no protótipo e só depois no app.
+
+Entregue (ver [ADR 0010](adr/0010-pesquisas-eleitorais-e-redesign.md)):
+
+| Tarefa | Situação |
+|---|---|
+| Protótipo: telas de Pesquisas (desktop e celular), Home com pesquisas, inventário e galeria atualizados | ✅ |
+| App `polls`: modelo, carga curada validada, Admin, API pública | ✅ |
+| 8 pesquisas nacionais reais do 2º turno de presidente e 2 registradas aguardando divulgação | ✅ |
+| Critério de inclusão: só com registro no TSE; todas as registradas; sem média nem previsão | ✅ |
+| Painel: confronto, faixa da margem, votos totais, simulação em votos, ficha técnica, linha do tempo, diferença por pesquisa, tabela | ✅ |
+| Cores das candidaturas sem associação partidária, validadas para daltonismo, com forma secundária | ✅ |
+| Fundação do redesign: tokens, tipografia, grade, módulo Bulcão, retratos, pílulas de estado | ✅ |
+| Cabeçalho com seis áreas, barra inferior com cinco, menu em gaveta, busca com sugestões e fotos | ✅ |
+| Home: herói com busca, faixa do 2º turno, pesquisas, números, mapa por estado, calendário | ✅ |
+| Apuração com retratos e mapa de comparecimento por UF | ✅ |
+| Explorador de candidaturas com contagens por filtro, mapa e gaveta de filtros no celular | ✅ |
+| Perfil unificado (candidatura e pessoa) com fatos-chave e índice "Nesta página" | ✅ |
+| Páginas novas: Estados, Estado, Partidos, Partido | ✅ |
+| "Como funciona": metodologia das pesquisas | ✅ |
+
+Descobertas:
+
+- **Chave "1" do JSON:** o SQLite e o PostgreSQL leem `rounds__1__status` como índice de lista. A
+  situação do 1º turno ganhou um campo próprio e indexado (`first_round_status`), preenchido na migração.
+- **Pesquisa sem fonte oficial de números:** o PesqEle publica o registro, não o resultado. Cada número
+  guarda o link da divulgação consultada e a data da transcrição.
+- **Siglas em nomes de urna:** "ACM Neto" e "AJ Albuquerque" viravam "Acm" e "Aj". Lista curta de
+  exceções em `displayName`.
+- **Concordância:** "1 itens" no cabeçalho do perfil, achado pelo teste de ponta a ponta.
+
+Testes: backend com 199 testes; frontend com 75 unitários e 22 de ponta a ponta (celular e
+computador); auditoria axe sem violações em 14 rotas nos dois tamanhos de tela.
+
+Fica para depois:
+
+- pesquisas de governador (o mecanismo já aceita um arquivo por disputa);
+- acerto histórico por instituto (exige as pesquisas do 1º turno com a mesma procedência);
+- transcrição das pesquisas Quaest (14/10) e Datafolha (15/10) quando forem divulgadas;
+- fotos servidas pelo próprio Tribuna (hoje vêm do servidor do TSE).
+
+Próximo passo: retomar o ciclo de infraestrutura (§10) ou a Sprint 6 (história republicana), conforme
+a prioridade do responsável pelo produto, lembrando que o 2º turno é em 25/10/2026.

@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
+
+// Com todos os arquivos em paralelo, a primeira renderização de cada página (rotas lazy, mapa)
+// pode passar de 1 s; findBy* espera até 5 s antes de falhar.
+configure({ asyncUtilTimeout: 5_000 })
 
 afterEach(() => {
   cleanup()

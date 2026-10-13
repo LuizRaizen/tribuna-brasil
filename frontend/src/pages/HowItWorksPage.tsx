@@ -7,6 +7,7 @@ const SECTIONS = [
   { id: 'fontes', title: 'Fontes oficiais' },
   { id: 'atualizacao', title: 'Atualização' },
   { id: 'apresentacao', title: 'Critérios de apresentação' },
+  { id: 'pesquisas', title: 'Pesquisas eleitorais' },
   { id: 'processos', title: 'Processos e contas públicas' },
   { id: 'limitacoes', title: 'Limitações' },
   { id: 'dados', title: 'Tratamento de dados pessoais' },
@@ -114,6 +115,38 @@ export default function HowItWorksPage() {
                 outro.
               </li>
               <li>Cálculos feitos pelo Tribuna (como o percentual do limite de gastos) vêm marcados como tais.</li>
+              <li>Partidos e estados: ordem de sigla, de número ou de nome, à escolha de quem lê. Contagens não são ranking.</li>
+            </ul>
+          </Section>
+
+          <Section id="pesquisas" title="Pesquisas eleitorais">
+            <p>
+              Pesquisa não é resultado: é o retrato de um período, com margem de erro. O Tribuna mostra pesquisas para que cada pessoa possa
+              compará-las com a própria ficha técnica, sem tomar partido de nenhum instituto.
+            </p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>
+                Entram só pesquisas com número de registro no TSE (sistema PesqEle), exigido pela Lei 9.504/1997 para a divulgação. Pesquisa sem
+                registro não aparece.
+              </li>
+              <li>
+                O TSE publica o registro, mas não os números. Os percentuais são transcritos da divulgação do instituto, com o link da publicação
+                consultada e a data da transcrição. Nada é estimado.
+              </li>
+              <li>Todas as pesquisas registradas da disputa entram, de qualquer instituto. A ordem é a data de divulgação, da mais recente para a mais antiga.</li>
+              <li>
+                Candidaturas aparecem em ordem de número de urna, com cores que não lembram nenhum partido (violeta e petróleo) e com forma diferente
+                (círculo e quadrado), para quem não distingue cores.
+              </li>
+              <li>
+                “Dentro da margem de erro” quando as faixas das duas candidaturas se sobrepõem, isto é, quando a diferença não passa de duas vezes a
+                margem. É o que a imprensa chama de empate técnico.
+              </li>
+              <li>
+                Quando o instituto divulga só votos totais, o Tribuna calcula os votos válidos excluindo brancos, nulos e indecisos, e marca o
+                número como cálculo próprio. A simulação em votos aplica o percentual aos votos válidos do 1º turno e também é marcada.
+              </li>
+              <li>O Tribuna não faz média entre institutos, não pondera pesquisas e não faz previsão.</li>
             </ul>
           </Section>
 

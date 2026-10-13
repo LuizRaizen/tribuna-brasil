@@ -1,50 +1,49 @@
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { formatDate } from '@/lib/format'
+import { SectionHeader } from '@/components/ui/Layout'
 import { cx } from '@/lib/cx'
+import { formatDate } from '@/lib/format'
 import type { Election } from './calendar'
 
-/** Linha do tempo das votações: o que já aconteceu e o que vem a seguir. */
+const day = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', timeZone: 'America/Sao_Paulo' })
+
+/** As votações do calendário oficial: o que já aconteceu (verde) e a próxima (ouro). */
 export function ElectionCalendar({ now, elections }: { now: Date; elections: Election[] }) {
   const rounds = elections.flatMap((election) => election.rounds.map((round) => ({ election, round })))
   if (rounds.length === 0) return null
   const nextIndex = rounds.findIndex(({ round }) => now < round.closesAt)
 
   return (
-    <section aria-labelledby="calendario-titulo" className="container-page mt-20 md:mt-28">
-      <h2 id="calendario-titulo" className="text-2xl font-extrabold md:text-3xl">
-        Calendário eleitoral
-      </h2>
-      <ol className="mt-8 max-w-2xl">
+    <section aria-labelledby="calendario-titulo" className="container-page mt-16 md:mt-24">
+      <SectionHeader id="calendario-titulo" title="Calendário eleitoral" />
+      <ol className="mt-8 grid gap-4 md:grid-cols-2">
         {rounds.map(({ election, round }, i) => {
           const done = now >= round.closesAt
           const current = i === nextIndex
           return (
-            <li key={`${election.name}-${round.number}`} className="relative grid grid-cols-[1.5rem_1fr] gap-x-4 pb-8 last:pb-0">
-              {i < rounds.length - 1 && (
-                <span aria-hidden="true" className={cx('absolute left-[0.6875rem] top-6 bottom-0 w-0.5', done ? 'bg-verde' : 'bg-line')} />
-              )}
+            <li
+              key={`${election.name}-${round.number}`}
+              className={cx('flex gap-4 rounded-panel border p-5', current ? 'border-ouro bg-ouro-50/60' : 'border-line bg-surface')}
+            >
               <span
                 aria-hidden="true"
                 className={cx(
-                  'relative mt-1 size-6 rounded-full border-2',
-                  // Realizado = verde (fato consumado); próxima votação = amarelo, o ponto de atenção.
-                  done && 'border-verde bg-verde',
-                  current && 'border-azul bg-amarelo ring-4 ring-amarelo-soft',
-                  !done && !current && 'border-line-strong bg-paper',
+                  'grid size-14 shrink-0 place-items-center rounded-full font-display text-xl font-extrabold',
+                  done ? 'bg-verde-50 text-verde' : current ? 'bg-ouro text-ink' : 'bg-sunken text-ink-2',
                 )}
-              />
-              <div>
-                <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className="font-bold">
+              >
+                {day.format(round.opensAt)}
+              </span>
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="font-display text-lg font-bold">
                     {election.name}, {round.number}º turno
                   </span>
-                  {done && <StatusBadge status="soon">Realizado</StatusBadge>}
-                  {current && <StatusBadge status="live">Próxima votação</StatusBadge>}
+                  {done && <span className="rounded-full bg-verde-50 px-2.5 py-0.5 text-xs font-semibold text-verde">Realizado</span>}
+                  {current && <span className="rounded-full bg-ouro px-2.5 py-0.5 text-xs font-semibold text-ink">Próxima votação</span>}
                 </p>
-                <p className="text-muted">
+                <p className="text-ink-2">
                   <time dateTime={round.opensAt.toISOString()}>{formatDate(round.opensAt)}</time>
                 </p>
-                {round.note && <p className="mt-1 max-w-[60ch] text-sm text-muted">{round.note}</p>}
+                {round.note && <p className="mt-1 max-w-[60ch] text-sm text-ink-3">{round.note}</p>}
               </div>
             </li>
           )

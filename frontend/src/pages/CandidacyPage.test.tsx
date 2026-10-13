@@ -83,9 +83,9 @@ describe('SearchPage', () => {
     expect(await screen.findByRole('heading', { name: /Candidaturas/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Candidata Alfa/ })).toHaveAttribute('href', '/candidaturas/900001')
     expect(screen.getByRole('link', { name: /Ver todas as 12 candidaturas/ })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'PA, partido número 91: ver candidaturas' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'PA, partido número 91: ver o partido' })).toHaveAttribute(
       'href',
-      '/candidaturas?partido=91',
+      '/partidos/91',
     )
     // Uma única requisição de busca para o termo completo, não uma por letra.
     const searches = api.mock.calls.filter(([url]) => String(url).startsWith('/api/v1/search/'))

@@ -8,6 +8,11 @@ import { RouteError } from './RouteError'
 // A Home vai no bundle principal (primeira pintura rápida); o resto é carregado sob demanda.
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
 const ResultsPage = lazy(() => import('@/pages/ResultsPage'))
+const PollsPage = lazy(() => import('@/pages/PollsPage'))
+const StatesIndexPage = lazy(() => import('@/pages/StatesPages').then((m) => ({ default: m.StatesIndexPage })))
+const StatePage = lazy(() => import('@/pages/StatesPages').then((m) => ({ default: m.StatePage })))
+const PartiesIndexPage = lazy(() => import('@/pages/PartiesPages').then((m) => ({ default: m.PartiesIndexPage })))
+const PartyPage = lazy(() => import('@/pages/PartiesPages').then((m) => ({ default: m.PartyPage })))
 const SearchPage = lazy(() => import('@/pages/SearchPage'))
 const CandidaciesPage = lazy(() => import('@/pages/CandidaciesPage'))
 const CandidacyPage = lazy(() => import('@/pages/CandidacyPage'))
@@ -30,6 +35,11 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'como-funciona', element: <HowItWorksPage /> },
       { path: 'apuracao', element: <ResultsPage /> },
+      { path: 'pesquisas', element: <PollsPage /> },
+      { path: 'estados', element: <StatesIndexPage /> },
+      { path: 'estados/:uf', element: <StatePage /> },
+      { path: 'partidos', element: <PartiesIndexPage /> },
+      { path: 'partidos/:numero', element: <PartyPage /> },
       { path: 'busca', element: <SearchPage /> },
       { path: 'candidaturas', element: <CandidaciesPage /> },
       { path: 'candidaturas/:tseId', element: <CandidacyPage /> },

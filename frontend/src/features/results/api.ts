@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { ApiError, errorsFrom, rawRequest } from '@/services/api'
-import type { ElectionSummary, FeedRef, FeedResult, FeedSummary } from './types'
+import type { ByState, ElectionSummary, FeedRef, FeedResult, FeedSummary } from './types'
 
 /** Sem SSE (rede que bloqueia streaming, navegador antigo), o painel faz polling neste intervalo. */
 export const FALLBACK_POLL_MS = 30_000
@@ -29,6 +29,26 @@ export function useFeeds(election: string | undefined, round: number) {
     queryKey: ['results', 'feeds', election, round],
     queryFn: () => getJson<FeedSummary[]>(`/api/v1/results/${election}/${round}/`),
     enabled: Boolean(election),
+    staleTime: 60_000,
+  })
+}
+
+/** Eleitorado e comparecimento de cada UF (mapa da apuração e página de estados). */
+export function useByState(election: string | undefined, round: number, office: string) {
+  return useQuery({
+    queryKey: ['results', 'by-state', election, round, office],
+    queryFn: () => getJson<ByState>(`/api/v1/results/${election}/${round}/${office}/estados/`),
+    enabled: Boolean(election),
+    staleTime: 5 * 60_000,
+  })
+}
+
+/** Resultado sem atualização ao vivo (Home, páginas de estado): uma leitura com cache curto. */
+export function useFeedResult(ref: FeedRef | undefined) {
+  return useQuery({
+    queryKey: ['results', 'static', ref?.election, ref?.round, ref?.office, ref?.region],
+    queryFn: () => getJson<FeedResult>(feedPath(ref!)),
+    enabled: Boolean(ref),
     staleTime: 60_000,
   })
 }

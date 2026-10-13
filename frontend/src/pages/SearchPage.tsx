@@ -6,9 +6,11 @@ import { MIN_QUERY_LENGTH, useDebounced, useSearch } from '@/features/candidates
 import { CandidacyRow, CandidatePhoto } from '@/features/candidates/components'
 import { FormErrors } from '@/features/auth/FormErrors'
 import { IN_HOUSE } from '@/features/people/parliament'
+import { norm } from '@/features/search/SearchCombobox'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { cx } from '@/lib/cx'
 import { displayName, formatInt } from '@/lib/format'
+import { UF_LIST } from '@/lib/territory'
 
 export function SearchField({ defaultValue = '' }: { defaultValue?: string }) {
   const id = useId()
@@ -51,6 +53,7 @@ export default function SearchPage() {
   }
 
   const groups = search.data?.groups ?? []
+  const states = term.length >= MIN_QUERY_LENGTH ? UF_LIST.filter((u) => norm(u.name).includes(norm(term)) || u.uf === norm(term)) : []
   return (
     <div className="container-page max-w-3xl pt-10 md:pt-14">
       <h1 className="text-3xl font-extrabold">Buscar</h1>
@@ -118,8 +121,8 @@ export default function SearchPage() {
                 {group.items.map((p) => (
                   <li key={p.number}>
                     <Link
-                      to={`/candidaturas?partido=${p.number}`}
-                      aria-label={`${p.acronym}, partido número ${p.number}: ver candidaturas`}
+                      to={`/partidos/${p.number}`}
+                      aria-label={`${p.acronym}, partido número ${p.number}: ver o partido`}
                       className="inline-flex min-h-11 items-center gap-2 rounded-control border border-line-strong bg-surface px-3 text-sm text-ink no-underline hover:border-ink"
                     >
                       <span className="font-bold">{p.acronym}</span>
@@ -131,6 +134,22 @@ export default function SearchPage() {
             )}
           </section>
         ))}
+        {states.length > 0 && (
+          <section aria-labelledby="grupo-estados" className="mb-10">
+            <h2 id="grupo-estados" className="flex items-baseline gap-2 text-xl font-bold">
+              Estados <span className="text-sm font-normal text-ink-3 tabular">{states.length}</span>
+            </h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {states.map((u) => (
+                <li key={u.uf}>
+                  <Link to={`/estados/${u.uf}`} viewTransition className="inline-flex min-h-11 items-center rounded-full border border-line-2 bg-surface px-4 font-semibold text-ink no-underline hover:border-azul hover:text-azul">
+                    {u.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {groups.length > 0 && (
           <p className="text-sm text-muted">
             Ordem: número de urna idêntico, nome idêntico, nome que começa pelo termo e, por fim, ordem alfabética.{' '}

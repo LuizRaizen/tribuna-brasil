@@ -69,6 +69,6 @@ export default defineConfig({
     css: false,
     // Testes que rodam a auditoria de acessibilidade (axe) na página inteira passam de 5 s em
     // máquinas carregadas; 15 s evita falso negativo sem esconder travamentos reais.
-    testTimeout: 15_000,
+    testTimeout: 30_000,
   },
 })

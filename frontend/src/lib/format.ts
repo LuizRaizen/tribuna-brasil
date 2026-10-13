@@ -67,6 +67,9 @@ export function formatBytes(bytes: number): string {
   return `${Math.max(1, Math.round(bytes / 1024))} KB`
 }
 
+/** Siglas com vogal que aparecem em nomes de urna: "ACM Neto", não "Acm Neto". */
+const NAME_ACRONYMS = new Set(['ACM', 'AJ', 'JP', 'PH', 'DJ', 'MC', 'TJ'])
+
 const LOWER_WORDS = new Set(['da', 'das', 'de', 'do', 'dos', 'e'])
 
 /**
@@ -80,6 +83,8 @@ export function displayName(upper: string): string {
       // Siglas sem vogal ("NCT", "PCB") ficam como publicadas.
       const bare = original.normalize('NFD').replace(/[^A-Za-z]/g, '')
       if (bare.length >= 2 && !/[aeiouy]/i.test(bare)) return original
+      // Siglas com vogal usadas como nome de urna (lista curta, revisada à mão).
+      if (NAME_ACRONYMS.has(bare.toUpperCase())) return original.toLocaleUpperCase('pt-BR')
       const word = original.toLocaleLowerCase('pt-BR')
       if (i > 0 && LOWER_WORDS.has(word)) return word
       return word.charAt(0).toLocaleUpperCase('pt-BR') + word.slice(1)
@@ -98,3 +103,11 @@ export function sentenceCase(upper: string): string {
 export function pluralize(n: number, one: string, many: string): string {
   return n === 1 ? one : many
 }
+
+const compact = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
+/** 158745502 → "158,7 mi". Para eixos e números de destaque. */
+export const formatCompact = (n: number) => compact.format(n)
+
+const pct1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+/** Percentual com até uma casa ("78,9%"), para números de destaque. */
+export const formatPct1 = (n: number) => `${pct1.format(n)}%`

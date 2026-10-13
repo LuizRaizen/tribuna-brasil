@@ -1,147 +1,107 @@
-import { CheckIcon, ClockIcon } from '@phosphor-icons/react'
 import { Link } from 'react-router'
+import { Meter } from '@/components/charts'
 import { BallotDigits } from '@/components/ui/BallotDigits'
 import { ContextNote } from '@/components/ui/ContextNote'
+import { Stat } from '@/components/ui/Layout'
+import { Portrait } from '@/components/ui/Portrait'
 import { SourceSeal } from '@/components/ui/SourceSeal'
-import { cx } from '@/lib/cx'
-import { displayName, formatDateTime, formatInt, formatPct, formatTime } from '@/lib/format'
+import { PartyTag, StatusPill } from '@/components/ui/StatusPill'
+import { displayName, formatDateTime, formatInt, formatPct, formatPct1, formatTime } from '@/lib/format'
 import type { CandidateResult, ResultSnapshot } from './types'
 
 /** Estado da totalização: sempre com ícone e texto, nunca só cor. */
 export function TotalizationBadge({ status }: { status: ResultSnapshot['status'] }) {
-  const final = status === 'final'
-  return (
-    <span
-      className={cx(
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold',
-        final ? 'bg-final-soft text-final' : 'bg-partial-soft text-partial',
-      )}
-    >
-      {final ? (
-        <CheckIcon className="size-4" weight="bold" aria-hidden="true" />
-      ) : (
-        <ClockIcon className="size-4" weight="bold" aria-hidden="true" />
-      )}
-      {final ? 'Resultado final' : 'Resultado parcial'}
-    </span>
-  )
+  return status === 'final' ? <StatusPill tone="final">Resultado final</StatusPill> : <StatusPill tone="next">Resultado parcial</StatusPill>
 }
 
 /** Número principal do painel: quanto da apuração já foi totalizado. */
-export function CountingMeter({ sections }: { sections: ResultSnapshot['sections'] }) {
+export function CountingMeter({ sections, final }: { sections: ResultSnapshot['sections']; final?: boolean }) {
   const pct = Math.min(100, Math.max(0, sections.pct_counted))
   return (
     <div>
-      <p className="font-display text-[clamp(3rem,10vw,4.5rem)] leading-none font-bold tracking-[-0.03em]">
-        {formatPct(pct)}
-      </p>
-      <p className="mt-2 text-muted">
+      <p className="font-display text-5xl leading-none font-extrabold tracking-[-0.03em] tabular">{formatPct(pct)}</p>
+      <p className="mt-1 text-ink-2">
         das seções apuradas ({formatInt(sections.counted)} de {formatInt(sections.total)})
       </p>
-      <div
-        role="meter"
-        aria-label="Seções apuradas"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Number(pct.toFixed(2))}
-        aria-valuetext={`${formatPct(pct)} das seções apuradas`}
-        className="mt-4 h-2.5 w-full max-w-md overflow-hidden rounded-full bg-azul-soft"
-      >
+      <div className="mt-3">
         {/* Escala em vez de largura: a atualização ao vivo anima só transform. */}
-        <div
-          className="h-full origin-left rounded-full bg-azul transition-transform duration-700 ease-out"
-          style={{ transform: `scaleX(${pct / 100})` }}
-        />
+        <Meter pct={pct} label="Seções apuradas" tone={final ? 'verde' : 'azul'} />
       </div>
     </div>
   )
 }
 
-function CandidateRow({ candidate, rank }: { candidate: CandidateResult; rank: number }) {
-  const mate = candidate.running_mates[0]
-  const group =
-    candidate.group_kind === 'coalition'
-      ? `${candidate.party}, coligação ${displayName(candidate.group_name)}`
-      : candidate.party
+function situationPill(c: CandidateResult) {
+  if (c.elected) return <StatusPill tone="final">Eleito</StatusPill>
+  const s = c.situation.toLowerCase()
+  if (s.includes('2º turno')) return <StatusPill tone="next">Vai ao 2º turno</StatusPill>
+  if (c.situation && !s.startsWith('não eleito')) return <StatusPill tone="neutral">{c.situation}</StatusPill>
+  return null
+}
+
+function CandidateRow({ candidate: c, rank, max }: { candidate: CandidateResult; rank: number; max: number }) {
+  const mate = c.running_mates[0]
+  const group = c.group_kind === 'coalition' ? `Coligação ${displayName(c.group_name)}` : null
   return (
-    <li className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 py-4 sm:grid-cols-[2rem_auto_1fr_auto] sm:items-center">
-      <span className="hidden text-sm text-muted tabular sm:block" aria-hidden="true">
-        {rank}º
-      </span>
-      <BallotDigits value={candidate.ballot_number} label={`Número ${candidate.ballot_number}`} size="sm" />
+    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 py-4">
+      <span className="sr-only">{rank}º lugar</span>
+      <Portrait src={c.photo_url} name={c.ballot_name} size="md" decorative />
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Link to={`/candidaturas/${candidate.tse_id}`} className="font-display text-lg font-bold text-ink">
-            {displayName(candidate.ballot_name)}
+          <Link to={`/candidaturas/${c.tse_id}`} viewTransition className="font-display text-lg font-bold text-ink no-underline hover:underline">
+            {displayName(c.ballot_name)}
           </Link>
-          {candidate.elected && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-final-soft px-2 py-0.5 text-xs font-semibold text-final">
-              <CheckIcon className="size-3.5" weight="bold" aria-hidden="true" />
-              Eleito
+          {situationPill(c)}
+        </p>
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-3">
+          <BallotDigits value={c.ballot_number} label={`Número ${c.ballot_number}`} size="sm" />
+          <PartyTag acronym={c.party} />
+          {group && (
+            <span className="min-w-0" title={c.group_composition || undefined}>
+              {group.replace('Coligação', 'coligação')}
             </span>
           )}
-          {!candidate.elected && candidate.situation && (
-            <span className="rounded-full bg-sunken px-2 py-0.5 text-xs font-semibold text-ink">{candidate.situation}</span>
-          )}
-        </p>
-        <p className="text-sm text-muted" title={candidate.group_composition || undefined}>
-          {group}
         </p>
         {mate && (
-          <p className="text-sm text-muted">
+          <p className="mt-1 text-sm text-ink-3">
             Vice: {displayName(mate.ballot_name)} ({mate.party_acronym})
           </p>
         )}
       </div>
-      <p className="col-span-2 text-right sm:col-span-1">
-        <span className="font-display text-xl font-bold tabular">{formatPct(candidate.pct_valid)}</span>
-        <span className="block text-sm text-muted tabular">{formatInt(candidate.votes)} votos</span>
+      <p className="text-right">
+        <span className="block font-display text-xl font-bold tabular">{formatPct(c.pct_valid)}</span>
+        <span className="block text-sm text-ink-3 tabular">{formatInt(c.votes)} votos</span>
       </p>
-      {/* Barra fina, uma única cor para todas as candidaturas: escala fixa de 0 a 100% dos válidos. */}
-      <div className="col-span-2 h-2 rounded-r-[4px] bg-transparent sm:col-span-4 sm:col-start-2" aria-hidden="true">
-        <div
-          className="h-full origin-left rounded-r-[4px] bg-azul transition-transform duration-700 ease-out"
-          style={{ transform: `scaleX(${Math.min(100, Math.max(0.2, candidate.pct_valid)) / 100})` }}
+      {/* Escala fixa: o mais votado ocupa a largura toda, sem trilho de fundo; uma cor para todos. */}
+      <span className="col-span-3 block h-2 sm:col-span-2 sm:col-start-2" aria-hidden="true">
+        <span
+          className="block h-full origin-left rounded-r-[4px] bg-dado-1 transition-transform duration-700 ease-out"
+          style={{ transform: `scaleX(${Math.max(0.005, c.pct_valid / max)})` }}
         />
-      </div>
+      </span>
     </li>
   )
 }
 
 export function CandidateList({ candidates }: { candidates: CandidateResult[] }) {
+  const max = Math.max(1, ...candidates.map((c) => c.pct_valid))
   return (
     <ol aria-label="Votos por candidatura, do mais votado ao menos votado" className="divide-y divide-line border-y border-line">
       {candidates.map((c, i) => (
-        <CandidateRow key={c.id} candidate={c} rank={i + 1} />
+        <CandidateRow key={c.id} candidate={c} rank={i + 1} max={max} />
       ))}
     </ol>
-  )
-}
-
-function Stat({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return (
-    <div className="border-t-2 border-line pt-3">
-      <dt className="text-sm text-muted">{label}</dt>
-      <dd className="mt-1">
-        <span className="font-display text-xl font-bold">{value}</span>
-        <span className="block text-sm text-muted tabular">{detail}</span>
-      </dd>
-    </div>
   )
 }
 
 export function VoteSummary({ snapshot }: { snapshot: ResultSnapshot }) {
   const { votes, electorate } = snapshot
   return (
-    <dl className="grid grid-cols-2 gap-x-8 gap-y-6">
-      <Stat label="Votos válidos" value={formatPct(votes.pct_valid)} detail={`${formatInt(votes.valid)} votos`} />
-      <Stat label="Brancos" value={formatPct(votes.pct_blank)} detail={`${formatInt(votes.blank)} votos`} />
-      <Stat label="Nulos" value={formatPct(votes.pct_null)} detail={`${formatInt(votes.null)} votos`} />
-      <Stat
-        label="Abstenção"
-        value={formatPct(electorate.pct_abstention)}
-        detail={`${formatInt(electorate.abstention)} de ${formatInt(electorate.total)} eleitores`}
-      />
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-6">
+      <Stat label="Comparecimento" value={formatPct1(electorate.pct_turnout)} detail={`${formatInt(electorate.turnout)} eleitores`} />
+      <Stat label="Abstenção" value={formatPct1(electorate.pct_abstention)} detail={`${formatInt(electorate.abstention)} de ${formatInt(electorate.total)}`} />
+      <Stat label="Votos válidos" value={formatPct1(votes.pct_valid)} detail={`${formatInt(votes.valid)} votos`} />
+      <Stat label="Brancos e nulos" value={formatPct1(votes.pct_blank + votes.pct_null)} detail={`${formatInt(votes.blank)} brancos, ${formatInt(votes.null)} nulos`} />
     </dl>
   )
 }
@@ -162,7 +122,7 @@ export function MathDefinedNote({ value }: { value: ResultSnapshot['math_defined
 export function UpdatedAt({ snapshot }: { snapshot: ResultSnapshot }) {
   const generated = new Date(snapshot.generated_at)
   return (
-    <p className="text-sm text-muted">
+    <p className="text-sm text-ink-3">
       Divulgado pelo TSE às <time dateTime={snapshot.generated_at} className="tabular">{formatTime(generated)}</time>
     </p>
   )
@@ -177,9 +137,9 @@ export function ResultProvenance({ snapshot }: { snapshot: ResultSnapshot }) {
         fetchedAt={new Date(snapshot.provenance.fetched_at)}
         sourceUpdatedAt={new Date(snapshot.provenance.source_updated_at)}
       />
-      <p className="text-sm text-muted">
-        Totalização de {formatDateTime(new Date(snapshot.totalized_at))}. Percentuais de candidaturas sobre os votos
-        válidos; brancos e nulos sobre o total de votos. Confira também no{' '}
+      <p className="text-sm text-ink-3">
+        Totalização de {formatDateTime(new Date(snapshot.totalized_at))}. Percentuais de candidaturas sobre os votos válidos; brancos e nulos sobre o
+        total de votos. Confira também no{' '}
         <a href={snapshot.provenance.portal_url} target="_blank" rel="noopener noreferrer">
           site de resultados do TSE
           <span className="sr-only"> (abre em nova aba)</span>

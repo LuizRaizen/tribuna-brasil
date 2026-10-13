@@ -27,6 +27,8 @@ export interface CandidateResult {
   tse_id: string
   ballot_number: string
   ballot_name: string
+  /** Foto oficial do TSE; ausente em resultados guardados antes de 13/10/2026. */
+  photo_url?: string | null
   party: string
   group_name: string
   group_kind: 'party' | 'coalition'
@@ -78,3 +80,9 @@ export interface ElectionSummary {
   offices: string[]
   provenance: { name: string; url: string; checked_at: string }
 }
+
+/** /api/v1/results/<eleição>/<turno>/<cargo>/estados/ */
+export type ByState = Record<
+  string,
+  { status: 'partial' | 'final'; electorate: number; turnout: number; pct_turnout: number; valid_votes: number; generated_at: string }
+>

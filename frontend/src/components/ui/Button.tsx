@@ -3,8 +3,8 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { Link, type LinkProps } from 'react-router'
 import { cx } from '@/lib/cx'
 
-type Variant = 'primary' | 'secondary' | 'quiet' | 'danger'
-type Size = 'md' | 'lg'
+type Variant = 'primary' | 'secondary' | 'quiet' | 'danger' | 'inverse'
+type Size = 'sm' | 'md' | 'lg'
 
 // Ao pressionar, o botão "afunda" 2% (só transform, na GPU); desabilitado não reage.
 const base =
@@ -14,14 +14,16 @@ const base =
   'disabled:cursor-not-allowed disabled:opacity-55 aria-busy:cursor-progress'
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-azul text-on-azul shadow-[var(--shadow-raised)] hover:bg-azul-strong',
+  primary: 'bg-azul text-white shadow-[var(--shadow-raised)] hover:bg-azul-700',
   secondary: 'bg-surface text-ink border border-line-strong hover:border-ink',
   quiet: 'text-ink hover:bg-sunken',
-  danger: 'bg-surface text-danger border border-danger/60 hover:bg-danger-soft',
+  danger: 'bg-surface text-danger border border-danger/60 hover:bg-danger-50',
+  inverse: 'bg-white text-azul-900 hover:bg-azul-50',
 }
 
 // Alvos de toque com no mínimo 44px de altura (WCAG 2.5.8 recomenda ≥ 24px; usamos 44px).
 const sizes: Record<Size, string> = {
+  sm: 'min-h-9 px-3 text-sm',
   md: 'min-h-11 px-4 text-sm',
   lg: 'min-h-13 px-6 text-base',
 }

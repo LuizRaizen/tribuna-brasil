@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { ButtonLink } from '@/components/ui/Button'
+import { ArrowSquareOutIcon } from '@phosphor-icons/react'
+import { ButtonLink, buttonClass } from '@/components/ui/Button'
+import { PartyTag } from '@/components/ui/StatusPill'
+import { ProfileHeader } from '@/features/people/Profile'
 import { ContextNote } from '@/components/ui/ContextNote'
 import { PageLoading } from '@/components/ui/Skeleton'
 import { SourceSeal } from '@/components/ui/SourceSeal'
 import { FormErrors } from '@/features/auth/FormErrors'
-import { CandidatePhoto } from '@/features/candidates/components'
 import { CorrectionForm } from '@/features/feedback/CorrectionForm'
 import { type PersonDetail, type TimelineEntry, usePerson } from '@/features/people/api'
 import { OversightSection } from '@/features/oversight/OversightSection'
@@ -151,95 +153,127 @@ export default function PersonPage() {
   const parliament = person.parliament
   const tabs = sectionsFor(person)
   const current = tabs.find((t) => t.id === params.get('aba')) ?? tabs[0]!
+  const name = displayName(person.name)
+  const candidacy = person.candidacies[0]
+  const kicker = parliament?.in_office ? `Em exercício ${IN_HOUSE[parliament.house]}` : 'Trajetória pública'
+  const firstYear = person.timeline.at(-1)?.year
   return (
-    <article className="container-page max-w-4xl pt-10 md:pt-14">
-      <header className="flex flex-col gap-6 sm:flex-row sm:items-end">
-        <CandidatePhoto src={person.photo_url} name={person.ballot_name || person.name} size="lg" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-azul">
-            {parliament?.in_office ? `Em exercício ${IN_HOUSE[parliament.house]}` : 'Trajetória pública'}
-          </p>
-          <h1 className="mt-1 text-3xl font-extrabold md:text-[2.75rem] md:leading-[1.05]">{displayName(person.name)}</h1>
-          {person.ballot_name && <p className="mt-2 text-muted">Nome público: {displayName(person.ballot_name)}</p>}
-          {parliament && (
-            <p className="mt-1 text-sm text-muted">
-              {[parliament.party, parliament.uf].filter(Boolean).join('-')}
-              {parliament.party && ' · '}
-              <a href={parliament.official_url} target="_blank" rel="noopener noreferrer">
+    <article>
+      <ProfileHeader
+        photoUrl={person.photo_url}
+        name={person.ballot_name || person.name}
+        kicker={kicker}
+        title={name}
+        crumbs={[
+          { label: 'Início', to: '/' },
+          ...(candidacy ? [{ label: displayName(candidacy.ballot_name), to: `/candidaturas/${candidacy.tse_id}` }] : []),
+          { label: 'Trajetória' },
+        ]}
+        tags={
+          <>
+            {person.ballot_name && <span className="text-ink-2">Nome público: {displayName(person.ballot_name)}</span>}
+            {parliament?.party && <PartyTag acronym={parliament.party} className="text-sm" />}
+            {parliament?.uf && <span className="rounded-md bg-sunken px-2 py-0.5 text-sm font-bold text-ink-2">{parliament.uf.toUpperCase()}</span>}
+          </>
+        }
+        actions={
+          <>
+            <FollowButton kind="person" id={String(person.id)} label={name} />
+            {candidacy && (
+              <Link to={`/candidaturas/${candidacy.tse_id}`} viewTransition className={buttonClass('quiet')}>
+                Candidatura {candidacy.election.year}
+              </Link>
+            )}
+            {parliament && (
+              <a href={parliament.official_url} target="_blank" rel="noopener noreferrer" className={buttonClass('quiet')}>
                 Página oficial {IN_HOUSE[parliament.house]}
+                <ArrowSquareOutIcon className="size-4" aria-hidden="true" />
                 <span className="sr-only"> (abre em nova aba)</span>
               </a>
-            </p>
-          )}
-        </div>
-        <FollowButton kind="person" id={String(person.id)} label={displayName(person.name)} />
-      </header>
-
-      {tabs.length > 1 && (
-        <nav aria-label="Seções desta página" className="mt-10 -mb-px overflow-x-auto border-b border-line">
-          <ul className="flex gap-1">
-            {tabs.map((t) => (
-              <li key={t.id} className="shrink-0">
-                <Link
-                  to={t.id === tabs[0]!.id ? '?' : `?aba=${t.id}`}
-                  replace
-                  preventScrollReset
-                  ref={t.id === current.id ? revealActive : undefined}
-                  aria-current={t.id === current.id ? 'page' : undefined}
-                  className={cx(
-                    'inline-flex min-h-11 items-center border-b-2 px-3 text-sm font-semibold no-underline',
-                    t.id === current.id ? 'border-azul text-ink' : 'border-transparent text-muted hover:text-ink',
-                  )}
-                >
-                  {t.label}
-                  {t.count !== undefined && <span className="ml-1.5 text-xs font-normal text-muted tabular">{formatInt(t.count)}</span>}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
-
-      <section aria-labelledby="secao-atual" className={cx('pt-8', tabs.length > 1 ? 'mt-0' : 'mt-12 border-t border-line')}>
-        <h2 id="secao-atual" className="mb-6 text-xl font-extrabold">
-          {current.title}
-        </h2>
-        {current.id === 'trajetoria' && (
-          <>
-            <ol>
-              {person.timeline.map((entry, i) => (
-                <TimelineItem key={`${entry.year}-${entry.tse_id ?? entry.office}-${i}`} entry={entry} last={i === person.timeline.length - 1} today={today} />
-              ))}
-            </ol>
-            {person.timeline.length === 0 && <p className="text-muted">Sem candidaturas no histórico do TSE desde {person.history_starts}.</p>}
-            <ContextNote className="mt-8" title="Sobre esta linha do tempo">
-              Montada com o histórico de candidaturas publicado pelo TSE, que começa em {person.history_starts}. Situações
-              ausentes no arquivo oficial aparecem como “Não informado pelo TSE”: o Tribuna não completa lacunas por conta
-              própria.
-            </ContextNote>
+            )}
           </>
-        )}
-        {current.id === 'controle' && person.oversight && <OversightSection oversight={person.oversight} />}
-        {current.id === 'mandatos' && parliament && <MandatesSection parliament={parliament} />}
-        {current.id === 'votacoes' && <VotesSection personId={person.id} />}
-        {current.id === 'proposicoes' && <PropositionsSection personId={person.id} />}
-        {current.id === 'despesas' && parliament && <ExpensesSection personId={person.id} years={parliament.expense_years} />}
-      </section>
+        }
+        facts={[
+          { label: 'Candidaturas', value: formatInt(person.timeline.length), detail: firstYear ? `Desde ${firstYear}` : `Histórico desde ${person.history_starts}` },
+          ...(parliament
+            ? [
+                { label: 'Mandatos', value: formatInt(parliament.mandates.length), detail: parliament.house_name },
+                { label: 'Votos nominais', value: formatInt(parliament.counts.votes), detail: 'Registrados pela casa' },
+                { label: 'Proposições', value: formatInt(parliament.counts.propositions), detail: 'Como autor' },
+              ]
+            : []),
+        ]}
+        tabs={
+          tabs.length > 1 ? (
+            <nav aria-label="Seções desta página" className="-mx-4 mt-8 overflow-x-auto px-4 [scrollbar-width:none]">
+              <ul className="flex w-max gap-1">
+                {tabs.map((t) => (
+                  <li key={t.id} className="shrink-0">
+                    <Link
+                      to={t.id === tabs[0]!.id ? '?' : `?aba=${t.id}`}
+                      replace
+                      preventScrollReset
+                      ref={t.id === current.id ? revealActive : undefined}
+                      aria-current={t.id === current.id ? 'page' : undefined}
+                      className={cx(
+                        'relative inline-flex min-h-12 items-center gap-1.5 px-3 text-sm font-semibold whitespace-nowrap no-underline',
+                        t.id === current.id
+                          ? 'text-azul after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-full after:bg-azul'
+                          : 'text-ink-2 hover:text-ink',
+                      )}
+                    >
+                      {t.label}
+                      {t.count !== undefined && <span className="rounded-full bg-sunken px-1.5 text-xs font-normal text-ink-3 tabular">{formatInt(t.count)}</span>}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : undefined
+        }
+      />
 
-      <section aria-labelledby="fontes-pessoa" className="mt-12 flex flex-col gap-5 border-t border-line pt-8">
-        <h2 id="fontes-pessoa" className="text-xl font-extrabold">
-          Fontes
-        </h2>
-        {source?.fetched_at && (
-          <SourceSeal
-            sourceName={`${source.source_name}, ${source.dataset}`}
-            officialUrl={source.official_url}
-            fetchedAt={new Date(source.fetched_at)}
-            sourceUpdatedAt={source.source_updated_at ? new Date(source.source_updated_at) : undefined}
-          />
-        )}
-        <CorrectionForm pageTitle={`Trajetória de ${displayName(person.name)}`} />
-      </section>
+      <div className="container-page mt-10">
+        <section aria-labelledby="secao-atual">
+          <h2 id="secao-atual" className="mb-6 text-2xl font-extrabold">
+            {current.title}
+          </h2>
+          {current.id === 'trajetoria' && (
+            <div className="max-w-3xl">
+              <ol>
+                {person.timeline.map((entry, i) => (
+                  <TimelineItem key={`${entry.year}-${entry.tse_id ?? entry.office}-${i}`} entry={entry} last={i === person.timeline.length - 1} today={today} />
+                ))}
+              </ol>
+              {person.timeline.length === 0 && <p className="text-ink-2">Sem candidaturas no histórico do TSE desde {person.history_starts}.</p>}
+              <ContextNote className="mt-8" title="Sobre esta linha do tempo">
+                Montada com o histórico de candidaturas publicado pelo TSE, que começa em {person.history_starts}. Situações ausentes no arquivo
+                oficial aparecem como “Não informado pelo TSE”: o Tribuna não completa lacunas por conta própria.
+              </ContextNote>
+            </div>
+          )}
+          {current.id === 'controle' && person.oversight && <OversightSection oversight={person.oversight} />}
+          {current.id === 'mandatos' && parliament && <MandatesSection parliament={parliament} />}
+          {current.id === 'votacoes' && <VotesSection personId={person.id} />}
+          {current.id === 'proposicoes' && <PropositionsSection personId={person.id} />}
+          {current.id === 'despesas' && parliament && <ExpensesSection personId={person.id} years={parliament.expense_years} />}
+        </section>
+
+        <section aria-labelledby="fontes-pessoa" className="mt-12 flex max-w-3xl flex-col gap-5 border-t border-line pt-8">
+          <h2 id="fontes-pessoa" className="text-2xl font-extrabold">
+            Fontes
+          </h2>
+          {source?.fetched_at && (
+            <SourceSeal
+              sourceName={`${source.source_name}, ${source.dataset}`}
+              officialUrl={source.official_url}
+              fetchedAt={new Date(source.fetched_at)}
+              sourceUpdatedAt={source.source_updated_at ? new Date(source.source_updated_at) : undefined}
+            />
+          )}
+          <CorrectionForm pageTitle={`Trajetória de ${name}`} />
+        </section>
+      </div>
     </article>
   )
 }

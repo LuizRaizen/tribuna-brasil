@@ -46,6 +46,9 @@ export interface CandidacyFilters {
   cargo?: string
   uf?: string
   partido?: string
+  situacao?: string
+  genero?: string
+  ordem?: string
   q?: string
 }
 
