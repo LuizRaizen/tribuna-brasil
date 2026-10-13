@@ -70,6 +70,14 @@ class Candidacy(TimeStampedModel):
         db_index=True,
         help_text="Ordem alfabética sem acentos (critério neutro de listagem).",
     )
+    first_round_status = models.CharField(
+        "situação no 1º turno",
+        max_length=80,
+        blank=True,
+        editable=False,
+        db_index=True,
+        help_text="Cópia de rounds['1'].status, para filtrar e contar sem ler o JSON.",
+    )
     assets_hash = models.CharField(max_length=64, blank=True, editable=False)
 
     class Meta:

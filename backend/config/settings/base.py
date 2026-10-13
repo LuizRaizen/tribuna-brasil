@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "apps.watchlist",
     "apps.notifications",
     "apps.feedback",
+    "apps.polls",
 ]
 
 MIDDLEWARE = [

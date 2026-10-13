@@ -42,6 +42,7 @@ class OfficeAdmin(admin.ModelAdmin):
 class ContestAdmin(admin.ModelAdmin):
     list_display = ("office", "region", "election")
     list_filter = ("election", "office")
+    search_fields = ("office__name", "region__name", "region__tse_code")
 
 
 @admin.register(ResultFeed)

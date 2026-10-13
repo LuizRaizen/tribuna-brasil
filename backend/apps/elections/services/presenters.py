@@ -6,6 +6,7 @@ from typing import Any
 
 from django.core.serializers.json import DjangoJSONEncoder
 
+from apps.candidates.presenters import photo_url
 from apps.elections.models import ResultFeed, ResultSnapshot
 from apps.ingestion.connectors.tse_resultados.client import FeedLocator
 
@@ -46,7 +47,12 @@ def feed_descriptor(feed: ResultFeed) -> dict[str, Any]:
 def snapshot_payload(snapshot: ResultSnapshot) -> dict[str, Any]:
     feed = snapshot.feed
     lines = sorted(
-        snapshot.lines.select_related("candidacy__party").all(),
+        snapshot.lines.select_related(
+            "candidacy__party",
+            "candidacy__contest__office",
+            "candidacy__contest__region",
+            "candidacy__contest__election",
+        ).all(),
         # Ordem neutra e documentada: votos (desc), depois nome de urna.
         key=lambda line: (-line.votes, line.candidacy.ballot_name),
     )
@@ -83,6 +89,7 @@ def snapshot_payload(snapshot: ResultSnapshot) -> dict[str, Any]:
                 "tse_id": line.candidacy.tse_id,
                 "ballot_number": line.candidacy.ballot_number,
                 "ballot_name": line.candidacy.ballot_name,
+                "photo_url": photo_url(line.candidacy),
                 "party": line.candidacy.party.acronym,
                 "group_name": line.candidacy.group_name,
                 "group_kind": line.candidacy.group_kind,

@@ -31,5 +31,15 @@ def feeds_of(election: str, round_number: int) -> QuerySet[ResultFeed]:
     )
 
 
+def state_feeds(election: str, round_number: int, office: str) -> QuerySet[ResultFeed]:
+    """Feeds por UF de um cargo (ex.: presidente em cada estado), sem exterior nem Brasil."""
+    return feed_queryset().filter(
+        contest__election__slug=election,
+        round__number=round_number,
+        contest__office__slug=office,
+        region__kind="uf",
+    )
+
+
 def elections() -> QuerySet[Election]:
     return Election.objects.prefetch_related("rounds").order_by("-year")

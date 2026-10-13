@@ -35,6 +35,7 @@ def apply_search_fields(candidacy: Candidacy) -> None:
     ]
     candidacy.search_text = normalize(" ".join(p for p in parts if p))
     candidacy.sort_name = normalize(candidacy.ballot_name)[:120]
+    candidacy.first_round_status = (candidacy.rounds.get("1") or {}).get("status", "")[:80]
 
 
 def search_candidacies(query: str, base: QuerySet[Candidacy] | None = None) -> QuerySet[Candidacy]:

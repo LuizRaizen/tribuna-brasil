@@ -121,6 +121,31 @@ class FeedResultView(APIView):
         return response
 
 
+class ByStateView(APIView):
+    """Eleitorado e comparecimento de cada UF num cargo e turno (último snapshot de cada estado)."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(operation_id="results_by_state", responses=OpenApiTypes.OBJECT)
+    def get(self, request: Request, election: str, round_number: int, office: str) -> Response:
+        data = {}
+        for feed in selectors.state_feeds(election, round_number, office):
+            snap = feed.snapshots.order_by("-generated_at").first()
+            if snap is None:
+                continue
+            data[feed.region.tse_code] = {
+                "status": snap.status,
+                "electorate": snap.electorate,
+                "turnout": snap.turnout,
+                "pct_turnout": float(round(snap.pct_turnout, 4)),
+                "valid_votes": snap.valid_votes,
+                "generated_at": snap.generated_at,
+            }
+        response = Response(data)
+        response["Cache-Control"] = PUBLIC_CACHE
+        return response
+
+
 # --- SSE ------------------------------------------------------------------------
 
 HEARTBEAT_SECONDS = 15.0

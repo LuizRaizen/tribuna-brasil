@@ -20,6 +20,7 @@ api_v1: list[URLPattern | URLResolver] = [
     path("", include("apps.watchlist.api.urls")),
     path("", include("apps.notifications.api.urls")),
     path("", include("apps.feedback.api.urls")),
+    path("", include("apps.polls.api")),
 ]
 
 urlpatterns = [

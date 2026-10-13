@@ -108,3 +108,40 @@ def test_short_query_returns_nothing(imported: None) -> None:
 
 def test_search_response_is_json_safe(imported: None) -> None:
     json.loads(get("/api/v1/search/?q=sp").content)
+
+
+def test_list_filters_by_situation_gender_and_several_offices(imported: None) -> None:
+    body = get("/api/v1/candidates/?cargo=presidente,governador&situacao=2turno").json()
+    assert sorted(c["ballot_name"] for c in body["results"]) == ["FLAVIO BOLSONARO", "LULA"]
+    elected = get("/api/v1/candidates/?situacao=eleito").json()["results"]
+    assert {c["ballot_name"] for c in elected} >= {"TARCÍSIO", "JILMAR TATTO"}
+    assert get("/api/v1/candidates/?genero=f").json()["count"] == 1  # Soninha Francine
+
+
+def test_list_can_be_ordered_by_ballot_number(imported: None) -> None:
+    body = get("/api/v1/candidates/?cargo=presidente&ordem=numero").json()
+    assert [c["ballot_number"] for c in body["results"]] == ["13", "22"]
+
+
+def test_facets_count_each_dimension_without_its_own_filter(imported: None) -> None:
+    body = get("/api/v1/candidates/facets/?cargo=governador&uf=sp&partido=13").json()
+    assert body["total"] == 1  # Haddad
+    # Partidos: governador em SP, sem o filtro de partido.
+    assert {p["acronym"]: p["count"] for p in body["by_party"]} == {"PT": 1, "REPUBLICANOS": 1}
+    # Cargos: PT em SP, sem o filtro de cargo.
+    assert body["by_office"]["governador"] == 1 and body["by_office"]["deputado-federal"] == 1
+    assert body["by_situation"] == {"eleito": 0, "2turno": 0, "outras": 1}
+    assert body["by_gender"] == {"f": 0, "m": 1}
+
+
+def test_stats_overview_counts_and_party_breakdown(imported: None) -> None:
+    body = get("/api/v1/candidates/stats/").json()
+    assert body["total"] == 15  # 19 linhas, 4 repetidas por turno
+    assert body["by_office"]["presidente"] == 2
+    assert body["by_uf_office"]["sp"]["governador"] == 2
+    pt = next(p for p in body["parties"] if p["acronym"] == "PT")
+    assert pt["by_office"]["presidente"] == 1
+    assert pt["elected_r1"] == {"deputado-federal": 1}
+    assert body["by_situation_office"]["2turno"]["presidente"] == 2
+    assert body["governor_runoff_ufs"] == []  # SP decidiu no 1º turno
+    assert body["source"]["url"].startswith("https://dadosabertos.tse.jus.br")

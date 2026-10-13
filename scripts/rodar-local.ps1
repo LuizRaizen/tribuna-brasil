@@ -79,6 +79,9 @@ try {
     } else {
         Write-Host "Dados já carregados. Use -Recarregar para baixar de novo."
     }
+    # Pesquisas curadas (arquivo versionado no repositório): rápido e idempotente, roda sempre.
+    Step "Carregando as pesquisas eleitorais registradas no TSE"
+    & $python manage.py carregar_pesquisas
 } finally {
     Pop-Location
 }

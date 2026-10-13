@@ -33,6 +33,7 @@ from apps.people.models import Person
 from apps.sources import services as sources
 from apps.sources.models import DataSnapshot, ExternalRecord, Source, SyncRun
 
+from . import stats
 from .models import Candidacy, DeclaredAsset, HistoricalCandidacy
 from .search import apply_search_fields
 
@@ -136,6 +137,7 @@ def import_candidacies(year: int = 2026) -> ImportReport:
     report.rejected = len(parsed.rejected)
     # Avisos só depois da gravação confirmada: ninguém é avisado de algo que não foi salvo.
     notify(report.events)
+    stats.invalidate()
     # Marca os arquivos como processados por esta execução (bem-sucedida).
     DataSnapshot.objects.filter(pk__in=[s.pk for s in snapshots.values()]).update(sync_run=run)
     sources.finish_run(
@@ -346,7 +348,14 @@ def persist(
     if to_update:
         Candidacy.objects.bulk_update(
             to_update,
-            [*CANDIDACY_FIELDS, "person", "search_text", "sort_name", "updated_at"],
+            [
+                *CANDIDACY_FIELDS,
+                "person",
+                "search_text",
+                "sort_name",
+                "first_round_status",
+                "updated_at",
+            ],
             batch_size=1000,
         )
     if orphans:

@@ -4,6 +4,8 @@ from . import views
 
 urlpatterns = [
     path("candidates/", views.CandidacyListView.as_view(), name="candidates"),
+    path("candidates/facets/", views.CandidacyFacetsView.as_view(), name="candidate-facets"),
+    path("candidates/stats/", views.CandidacyStatsView.as_view(), name="candidate-stats"),
     path("candidates/<str:tse_id>/", views.CandidacyDetailView.as_view(), name="candidate"),
     path(
         "candidates/<str:tse_id>/proposals/<int:order>.pdf",

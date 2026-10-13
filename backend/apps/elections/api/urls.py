@@ -11,6 +11,11 @@ urlpatterns = [
         views.FeedListView.as_view(),
         name="result-feeds",
     ),
+    path(
+        "results/<slug:election>/<int:round_number>/<slug:office>/estados/",
+        views.ByStateView.as_view(),
+        name="result-by-state",
+    ),
     path(f"results/{feed}", views.FeedResultView.as_view(), name="result-feed"),
     path(f"results/{feed}stream/", views.feed_stream, name="result-feed-stream"),
 ]

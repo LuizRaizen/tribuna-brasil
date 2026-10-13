@@ -12,7 +12,7 @@ from apps.core.pagination import DefaultPagination
 from apps.legislative.presenters import search_legislators
 from apps.parties.models import Party
 
-from .. import presenters
+from .. import presenters, stats
 from ..models import Proposal
 from ..search import MIN_QUERY_LENGTH, matches_party, search_candidacies
 
@@ -33,26 +33,54 @@ class CandidacyListView(APIView):
     @extend_schema(
         operation_id="candidates_list",
         parameters=[
-            OpenApiParameter("cargo", str, description="slug do cargo, ex.: deputado-federal"),
+            OpenApiParameter(
+                "cargo", str, description="slug do cargo (vários separados por vírgula)"
+            ),
             OpenApiParameter("uf", str, description="UF (ou br)"),
             OpenApiParameter("partido", str, description="número do partido"),
+            OpenApiParameter("situacao", str, description="eleito, 2turno ou outras (1º turno)"),
+            OpenApiParameter("genero", str, description="f ou m (gênero declarado ao TSE)"),
+            OpenApiParameter("ordem", str, description="nome (padrão) ou numero"),
             OpenApiParameter("q", str, description="nome, nome de urna, número ou partido"),
         ],
         responses=OpenApiTypes.OBJECT,
     )
     def get(self, request: Request) -> Response:
-        qs = presenters.base_queryset()
-        if office := request.query_params.get("cargo"):
-            qs = qs.filter(contest__office__slug=office)
-        if uf := request.query_params.get("uf"):
-            qs = qs.filter(contest__region__tse_code=uf.lower())
-        if party := request.query_params.get("partido"):
-            qs = qs.filter(party__number=party)
+        qs = stats.apply_filters(presenters.base_queryset(), request.query_params)
         query = request.query_params.get("q", "").strip()
-        qs = search_candidacies(query, qs) if query else qs.order_by("sort_name", "tse_id")
+        qs = (
+            search_candidacies(query, qs)
+            if query
+            else stats.order(qs, request.query_params.get("ordem", ""))
+        )
         paginator = DefaultPagination()
         page = paginator.paginate_queryset(qs, request, view=self) or []
         response = paginator.get_paginated_response([presenters.summary(c) for c in page])
+        response["Cache-Control"] = PUBLIC_CACHE
+        return response
+
+
+class CandidacyFacetsView(APIView):
+    """Contagens por cargo, UF, partido, situação e gênero, cada uma sem o próprio filtro."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(operation_id="candidates_facets", responses=OpenApiTypes.OBJECT)
+    def get(self, request: Request) -> Response:
+        params = {k: request.query_params.get(k, "") for k in stats.FILTERS}
+        response = Response(stats.facets(params))
+        response["Cache-Control"] = PUBLIC_CACHE
+        return response
+
+
+class CandidacyStatsView(APIView):
+    """Panorama das candidaturas: por cargo, UF, gênero, situação e partido."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(operation_id="candidates_stats", responses=OpenApiTypes.OBJECT)
+    def get(self, request: Request) -> Response:
+        response = Response(stats.overview())
         response["Cache-Control"] = PUBLIC_CACHE
         return response
 

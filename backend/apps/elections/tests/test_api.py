@@ -108,3 +108,15 @@ def test_stream_sends_latest_then_live_updates_and_keepalive() -> None:
     assert '"seq": 1' in first
     assert '"seq": 2' in live
     assert keepalive == ": keepalive\n\n"
+
+
+def test_by_state_lists_only_states_with_results(
+    tse: respx.MockRouter, make_feed: Callable[..., ResultFeed]
+) -> None:
+    br = make_feed("presidente", "br")
+    make_feed("presidente", "sp")  # sem divulgação ainda: fica de fora
+    tse.get(BR_URL).mock(return_value=httpx.Response(200, content=fixture_bytes(BR_PRESIDENT)))
+    collect(br)
+    response = Client().get("/api/v1/results/eleicoes-gerais-2026/1/presidente/estados/")
+    assert response.status_code == 200
+    assert response.json() == {}  # o Brasil não é estado; SP ainda não tem snapshot
