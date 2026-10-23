@@ -7,7 +7,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 # Lê só o necessário (o .env tem valores com espaços que não podem ser "sourced" pelo shell).
-env_value() { grep -E "^$1=" .env | tail -n1 | cut -d= -f2-; }
+# Variável ausente devolve vazio: sem o "|| true", o grep sem resultado derruba o script (pipefail).
+env_value() { { grep -E "^$1=" .env || true; } | tail -n1 | cut -d= -f2-; }
 POSTGRES_USER="$(env_value POSTGRES_USER)"
 POSTGRES_DB="$(env_value POSTGRES_DB)"
 BACKUP_RCLONE_REMOTE="$(env_value BACKUP_RCLONE_REMOTE)"
