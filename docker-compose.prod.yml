@@ -95,6 +95,12 @@ services:
     <<: *backend
     command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2"]
     mem_limit: 1g
+    # O healthcheck da imagem testa o HTTP do backend; o worker responde ao ping do Celery.
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A config inspect ping -d celery@$$HOSTNAME --timeout 10"]
+      interval: 60s
+      timeout: 20s
+      retries: 3
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -104,6 +110,12 @@ services:
     command:
       ["celery", "-A", "config", "beat", "--loglevel=INFO", "--pidfile=/tmp/celerybeat.pid"]
     mem_limit: 256m
+    # O beat não serve HTTP nem responde a ping; vale o processo estar vivo.
+    healthcheck:
+      test: ["CMD-SHELL", "kill -0 $$(cat /tmp/celerybeat.pid)"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
     depends_on:
       migrate:
         condition: service_completed_successfully
