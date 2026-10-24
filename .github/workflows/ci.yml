@@ -55,6 +55,9 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.prod
           DJANGO_SECRET_KEY: ci-only-${{ github.run_id }}-a-long-random-looking-value-for-checks
           DJANGO_ALLOWED_HOSTS: tribuna.example
+          # A checagem exige SMTP real (tribuna.E001/E002); aqui só o formato importa.
+          EMAIL_URL: smtp+tls://ci:ci@smtp.tribuna.invalid:587
+          DEFAULT_FROM_EMAIL: Tribuna Brasil <nao-responda@tribuna.org.br>
       - name: Bandit
         run: bandit -q -c pyproject.toml -r apps config
       - name: Vulnerabilidades em dependências

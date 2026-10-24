@@ -557,3 +557,28 @@ Fica para depois:
 
 Próximo passo: retomar o ciclo de infraestrutura (§10) ou a Sprint 6 (história republicana), conforme
 a prioridade do responsável pelo produto, lembrando que o 2º turno é em 25/10/2026.
+
+## 17. Correções vindas da produção: e-mail, instalação e celular (24/10/2026)
+
+Problemas relatados pelo responsável pelo produto com o app rodando na VPS:
+
+| Problema | Correção | Situação |
+|---|---|---|
+| E-mail de ativação da conta não chega | Checagens de deploy `tribuna.E001` (e-mail só no log) e `tribuna.E002` (remetente de exemplo), avisadas pelo `deploy.sh`; comando `enviar_email_teste`; falha de envio registrada (`email.send_failed`, destinatário mascarado); guia de diagnóstico em `DEPLOY.md` | ✅ no código; falta corrigir o `.env` da VPS |
+| Sem botão para instalar o app no celular | Convite abaixo do cabeçalho (só no celular, "Agora não" esconde por 21 dias), botão no menu e no rodapé; diálogo nativo no Android e passo a passo no iPhone; tudo some com o app instalado | ✅ |
+| Porcentagens com casas decimais sobrepostas nas pesquisas | Números com tamanho relativo à coluna (container queries), sem quebra, alinhados por subgrid; testado de 320 a 1280 px | ✅ |
+| Rodapé feio no celular | Navegação em duas colunas, fontes oficiais como pílulas, barra final com "Corrigir uma informação" | ✅ |
+| Conteúdo quebrado para caber na tela | Cabeçalho que estourava a largura, barra inferior a 320 px, tabela de bens virou lista no celular, totais e valores sem quebra, comparecimento sem a coluna de eleitorado no celular, lista de diferenças das pesquisas reorganizada | ✅ |
+
+Descobertas:
+
+- **Causa provável do e-mail:** sem `EMAIL_URL` no `.env`, o padrão é `consolemail://` e o e-mail
+  vai só para o log, sem erro. O login SMTP do Brevo tem `@`, que precisa virar `%40` na URL.
+- **Classe base vence `hidden`:** um botão com `inline-flex` na base ignorava `hidden`; usar
+  `max-lg:hidden`.
+- **`li` em grade com `min-width: auto`:** "Candidaturas" alargava a barra inferior a 320 px.
+- **Acesso à VPS:** a chave SSH desta máquina não é aceita; a configuração do e-mail fica com o
+  responsável pelo produto (passos em `DEPLOY.md`, "Se o e-mail de confirmação não chegar").
+
+Testes: backend com 206 testes; frontend com 80 unitários e 22 de ponta a ponta; nenhuma das 13
+rotas auditadas transborda a 320 nem a 360 px.

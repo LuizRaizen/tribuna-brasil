@@ -16,9 +16,10 @@ export function LogoMark({ className }: { className?: string }) {
  */
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cx('inline-flex items-center gap-2', className)}>
-      <LogoMark className="size-9" />
-      <span className="font-display text-[1.375rem] leading-none tracking-[-0.025em] text-ink">
+    <span className={cx('inline-flex items-center gap-1.5 sm:gap-2', className)}>
+      <LogoMark className="size-8 sm:size-9" />
+      {/* Um pouco menor em celulares estreitos (360 px), para o cabeçalho caber sem rolagem lateral. */}
+      <span className="font-display text-[1.25rem] leading-none tracking-[-0.025em] whitespace-nowrap text-ink sm:text-[1.375rem]">
         <span className="font-light">Tribuna</span>
         <span className="font-extrabold font-stretch-[112%]">Brasil</span>
       </span>

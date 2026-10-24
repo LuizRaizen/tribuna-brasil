@@ -68,7 +68,9 @@ function PollPicker({ polls, selected, onSelect }: { polls: Poll[]; selected: st
 function CandidateFigure({ c, value, margin, align }: { c: PollCandidate; value: number; margin: number; align: 'left' | 'right' }) {
   const [lo, hi] = interval(value, margin)
   return (
-    <div className={cx('flex min-w-0 flex-col gap-3', align === 'right' && 'items-end text-right')}>
+    // Duas linhas da grade do confronto (subgrid): nome e número ficam alinhados com a outra
+    // candidatura mesmo quando um nome quebra em duas linhas.
+    <div className={cx('row-span-2 grid min-w-0 grid-rows-subgrid gap-3 @container', align === 'right' && 'justify-items-end text-right')}>
       <div className={cx('flex flex-col gap-3 sm:flex-row sm:items-center', align === 'right' ? 'items-end sm:flex-row-reverse' : 'items-start')}>
         <Portrait src={c.photoUrl} name={c.name} size="lg" decorative />
         <div className="min-w-0">
@@ -81,8 +83,12 @@ function CandidateFigure({ c, value, margin, align }: { c: PollCandidate; value:
           </p>
         </div>
       </div>
-      <p>
-        <span className="block font-display text-5xl leading-none font-extrabold tracking-[-0.03em] tabular md:text-6xl">{fmtPct(value)}</span>
+      <p className="self-end">
+        {/* O tamanho acompanha a largura da coluna (cqi): "52,7%" cabe lado a lado num celular de
+            360 px sem encostar no número da outra candidatura; no desktop chega aos 60 px de antes. */}
+        <span className="block font-display text-[clamp(1.875rem,27cqi,3.75rem)] leading-none font-extrabold tracking-[-0.03em] whitespace-nowrap tabular">
+          {fmtPct(value)}
+        </span>
         <span className="mt-1.5 block text-sm text-ink-3">
           entre {fmtPct(lo)} e {fmtPct(hi)}
         </span>
@@ -149,7 +155,7 @@ function Dashboard({ data }: { data: ContestPolls }) {
             faz do momento.
           </p>
         </div>
-        <dl className="grid grid-cols-[auto_auto_minmax(0,1fr)] gap-x-8 gap-y-4 border-t border-line pt-4 lg:border-t-0 lg:pt-0">
+        <dl className="grid grid-cols-[auto_auto_minmax(0,1fr)] gap-x-5 gap-y-4 border-t min-[22.5rem]:gap-x-8 border-line pt-4 lg:border-t-0 lg:pt-0">
           {[
             ['Pesquisas', String(polls.length)],
             ['Institutos', String(institutes)],
@@ -157,7 +163,7 @@ function Dashboard({ data }: { data: ContestPolls }) {
           ].map(([k, v]) => (
             <div key={k}>
               <dt className="text-sm text-ink-3">{k}</dt>
-              <dd className="mt-0.5 font-display text-xl font-bold whitespace-nowrap md:text-2xl">{v}</dd>
+              <dd className="mt-0.5 font-display text-lg font-bold whitespace-nowrap min-[22.5rem]:text-xl md:text-2xl">{v}</dd>
             </div>
           ))}
         </dl>
@@ -203,7 +209,7 @@ function Dashboard({ data }: { data: ContestPolls }) {
 
           {basis === 'validos' ? (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <CandidateFigure c={a} value={va} margin={poll.margin_of_error} align="left" />
                 <CandidateFigure c={b} value={vb} margin={poll.margin_of_error} align="right" />
               </div>
@@ -238,7 +244,7 @@ function Dashboard({ data }: { data: ContestPolls }) {
             </>
           ) : poll.total ? (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <CandidateFigure c={a} value={poll.total.candidates[a.key] ?? 0} margin={poll.margin_of_error} align="left" />
                 <CandidateFigure c={b} value={poll.total.candidates[b.key] ?? 0} margin={poll.margin_of_error} align="right" />
               </div>
@@ -270,7 +276,10 @@ function Dashboard({ data }: { data: ContestPolls }) {
                       <p className="flex items-center gap-2 text-sm font-semibold">
                         <CandMark slot={c.slot} /> {c.name}
                       </p>
-                      <p className="mt-1 font-display text-2xl font-bold tabular">{millions(votesFrom(v, base))} de votos</p>
+                      <p className="mt-1 font-display text-2xl font-bold tabular">
+                        <span className="whitespace-nowrap">{millions(votesFrom(v, base))}</span>{' '}
+                        <span className="font-sans text-base font-normal text-ink-2">de votos</span>
+                      </p>
                       <p className="text-sm text-ink-3 tabular">
                         entre {millions(votesFrom(lo, base))} e {millions(votesFrom(hi, base))}.
                         {c.firstRoundPct !== null && <> No 1º turno: {formatPct(c.firstRoundPct)} dos válidos.</>}
@@ -432,12 +441,9 @@ function Dashboard({ data }: { data: ContestPolls }) {
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2">
                       <span className="font-display text-lg font-bold">{s.institute}</span>
-                      {s.expected_on && (
-                        <StatusPill tone={late ? 'neutral' : 'next'}>
-                          {late ? `Prevista para ${fmtDayMonth(s.expected_on)}, aguardando transcrição` : `Prevista para ${fmtDayMonth(s.expected_on)}`}
-                        </StatusPill>
-                      )}
+                      {s.expected_on && <StatusPill tone={late ? 'neutral' : 'next'}>Prevista para {fmtDayMonth(s.expected_on)}</StatusPill>}
                     </p>
+                    {s.expected_on && late && <p className="mt-1 text-sm font-semibold text-ink-2">A data prevista já passou; aguardando a transcrição dos números.</p>}
                     <p className="mt-1 text-sm text-ink-2">
                       Campo de {fieldRange(s.field_start, s.field_end)}
                       {s.sample_size && `, ${formatInt(s.sample_size)} entrevistas`}, margem de ± {fmtPts(s.margin_of_error)}

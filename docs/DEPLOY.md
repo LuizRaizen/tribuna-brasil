@@ -110,6 +110,30 @@ fail2ban e 2 GB de swap, desativa o login por senha, cria o usuário `tribuna`, 
 2. **SMTP & API → SMTP:** gere uma chave SMTP.
 3. No `.env` (próximo passo):
    `EMAIL_URL=smtp+tls://SEU_LOGIN:SUA_CHAVE@smtp-relay.brevo.com:587`
+   `DEFAULT_FROM_EMAIL=Tribuna Brasil <o-remetente-que-voce-verificou@...>`
+   - O login é o que aparece na tela **SMTP** do Brevo (algo como `8a1b2c001@smtp-brevo.com`), não o
+     e-mail da conta. A senha é a **chave SMTP**, não a chave de API.
+   - Dentro da URL, `@` no login vira `%40` (ex.: `8a1b2c001%40smtp-brevo.com`). Na chave, `/` vira
+     `%2F` e `:` vira `%3A`.
+   - O remetente precisa ser exatamente o verificado em **Senders**; outro endereço é recusado.
+
+### Se o e-mail de confirmação não chegar
+
+O deploy já avisa (`!! ATENÇÃO`) quando o e-mail não está configurado para envio real: sem
+`EMAIL_URL`, o Django só imprime as mensagens no log (`tribuna.E001`); com remetente de exemplo, o
+envio é recusado (`tribuna.E002`). Para diagnosticar:
+
+```bash
+cd /opt/tribuna
+docker compose -f docker-compose.prod.yml exec backend python manage.py check --deploy
+docker compose -f docker-compose.prod.yml exec backend python manage.py enviar_email_teste seu@email.com
+docker compose -f docker-compose.prod.yml logs backend | grep email.send_failed
+```
+
+`enviar_email_teste` mostra o servidor e o remetente em uso e, se falhar, o erro exato do SMTP (login
+recusado, remetente não verificado, porta bloqueada). Depois de corrigir o `.env`, recrie os
+contêineres com `./deploy/deploy.sh`, porque `restart` não relê o arquivo. Se o teste diz "enviado" mas
+nada chega, olhe a caixa de spam e o histórico em **Brevo → Transactional → Logs**.
 
 ## Passo 7 — Configurar e subir
 

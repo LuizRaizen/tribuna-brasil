@@ -72,7 +72,7 @@ export function CampaignFinanceSection({ finance: f, spendingLimit }: { finance:
         <div>
           <h3 className="font-bold">
             Maiores doadores e repasses
-            <span className="font-normal text-muted">
+            <span className="block text-sm font-normal whitespace-nowrap text-muted sm:inline sm:text-base">
               {' '}
               ({formatInt(receipts.top_donors.length)} de {formatInt(receipts.donors_count)})
             </span>
@@ -84,7 +84,7 @@ export function CampaignFinanceSection({ finance: f, spendingLimit }: { finance:
                   <span className="font-semibold break-words">{displayName(d.name)}</span>
                   <span className="block text-sm text-muted">{d.origin}</span>
                 </span>
-                <span className="tabular">{formatBRL(d.total)}</span>
+                <span className="shrink-0 font-semibold whitespace-nowrap tabular">{formatBRL(d.total)}</span>
               </li>
             ))}
           </ol>
@@ -98,7 +98,7 @@ export function CampaignFinanceSection({ finance: f, spendingLimit }: { finance:
           <h3 className="font-bold">
             Maiores fornecedores (empresas)
             {expenses.suppliers_count > 0 && (
-              <span className="font-normal text-muted">
+              <span className="block text-sm font-normal whitespace-nowrap text-muted sm:inline sm:text-base">
                 {' '}
                 ({formatInt(expenses.top_suppliers.length)} de {formatInt(expenses.suppliers_count)})
               </span>
@@ -111,7 +111,7 @@ export function CampaignFinanceSection({ finance: f, spendingLimit }: { finance:
                   <span className="font-semibold break-words">{displayName(s.name)}</span>
                   <span className="block font-mono text-sm text-muted tabular">CNPJ {formatCnpj(s.cnpj)}</span>
                 </span>
-                <span className="tabular">{formatBRL(s.total)}</span>
+                <span className="shrink-0 font-semibold whitespace-nowrap tabular">{formatBRL(s.total)}</span>
               </li>
             ))}
           </ol>

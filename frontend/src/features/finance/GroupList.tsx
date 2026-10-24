@@ -36,10 +36,13 @@ export function GroupList({
           const share = Number(total) ? (Number(g.total) / Number(total)) * 100 : 0
           return (
             <li key={g.label}>
-              <p className="flex flex-wrap items-baseline justify-between gap-x-3">
-                <span className="min-w-0 break-words">{g.label}</span>
-                <span className="tabular">
-                  {formatBRL(g.total)} <span className="text-sm text-muted">({formatPct(share)})</span>
+              {/* Celular: o nome ganha a linha inteira e o valor fica embaixo, sem quebrar no meio.
+                  A partir de sm, nome e valor dividem a linha. */}
+              <p className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-x-4">
+                <span className="min-w-0 text-pretty break-words">{g.label}</span>
+                <span className="flex shrink-0 items-baseline justify-between gap-3 whitespace-nowrap tabular sm:justify-end">
+                  <span className="font-semibold">{formatBRL(g.total)}</span>
+                  <span className="text-sm text-ink-3">{formatPct(share)}</span>
                 </span>
               </p>
               <div className="mt-1 h-1.5 rounded-full bg-sunken" aria-hidden="true">

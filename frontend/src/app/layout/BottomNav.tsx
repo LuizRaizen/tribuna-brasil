@@ -1,6 +1,7 @@
 import { BellIcon, MagnifyingGlassIcon, SwatchesIcon } from '@phosphor-icons/react'
 import { Link, NavLink } from 'react-router'
 import { Sheet } from '@/components/ui/Sheet'
+import { InstallButton } from '@/features/install/InstallApp'
 import { SearchCombobox } from '@/features/search/SearchCombobox'
 import { cx } from '@/lib/cx'
 import { NAV_ITEMS, TAB_ITEMS } from './nav'
@@ -14,14 +15,14 @@ export function BottomNav() {
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5">
         {TAB_ITEMS.map(({ icon: ItemIcon, ...item }) => (
-          <li key={item.to}>
+          <li key={item.to} className="min-w-0">
             <NavLink
               to={item.to}
               end={item.end}
               viewTransition
               className={({ isActive }) =>
                 cx(
-                  'flex min-h-15 flex-col items-center justify-center gap-0.5 text-[0.75rem] font-semibold no-underline transition-colors active:bg-sunken',
+                  'flex min-h-15 flex-col items-center justify-center gap-0.5 text-[clamp(0.625rem,3.15vw,0.75rem)] font-semibold tracking-tight whitespace-nowrap no-underline transition-colors active:bg-sunken',
                   isActive ? 'text-azul' : 'text-ink-3',
                 )
               }
@@ -59,6 +60,7 @@ export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => voi
   ]
   return (
     <Sheet open={open} onClose={onClose} title="Menu">
+      <InstallButton className="mb-4" />
       <nav aria-label="Menu">
         <ul className="grid grid-cols-2 gap-2">
           {items.map(({ icon: ItemIcon, ...i }) => (

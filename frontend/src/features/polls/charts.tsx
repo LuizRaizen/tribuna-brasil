@@ -71,7 +71,8 @@ export function MarginChart({ cands, values, margin, domain }: { cands: PollCand
   return (
     <figure className="min-w-0">
       <figcaption className="text-sm font-semibold">Faixa da margem de erro</figcaption>
-      <div className="mt-4 grid grid-cols-[minmax(0,6.5rem)_minmax(0,1fr)] gap-x-3 gap-y-4 sm:grid-cols-[minmax(0,8.5rem)_minmax(0,1fr)]">
+      {/* Celular: o nome vai acima da faixa, inteiro (sem reticências); a partir de sm, ao lado. */}
+      <div className="mt-4 grid grid-cols-1 gap-x-3 gap-y-1.5 sm:grid-cols-[minmax(0,8.5rem)_minmax(0,1fr)] sm:gap-y-4">
         {cands.map((c) => {
           const v = val(values, c.key)
           const [a, b] = interval(v, margin)
@@ -79,7 +80,8 @@ export function MarginChart({ cands, values, margin, domain }: { cands: PollCand
             <div key={c.key} className="contents">
               <p className="flex min-w-0 items-center gap-2 text-sm">
                 <CandMark slot={c.slot} />
-                <span className="truncate font-semibold">{c.name}</span>
+                <span className="font-semibold sm:truncate">{c.name}</span>
+                <span className="ml-auto tabular text-ink-2 sm:hidden">{fmtPct(v)}</span>
               </p>
               <div className="relative h-7" role="img" aria-label={`${c.name}: ${fmtPct(v)}, entre ${fmtPct(a)} e ${fmtPct(b)}`}>
                 {ticks.map((t) => (
@@ -103,8 +105,8 @@ export function MarginChart({ cands, values, margin, domain }: { cands: PollCand
             </div>
           )
         })}
-        <span />
-        <div className="relative h-4 text-xs text-ink-3 tabular" aria-hidden="true">
+        <span className="hidden sm:block" />
+        <div className="relative mt-1.5 h-4 text-xs text-ink-3 tabular sm:mt-0" aria-hidden="true">
           {ticks.map((t) => (
             <span key={t} className="absolute -translate-x-1/2" style={{ left: `${x(t)}%` }}>
               {t}%
@@ -192,8 +194,13 @@ export function PollTimeline({
   }
   const sel = points.find((p) => p.id === selected)
   const days = Math.round((d1 - d0) / 86_400_000)
-  const step = W < 480 ? 3 : 2
-  const axisDays = Array.from({ length: days + 1 }, (_, i) => isoDay(d0 + i * 86_400_000)).filter((_, i) => i % step === 1)
+  // Rótulos de data com folga mínima entre si, calculada pela largura real do gráfico: no celular,
+  // formato curto ("30/9") e menos rótulos, para nunca encostarem uns nos outros.
+  const narrow = W < 480
+  const perDay = (W - M.l - M.r) / Math.max(days, 1)
+  const step = Math.max(1, Math.ceil((narrow ? 44 : 76) / perDay))
+  const axisLabel = (iso: string) => (narrow ? `${Number(iso.slice(8, 10))}/${Number(iso.slice(5, 7))}` : fmtDayMonth(iso))
+  const axisDays = Array.from({ length: days + 1 }, (_, i) => isoDay(d0 + i * 86_400_000)).filter((_, i) => i % step === Math.min(1, step - 1))
 
   function onMove(e: PointerEvent<SVGRectElement>) {
     const box = e.currentTarget.ownerSVGElement!.getBoundingClientRect()
@@ -225,8 +232,8 @@ export function PollTimeline({
             </g>
           ))}
           {axisDays.map((d) => (
-            <text key={d} x={xd(d)} y={H - 6} textAnchor="middle" aria-hidden="true" className="fill-ink-3 text-[12px]">
-              {fmtDayMonth(d)}
+            <text key={d} x={xd(d)} y={H - 6} textAnchor="middle" aria-hidden="true" className="fill-ink-3 text-[12px] tabular">
+              {axisLabel(d)}
             </text>
           ))}
           {sel &&
@@ -346,11 +353,11 @@ export function DifferenceList({
     <div className="min-w-0">
       <div className="grid grid-cols-[minmax(0,1fr)] px-3 text-xs text-ink-3 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_7.5rem] sm:gap-x-4">
         <span className="hidden sm:block" />
-        <p className="flex justify-between gap-4" aria-hidden="true">
-          <span className="flex items-center gap-1.5">
+        <p className="flex flex-wrap justify-between gap-x-4 gap-y-1" aria-hidden="true">
+          <span className="flex items-center gap-1.5 whitespace-nowrap">
             <CandMark slot={a.slot} /> {a.name} à frente
           </span>
-          <span className="flex items-center gap-1.5 text-right">
+          <span className="ml-auto flex items-center gap-1.5 whitespace-nowrap">
             {b.name} à frente <CandMark slot={b.slot} />
           </span>
         </p>
@@ -372,13 +379,25 @@ export function DifferenceList({
                 aria-pressed={selected ? isSel : undefined}
                 onClick={() => onSelect(r.id)}
                 className={cx(
-                  'grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 rounded-control px-3 py-3 text-left transition-colors sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_7.5rem]',
+                  'grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-2 sm:items-center rounded-control px-3 py-3 text-left transition-colors sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_7.5rem]',
                   isSel ? 'bg-azul-50 ring-1 ring-azul/30' : 'hover:bg-sunken',
                 )}
               >
                 <span className="col-start-1 row-start-1 min-w-0">
                   <span className="block truncate font-semibold text-ink">{r.title}</span>
-                  <span className="block text-xs text-ink-3">{r.meta}</span>
+                  {/* Cada parte fica inteira: empilhadas no celular, numa linha com "·" a partir de sm. */}
+                  <span className="flex flex-col text-xs text-ink-3 sm:flex-row sm:flex-wrap sm:gap-x-1">
+                    {r.meta.split(' · ').map((part, i) => (
+                      <span key={part} className="whitespace-nowrap">
+                        {i > 0 && <span aria-hidden="true" className="hidden sm:inline">· </span>}
+                        {part}
+                      </span>
+                    ))}
+                    {/* No celular a situação na margem vem aqui, e a coluna da direita fica só com os pontos. */}
+                    <span className="font-semibold text-ink-2 sm:hidden" aria-hidden="true">
+                      {inside ? 'Dentro da margem' : 'Acima da margem'}
+                    </span>
+                  </span>
                 </span>
                 <span className="relative col-span-2 col-start-1 row-start-2 block h-6 sm:col-span-1 sm:col-start-2 sm:row-start-1" aria-hidden="true">
                   <span className="absolute inset-y-0 left-1/2 w-px bg-ink/50" />
@@ -393,7 +412,7 @@ export function DifferenceList({
                 </span>
                 <span className="col-start-2 row-start-1 text-right text-sm sm:col-start-3">
                   <span className="block font-semibold text-ink tabular">{diff === 0 ? 'Empate numérico' : fmtPts(Math.abs(diff))}</span>
-                  <span className="block text-xs text-ink-3">{inside ? 'dentro da margem' : 'acima da margem'}</span>
+                  <span className="hidden text-xs text-ink-3 sm:block">{inside ? 'dentro da margem' : 'acima da margem'}</span>
                 </span>
                 <span className="sr-only">
                   {lead ? `${lead.name} à frente por ${fmtPts(Math.abs(diff))}` : 'Empate numérico'}, {inside ? 'dentro da margem de erro' : 'acima da margem de erro'}.

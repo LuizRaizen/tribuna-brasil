@@ -30,6 +30,12 @@ for _ in $(seq 1 30); do
       "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/ready').status==200 else 1)" \
       >/dev/null 2>&1; then
     echo "==> Online ($(git rev-parse --short HEAD))"
+    # Configuração incompleta (ex.: e-mail de confirmação que nunca sai) não derruba o site,
+    # mas fica bem visível no log do deploy.
+    if ! "${COMPOSE[@]}" exec -T backend python manage.py check --deploy --fail-level ERROR; then
+      echo "!! ATENÇÃO: a checagem de produção encontrou problemas (acima). O site está no ar,"
+      echo "!! mas algo precisa de ajuste no .env (ex.: EMAIL_URL para o cadastro funcionar)."
+    fi
     docker image prune -f >/dev/null
     exit 0
   fi

@@ -90,7 +90,7 @@ describe('PollsPage', () => {
     expect(screen.getByText(/Os votos válidos foram calculados pelo Tribuna/)).toBeInTheDocument()
     const sim = screen.getByRole('complementary', { name: 'Simulação e ficha técnica' })
     // 48,8% de 119,3 milhões
-    expect(within(sim).getByText('58,2 milhões de votos')).toBeInTheDocument()
+    expect(within(sim).getByText('58,2 milhões')).toBeInTheDocument()
   })
 
   it('mostra votos totais quando divulgados e explica quando não foram', async () => {

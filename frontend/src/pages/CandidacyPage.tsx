@@ -171,7 +171,8 @@ function Assets({ c }: { c: CandidacyDetail }) {
   return (
     <>
       <p>
-        <span className="font-display text-4xl font-extrabold tracking-[-0.02em]">{formatBRL(assets.total)}</span>
+        {/* Nunca quebra no meio do valor: o corpo acompanha a largura da tela até 36 px. */}
+        <span className="font-display text-[min(2.25rem,7.4vw)] font-extrabold tracking-[-0.02em] whitespace-nowrap tabular">{formatBRL(assets.total)}</span>
         <span className="block text-ink-3">
           em {formatInt(assets.count)} {assets.count === 1 ? 'bem declarado' : 'bens declarados'}
         </span>
@@ -185,9 +186,21 @@ function Assets({ c }: { c: CandidacyDetail }) {
           />
         </div>
       )}
-      {/* Tabela larga rola de lado: a região recebe foco para rolar pelo teclado. */}
+      {/* Celular: lista empilhada (tipo e valor em cima, descrição embaixo), sem rolagem lateral. */}
+      <ul className="mt-6 divide-y divide-line/70 border-y border-line/70 sm:hidden" aria-label="Lista de bens declarados">
+        {items.map((a, i) => (
+          <li key={i} className="py-3">
+            <p className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 font-semibold text-pretty">{a.kind}</span>
+              <span className="shrink-0 whitespace-nowrap tabular">{formatBRL(a.value)}</span>
+            </p>
+            <p className="mt-0.5 text-sm break-words text-ink-2">{a.description || 'Sem descrição'}</p>
+          </li>
+        ))}
+      </ul>
+      {/* A partir de sm, tabela; se ainda for larga, rola de lado e recebe foco para rolar pelo teclado. */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
-      <div className="mt-6 overflow-x-auto" tabIndex={0} role="region" aria-label="Lista de bens declarados">
+      <div className="mt-6 hidden overflow-x-auto sm:block" tabIndex={0} role="region" aria-label="Tabela de bens declarados">
         <table className="w-full min-w-[32rem] text-left text-sm">
           <caption className="sr-only">Bens declarados ao TSE</caption>
           <thead>

@@ -356,7 +356,7 @@ export function ExpensesSection({ personId, years }: { personId: number; years: 
                   <span className="font-semibold break-words">{s.name}</span>
                   <span className="block font-mono text-sm text-muted tabular">CNPJ {formatCnpj(s.cnpj)}</span>
                 </span>
-                <span className="tabular">{formatBRL(s.total)}</span>
+                <span className="shrink-0 font-semibold whitespace-nowrap tabular">{formatBRL(s.total)}</span>
               </li>
             ))}
           </ol>

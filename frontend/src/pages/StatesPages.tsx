@@ -113,7 +113,11 @@ function GovernorRows({ people }: { people: CandidateResult[] }) {
               {displayName(c.ballot_name)}
             </Link>
             <p className="text-sm text-ink-3">
-              {c.party} {c.ballot_number} · {formatPct(c.pct_valid)} no 1º turno
+              {/* Partes inteiras: a linha só quebra no separador. */}
+              <span className="whitespace-nowrap">
+                {c.party} {c.ballot_number}
+              </span>{' · '}
+              <span className="whitespace-nowrap">{formatPct(c.pct_valid)} no 1º turno</span>
             </p>
           </div>
         </li>

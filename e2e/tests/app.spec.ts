@@ -48,7 +48,10 @@ test.describe('Conta', () => {
 
     await page.getByRole('button', { name: 'Sair' }).click()
     await expect(page).toHaveURL('/')
-    await expect(page.getByRole('link', { name: 'Entrar' })).toBeVisible()
+    // No celular o "Entrar" fica em "Conta", na barra de baixo; a área da conta volta a pedir login.
+    if (test.info().project.name === 'desktop') await expect(page.getByRole('link', { name: 'Entrar' })).toBeVisible()
+    await page.goto('/conta')
+    await expect(page).toHaveURL(/\/conta\/entrar/)
   })
 })
 

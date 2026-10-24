@@ -36,7 +36,8 @@ function NotificationsBell() {
 
 export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () => void }) {
   const session = useSession()
-  const { canInstall, install } = useInstallPrompt()
+  // No desktop, só o diálogo nativo; no celular o convite fica no banner, no menu e no rodapé.
+  const { method, install } = useInstallPrompt()
   const user = session.data
   // Nas telas de entrar/criar conta o atalho "Entrar" seria redundante.
   const onAuthPage = useLocation().pathname.startsWith('/conta/')
@@ -44,7 +45,7 @@ export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
   return (
     <header className="header-shadow sticky top-0 z-30 border-b border-line bg-surface/92 backdrop-blur-md [view-transition-name:site-header] supports-[not(backdrop-filter:blur(0))]:bg-surface">
       <div aria-hidden="true" className="filete-nacional h-[3px]" />
-      <div className="container-page flex h-16 items-center gap-5 xl:gap-6">
+      <div className="container-page flex h-16 items-center gap-3 sm:gap-5 xl:gap-6">
         <Link to="/" viewTransition className="shrink-0 no-underline" aria-label="Tribuna Brasil, página inicial" translate="no">
           <Logo />
         </Link>
@@ -72,7 +73,7 @@ export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1.5">
           <div className="hidden w-60 min-[90rem]:block">
             <SearchCombobox label="Busca rápida" />
           </div>
@@ -85,7 +86,7 @@ export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
             <MagnifyingGlassIcon weight="bold" className="size-5" aria-hidden="true" />
           </button>
           {user && <NotificationsBell />}
-          {canInstall && (
+          {method === 'prompt' && (
             <button
               type="button"
               onClick={install}
@@ -94,12 +95,13 @@ export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
               Instalar app
             </button>
           )}
+          {/* No celular, "Conta" já está na barra inferior: o cabeçalho fica com o essencial. */}
           {session.isPending ? (
-            <span className="h-11 w-20" aria-hidden="true" />
+            <span className="hidden h-11 w-20 lg:block" aria-hidden="true" />
           ) : user ? (
             <Link
               to="/conta"
-              className="inline-flex min-h-11 items-center gap-2 rounded-control px-2 text-sm font-semibold text-ink no-underline hover:bg-sunken"
+              className="hidden min-h-11 items-center gap-2 rounded-control px-2 text-sm font-semibold text-ink no-underline hover:bg-sunken lg:inline-flex"
             >
               <span className="grid size-8 place-items-center rounded-full bg-azul-50 font-bold text-azul" aria-hidden="true">
                 {(user.display || user.email).charAt(0).toUpperCase()}
@@ -107,7 +109,7 @@ export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
               <span className="sr-only lg:not-sr-only">Minha conta</span>
             </Link>
           ) : onAuthPage ? null : (
-            <Link to="/conta/entrar" viewTransition className={buttonClass('secondary')}>
+            <Link to="/conta/entrar" viewTransition className={buttonClass('secondary', 'md', 'max-lg:hidden')}>
               Entrar
             </Link>
           )}

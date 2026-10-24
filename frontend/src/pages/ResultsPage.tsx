@@ -272,7 +272,7 @@ export default function ResultsPage() {
                 <thead>
                   <tr className="sticky top-0 border-b border-line-strong/50 bg-surface text-ink-3">
                     <th scope="col" className="py-2 pr-3 font-semibold">Estado</th>
-                    <th scope="col" className="py-2 pr-3 text-right font-semibold">Eleitorado</th>
+                    <th scope="col" className="hidden py-2 pr-3 text-right font-semibold sm:table-cell">Eleitorado</th>
                     <th scope="col" className="py-2 text-right font-semibold">Comparecimento</th>
                   </tr>
                 </thead>
@@ -282,12 +282,14 @@ export default function ResultsPage() {
                     .map(([uf, s]) => (
                       <tr key={uf} className={cx('border-b border-line/70', region === uf && 'bg-azul-50')}>
                         <th scope="row" className="py-2 pr-3 font-normal">
-                          <button type="button" onClick={() => update({ local: uf })} className="font-semibold text-azul hover:underline">
+                          <button type="button" onClick={() => update({ local: uf })} className="text-left font-semibold text-azul hover:underline">
                             {ufName(uf)}
                           </button>
+                          {/* Celular: eleitorado sob o nome, para o nome do estado caber inteiro. */}
+                          <span className="block text-xs text-ink-3 tabular sm:hidden">{formatInt(s.electorate)} eleitores</span>
                         </th>
-                        <td className="py-2 pr-3 text-right tabular">{formatInt(s.electorate)}</td>
-                        <td className="py-2 text-right tabular">{formatPct(s.pct_turnout)}</td>
+                        <td className="hidden py-2 pr-3 text-right tabular sm:table-cell">{formatInt(s.electorate)}</td>
+                        <td className="py-2 text-right whitespace-nowrap tabular">{formatPct(s.pct_turnout)}</td>
                       </tr>
                     ))}
                 </tbody>

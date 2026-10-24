@@ -12,10 +12,14 @@ const TONES: Record<PillTone, string> = {
   soon: 'bg-transparent text-ink-3 ring-1 ring-inset ring-line-2',
 }
 
-/** Estado com texto + ícone; a cor só reforça. */
+/**
+ * Estado com texto + ícone; a cor só reforça. Raio de 0.75rem (e não "full"): numa linha parece
+ * uma pílula; se um texto oficial longo precisar de duas linhas no celular, vira um retângulo
+ * arredondado alinhado, em vez de uma cápsula deformada.
+ */
 export function StatusPill({ tone = 'neutral', children, className }: { tone?: PillTone; children: ReactNode; className?: string }) {
   return (
-    <span className={cx('inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold text-pretty', TONES[tone], className)}>
+    <span className={cx('inline-flex max-w-full items-center gap-1 rounded-[0.75rem] px-2.5 py-0.5 text-xs leading-4 font-semibold text-pretty', TONES[tone], className)}>
       {tone === 'live' && (
         <span className="relative flex size-2" aria-hidden="true">
           <span className="absolute inline-flex size-full rounded-full bg-current opacity-60 motion-safe:animate-ping" />

@@ -45,10 +45,11 @@ export function Breadcrumbs({ items }: { items: { label: string; to?: string }[]
 /** Número de destaque com rótulo e detalhe. Usar dentro de um <dl>. */
 export function Stat({ label, value, detail, className }: { label: string; value: ReactNode; detail?: ReactNode; className?: string }) {
   return (
-    <div className={cx('min-w-0', className)}>
+    // Contêiner de consulta: o número acompanha a largura da coluna e nunca quebra no meio.
+    <div className={cx('min-w-0 @container', className)}>
       <dt className="text-sm text-ink-3">{label}</dt>
       <dd className="mt-1">
-        <span className="font-display text-2xl font-bold tracking-[-0.02em] [font-stretch:104%]">{value}</span>
+        <span className="block font-display text-[clamp(1.125rem,14cqi,1.5rem)] font-bold tracking-[-0.02em] whitespace-nowrap [font-stretch:104%]">{value}</span>
         {detail && <span className="mt-0.5 block text-sm text-ink-3">{detail}</span>}
       </dd>
     </div>
