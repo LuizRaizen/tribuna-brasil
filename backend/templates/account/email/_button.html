@@ -1,0 +1,9 @@
+{% comment %}Botão "à prova de programa de e-mail" (célula de tabela com fundo), mais o link por extenso para quem não consegue clicar. Parâmetros: url, label.{% endcomment %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 0;">
+  <tr>
+    <td style="background-color:#143f8f;border-radius:10px;">
+      <a href="{{ url }}" style="display:inline-block;padding:14px 24px;font-family:'Atkinson Hyperlegible Next','Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;line-height:1;color:#ffffff;text-decoration:none;border-radius:10px;">{{ label }}</a>
+    </td>
+  </tr>
+</table>
+<p style="margin:20px 0 0;font-size:13px;line-height:1.55;color:#566376;">Se o botão não funcionar, copie e cole este endereço no navegador:<br><a href="{{ url }}" style="color:#143f8f;word-break:break-all;">{{ url }}</a></p>

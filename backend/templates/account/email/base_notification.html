@@ -1,0 +1,11 @@
+{% extends "account/email/base_message.html" %}
+{% comment %}Aviso de segurança: algo mudou na conta. Mostra quando e de onde, para a pessoa reconhecer (ou não) a alteração.{% endcomment %}
+{% block preheader %}Aviso de segurança da sua conta no Tribuna Brasil.{% endblock preheader %}
+{% block content %}<p style="margin:0;">{% block notification_message %}{% endblock notification_message %}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0 0;background-color:#f4f6f9;border-radius:10px;font-size:14px;line-height:1.5;">
+  <tr><td style="padding:14px 16px 4px;color:#566376;width:96px;vertical-align:top;">Quando</td><td style="padding:14px 16px 4px 0;color:#0e1a2b;">{{ timestamp|date:"d/m/Y \à\s H:i" }} (horário de Brasília)</td></tr>
+  <tr><td style="padding:4px 16px;color:#566376;vertical-align:top;">Navegador</td><td style="padding:4px 16px 4px 0;color:#0e1a2b;word-break:break-word;">{{ user_agent|default:"não informado" }}</td></tr>
+  <tr><td style="padding:4px 16px 14px;color:#566376;vertical-align:top;">Endereço IP</td><td style="padding:4px 16px 14px 0;color:#0e1a2b;">{{ ip|default:"não informado" }}</td></tr>
+</table>{% endblock content %}
+{% block note %}{% include "account/email/_note.html" with text="Foi você? Então não precisa fazer nada. Se não reconhece essa alteração, redefina sua senha agora:" %}
+<p style="margin:8px 0 0;font-size:14px;line-height:1.55;"><a href="{{ password_reset_request_url }}" style="color:#143f8f;font-weight:700;">Redefinir minha senha</a></p>{% endblock note %}

@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.html" %}
+{% block title %}Você já tem uma conta{% endblock title %}
+{% block preheader %}Já existe uma conta no Tribuna Brasil com este endereço.{% endblock preheader %}
+{% block heading %}Você já tem uma conta{% endblock heading %}
+{% block content %}<p style="margin:0;">Alguém tentou criar uma conta no Tribuna Brasil com o e-mail <strong style="color:#0e1a2b;">{{ email }}</strong>, mas já existe uma conta com esse endereço.</p>
+<p style="margin:16px 0 0;">Se você esqueceu a senha, pode escolher uma nova pelo botão abaixo.</p>{% endblock content %}
+{% block action %}{% include "account/email/_button.html" with url=password_reset_url label="Redefinir senha" %}{% endblock action %}
+{% block note %}{% include "account/email/_note.html" with text="Se você não fez esse pedido, ignore esta mensagem." %}{% endblock note %}

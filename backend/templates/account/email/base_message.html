@@ -1,0 +1,46 @@
+<!doctype html>
+{% comment %}
+Layout HTML dos e-mails de conta. Cada mensagem tem também a versão em texto puro (.txt), enviada
+junto: quem não abre HTML lê o texto, e os testes leem o link dali.
+
+Feito para programas de e-mail, não para navegador: tabelas, estilos inline e nada de CSS externo,
+fonte web ou SVG (o Gmail descarta). O logotipo é PNG com fundo branco, servido pelo próprio site,
+para continuar legível quando o app de e-mail força o modo escuro. Cores: tokens de
+frontend/src/styles/index.css (azul nas ações; texto em ink e ink-2).
+{% endcomment %}
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>{% block title %}{% endblock title %}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f4f6f9;font-size:1px;line-height:1px;">{% block preheader %}{% endblock preheader %}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f6f9;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+        <tr>
+          <td style="background-color:#ffffff;border:1px solid #dce2e9;border-top:4px solid #143f8f;border-radius:12px;padding:28px 32px 32px;font-family:'Atkinson Hyperlegible Next','Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0e1a2b;">
+            <a href="{{ site_url }}" style="text-decoration:none;"><img src="{{ logo_url }}" width="205" height="44" alt="Tribuna Brasil" style="display:block;border:0;width:205px;height:44px;color:#0e1a2b;font-size:20px;font-weight:bold;"></a>
+            <h1 style="margin:28px 0 12px;font-size:24px;line-height:1.25;font-weight:700;color:#0e1a2b;">{% block heading %}{% endblock heading %}</h1>
+            <div style="font-size:16px;line-height:1.6;color:#3e4c5e;">{% block content %}{% endblock content %}</div>
+            {% block action %}{% endblock action %}
+            {% block note %}{% endblock note %}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 32px 0;font-family:'Atkinson Hyperlegible Next','Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.55;color:#566376;text-align:center;">
+            <strong style="color:#3e4c5e;">Tribuna Brasil</strong> · Informação pública, verificável e com fonte.<br>
+            Este endereço só envia mensagens; respostas não são lidas.<br>
+            <a href="{{ site_url }}" style="color:#143f8f;text-decoration:underline;">{{ site_host }}</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

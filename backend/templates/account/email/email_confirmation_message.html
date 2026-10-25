@@ -1,0 +1,7 @@
+{% extends "account/email/base_message.html" %}
+{% block title %}Confirme seu e-mail{% endblock title %}
+{% block preheader %}Confirme este endereço para usar sua conta no Tribuna Brasil.{% endblock preheader %}
+{% block heading %}{% block heading_text %}Confirme seu e-mail{% endblock heading_text %}{% endblock heading %}
+{% block content %}<p style="margin:0;">{% block lead %}Recebemos um pedido para usar este endereço numa conta do Tribuna Brasil. Para confirmar, use o botão abaixo.{% endblock lead %}</p>{% endblock content %}
+{% block action %}{% include "account/email/_button.html" with url=activate_url label="Confirmar e-mail" %}{% endblock action %}
+{% block note %}{% include "account/email/_note.html" with text="Se você não fez esse pedido, ignore esta mensagem. Nenhuma conta será ativada." %}{% endblock note %}

@@ -1,0 +1,8 @@
+{% extends "account/email/base_message.html" %}
+{% block title %}Conta não encontrada{% endblock title %}
+{% block preheader %}Não existe conta no Tribuna Brasil com este endereço.{% endblock preheader %}
+{% block heading %}Conta não encontrada{% endblock heading %}
+{% block content %}<p style="margin:0;">Alguém pediu acesso a uma conta do Tribuna Brasil com o e-mail <strong style="color:#0e1a2b;">{{ email }}</strong>, mas não existe conta com esse endereço.</p>
+<p style="margin:16px 0 0;">Se foi você e quer criar uma conta, use o botão abaixo.</p>{% endblock content %}
+{% block action %}{% include "account/email/_button.html" with url=signup_url label="Criar conta" %}{% endblock action %}
+{% block note %}{% include "account/email/_note.html" with text="Se você não fez esse pedido, ignore esta mensagem." %}{% endblock note %}

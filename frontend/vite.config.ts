@@ -42,6 +42,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Logotipo dos e-mails (backend/templates/account/email/): só o Gmail e afins o baixam.
+        globIgnores: ['email/**'],
         navigateFallback: '/index.html',
         // Rotas do backend nunca caem no shell do app e nunca são cacheadas pelo SW.
         navigateFallbackDenylist: backendPaths.map((p) => new RegExp(`^${p}(/|$)`)),

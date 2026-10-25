@@ -1,0 +1,4 @@
+{% extends "account/email/base_notification.html" %}
+{% block title %}E-mail alterado{% endblock title %}
+{% block heading %}O e-mail da conta mudou{% endblock heading %}
+{% block notification_message %}O e-mail da sua conta no Tribuna Brasil foi trocado de <strong style="color:#0e1a2b;">{{ from_email }}</strong> para <strong style="color:#0e1a2b;">{{ to_email }}</strong>.{% endblock notification_message %}

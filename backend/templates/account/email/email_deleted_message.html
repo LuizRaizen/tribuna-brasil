@@ -1,0 +1,4 @@
+{% extends "account/email/base_notification.html" %}
+{% block title %}E-mail removido{% endblock title %}
+{% block heading %}Um e-mail foi removido da conta{% endblock heading %}
+{% block notification_message %}O endereço <strong style="color:#0e1a2b;">{{ deleted_email }}</strong> foi removido da sua conta no Tribuna Brasil.{% endblock notification_message %}

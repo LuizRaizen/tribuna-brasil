@@ -564,7 +564,8 @@ Problemas relatados pelo responsável pelo produto com o app rodando na VPS:
 
 | Problema | Correção | Situação |
 |---|---|---|
-| E-mail de ativação da conta não chega | Checagens de deploy `tribuna.E001` (e-mail só no log) e `tribuna.E002` (remetente de exemplo), avisadas pelo `deploy.sh`; comando `enviar_email_teste`; falha de envio registrada (`email.send_failed`, destinatário mascarado); guia de diagnóstico em `DEPLOY.md` | ✅ no código; falta corrigir o `.env` da VPS |
+| E-mail de ativação da conta não chega | Checagens de deploy `tribuna.E001` (e-mail só no log) e `tribuna.E002` (remetente de exemplo), avisadas pelo `deploy.sh`; comando `enviar_email_teste`; falha de envio registrada (`email.send_failed`, destinatário mascarado); guia de diagnóstico em `DEPLOY.md` | ✅ e-mail chegando (`EMAIL_URL` do Brevo no `.env` da VPS; domínio autenticado com código Brevo, DKIM e DMARC no Registro.br) |
+| E-mails de conta em texto puro, sem identidade | Modelo HTML para todos os e-mails de conta (confirmação, redefinição, conta existente ou inexistente, avisos de segurança) com logotipo, botão e link por extenso; o texto puro segue junto. Logotipo em PNG com fundo branco em `frontend/public/email/`, fora do pré-cache do PWA | ✅ |
 | Sem botão para instalar o app no celular | Convite abaixo do cabeçalho (só no celular, "Agora não" esconde por 21 dias), botão no menu e no rodapé; diálogo nativo no Android e passo a passo no iPhone; tudo some com o app instalado | ✅ |
 | Porcentagens com casas decimais sobrepostas nas pesquisas | Números com tamanho relativo à coluna (container queries), sem quebra, alinhados por subgrid; testado de 320 a 1280 px | ✅ |
 | Rodapé feio no celular | Navegação em duas colunas, fontes oficiais como pílulas, barra final com "Corrigir uma informação" | ✅ |
@@ -577,8 +578,11 @@ Descobertas:
 - **Classe base vence `hidden`:** um botão com `inline-flex` na base ignorava `hidden`; usar
   `max-lg:hidden`.
 - **`li` em grade com `min-width: auto`:** "Candidaturas" alargava a barra inferior a 320 px.
-- **Acesso à VPS:** a chave SSH desta máquina não é aceita; a configuração do e-mail fica com o
-  responsável pelo produto (passos em `DEPLOY.md`, "Se o e-mail de confirmação não chegar").
+- **Causa confirmada do e-mail:** o `.env` da VPS não tinha `EMAIL_URL`, e os e-mails saíam no log do
+  backend. Com o SMTP configurado, o Brevo recusou o remetente até o domínio ser autenticado.
+- **Acesso à VPS:** pelo usuário `luizadmin` (não `root`); o app fica em `/opt/apps/tribuna-brasil`.
+- **Foto do remetente:** não vem no e-mail; o Gmail mostra a foto da conta Google do endereço que
+  envia. O padrão oficial (BIMI) exige certificado VMC/CMC pago no Gmail e na Apple, e fica para depois.
 
-Testes: backend com 206 testes; frontend com 80 unitários e 22 de ponta a ponta; nenhuma das 13
+Testes: backend com 210 testes; frontend com 80 unitários e 22 de ponta a ponta; nenhuma das 13
 rotas auditadas transborda a 320 nem a 360 px.
