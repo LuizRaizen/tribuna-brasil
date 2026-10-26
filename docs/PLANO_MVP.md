@@ -586,3 +586,40 @@ Descobertas:
 
 Testes: backend com 210 testes; frontend com 80 unitários e 22 de ponta a ponta; nenhuma das 13
 rotas auditadas transborda a 320 nem a 360 px.
+
+## 18. Incidente da apuração do 2º turno e cabeçalho do desktop (26/10/2026)
+
+**Apuração:** nenhum arquivo do TSE foi consultado em 25/10. A importação do DataJud estourava a
+memória do worker e era reentregue para sempre, e em dobro. Os 2 processos ficaram ocupados, e as
+26.376 tarefas de coleta expiraram na fila. Análise completa em
+[ESTUDO_POS_ELEICAO.md](ESTUDO_POS_ELEICAO.md), §1.
+
+| Correção | Situação |
+|---|---|
+| Worker e fila exclusivos para a apuração (`worker-realtime`, `realtime`); importações em `bulk` | ✅ `a7fec08` |
+| `reject_on_worker_lost=False`; `visibility_timeout` de 3 h, acima do maior `time_limit` | ✅ `a7fec08` |
+| DataJud página a página, só com os processos procurados | ✅ `a7fec08` |
+| `/health/apuracao` (503 quando a coleta para) e monitor no UptimeRobot (`DEPLOY.md`) | ✅ `a7fec08`; falta criar o monitor |
+| Repescagem: arquivo sem totalização final é consultado a cada 15 min por 30 dias | ✅ `ba1042d` |
+
+**Cabeçalho do desktop:** logado, com o app instalável, a 1440–1535 px os itens não cabiam ("Minha
+conta" cortado e rolagem lateral de 84 px). "Instalar" e "Minha conta" viraram ícones com nome
+acessível (`40ed0f6`). Conferido de 1024 a 1536 px, sem transbordar.
+
+Testes: backend com 218 testes.
+
+## 19. Nova missão: o Tribuna depois da eleição (planejada em 26/10/2026)
+
+Estudo e decisões pendentes em [ESTUDO_POS_ELEICAO.md](ESTUDO_POS_ELEICAO.md). O app passa a ter
+fases automáticas (acompanhamento, pré-eleição, apuração, transição), calculadas a partir de datas e
+dados oficiais. A prioridade passa a ser quem foi eleito e o acompanhamento do mandato. Tudo o que foi
+construído para a eleição continua útil e volta a ser destaque sozinho no próximo ciclo.
+
+| Sprint | Objetivo | Entrega | Situação |
+|---|---|---|---|
+| 7 | Confiabilidade das coletas | Isolamento da apuração, repescagem e alarme (§18); `/health/fontes` com frequência esperada por fonte; simulação de dia de eleição com carga | Em andamento |
+| 8 | Design pós-eleição | Protótipo em `design/pos-eleicao-2026/`: Início nas 3 fases, Quem governa, pessoa em exercício, Aprender, Eleições, design system v2, antes e depois das telas atuais | Aguarda as decisões do estudo (§8) |
+| 9 | Fases e nova Início | Cálculo da fase pelo calendário oficial; Início com cartões; navegação em 5 áreas | Depois da aprovação do design |
+| 10 | Quem governa | Eleitos de 2026 (resultado final e situação pós-turno do TSE); mandatos e posse (5/1, 6/1, 1/2); atos da Presidência pelas APIs do Congresso; virada da legislatura | — |
+| 11 | Aprender | República, três Poderes, como nasce uma lei, eleições, cargos; história republicana (E12) começando pelos presidentes | — |
+| 12 | Telas mais limpas | Design system v2 aplicado às telas atuais; a11y e performance | — |
