@@ -42,5 +42,12 @@ def test_health_rejects_write_methods() -> None:
     assert Client().post("/health").status_code == 405
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("path", ["/health", "/ready", "/health/apuracao"])
+def test_health_endpoints_answer_head_for_external_monitors(path: str) -> None:
+    # O UptimeRobot gratuito testa com HEAD; 405 virava alarme falso de "site fora do ar".
+    assert Client().head(path).status_code == 200
+
+
 def test_worker_ping_task() -> None:
     assert ping.delay().get() == "pong"

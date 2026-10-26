@@ -4,19 +4,21 @@ from django.db import connection
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_safe
 
 logger = structlog.get_logger(__name__)
 
 
-@require_GET
+# Os endpoints de saúde aceitam HEAD além de GET: monitores externos (o plano gratuito do
+# UptimeRobot) testam com HEAD, e com só GET recebiam 405 e davam alarme falso.
+@require_safe
 @never_cache
 def health(request: HttpRequest) -> JsonResponse:
     """Liveness: o processo está de pé. Não consulta dependências."""
     return JsonResponse({"status": "ok"})
 
 
-@require_GET
+@require_safe
 @never_cache
 def ready(request: HttpRequest) -> JsonResponse:
     """Readiness: o processo consegue atender (banco e cache acessíveis)."""
@@ -42,7 +44,7 @@ def ready(request: HttpRequest) -> JsonResponse:
     )
 
 
-@require_GET
+@require_safe
 @never_cache
 def results_collection(request: HttpRequest) -> JsonResponse:
     """A apuração está sendo coletada? 503 quando há resultados por vir e a coleta parou.
