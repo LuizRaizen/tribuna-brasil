@@ -61,7 +61,8 @@ services:
 
   worker:
     <<: *backend
-    command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2"]
+    # Em desenvolvimento um só worker consome as duas filas; em produção são dois (realtime e bulk).
+    command: ["celery", "-A", "config", "worker", "--loglevel=INFO", "--concurrency=2", "-Q", "realtime,bulk,celery"]
 
   scheduler:
     <<: *backend

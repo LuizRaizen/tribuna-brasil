@@ -184,8 +184,24 @@ A partir daí, cada push na `main` roda o CI completo e, **só se tudo passar**,
 
 ## Passo 9 — Monitoramento
 
-Em https://uptimerobot.com, crie um monitor HTTP(s) para `https://tribuna.duckdns.org/ready`
-(intervalo de 5 minutos, alerta por e-mail). Ele avisa se o banco, o cache ou o site caírem.
+Em https://uptimerobot.com, crie dois monitores HTTP(s), com intervalo de 5 minutos e alerta por
+e-mail:
+
+| Monitor | Endereço | Avisa quando |
+|---|---|---|
+| Site | `https://<seu-domínio>/ready` | o banco, o cache ou o site caem |
+| Apuração | `https://<seu-domínio>/health/apuracao` | há resultados por vir e algum arquivo do TSE ficou mais de 5 minutos sem ser consultado |
+
+O monitor da apuração pode ficar ligado o ano todo: fora da janela de apuração ele responde 200
+(`"status": "idle"`). Ele existe por causa do 2º turno de 2026, quando uma importação travada ocupou
+o worker e nenhum resultado foi coletado, sem que nada avisasse. Desde então a apuração roda num
+worker próprio (`worker-realtime`, fila `realtime`), separado das importações (`worker`, fila `bulk`).
+Se o alerta disparar:
+
+```bash
+docker compose -f docker-compose.prod.yml logs --tail=100 worker-realtime
+docker compose -f docker-compose.prod.yml restart worker-realtime
+```
 
 ## Passo 10 — Backup externo (recomendado)
 

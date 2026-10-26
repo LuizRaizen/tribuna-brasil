@@ -8,6 +8,7 @@
 """
 
 import json
+from collections.abc import Iterator
 from typing import Any
 
 from django.conf import settings
@@ -46,11 +47,15 @@ MAX_WINDOW = 10_000  # limite de paginação por from/size do Elasticsearch
 
 def search_registrations(
     court: str, *, year: int, updated_since: str | None = None
-) -> list[tuple[bytes, list[dict[str, Any]]]]:
-    """Todos os processos de registro de candidatura do ano em um tribunal, em páginas.
+) -> Iterator[tuple[bytes, list[dict[str, Any]]]]:
+    """Todos os processos de registro de candidatura do ano em um tribunal, página a página.
 
     Uma consulta por tribunal (e não por número) é muito mais leve para o DataJud, que leva
     dezenas de segundos por consulta. Com `updated_since`, só vem o que mudou desde então.
+
+    Gerador: cada página é processada e descartada antes da seguinte. Acumular as páginas de um
+    TRE grande (até 10 mil processos com todas as movimentações) estourava a memória do worker
+    (25/10/2026), e a tarefa morta travava a fila da apuração.
     """
     # O filtro é pela data de atualização, não pelo ajuizamento: em alguns tribunais (ex.: TRE-BA)
     # o filtro por `dataAjuizamento` não restringe nada (90 mil documentos em 12/10/2026). Os
@@ -61,7 +66,6 @@ def search_registrations(
         {"term": {"classe.codigo": CANDIDACY_REGISTRATION_CLASS}},
         {"range": {"dataHoraUltimaAtualizacao": {"gte": since}}},
     ]
-    pages: list[tuple[bytes, list[dict[str, Any]]]] = []
     start = 0
     while start < MAX_WINDOW:
         body = {
@@ -85,8 +89,7 @@ def search_registrations(
             hits = json.loads(result.content)["hits"]["hits"]
         except (ValueError, KeyError, TypeError) as exc:
             raise SourceError(f"DataJud {court}: resposta fora do formato esperado") from exc
-        pages.append((result.content, [h["_source"] for h in hits]))
+        yield result.content, [h["_source"] for h in hits]
         if len(hits) < PAGE:
-            break
+            return
         start += PAGE
-    return pages

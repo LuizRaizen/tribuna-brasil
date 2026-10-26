@@ -44,6 +44,21 @@ def ready(request: HttpRequest) -> JsonResponse:
 
 @require_GET
 @never_cache
+def results_collection(request: HttpRequest) -> JsonResponse:
+    """A apuração está sendo coletada? 503 quando há resultados por vir e a coleta parou.
+
+    Fora da janela de apuração responde 200 ("idle"): o monitor pode ficar ligado o ano todo.
+    """
+    from apps.elections.services.freshness import collection_status
+
+    status = collection_status()
+    if not status.healthy:
+        logger.error("results.collection_stale", **status.as_dict())
+    return JsonResponse(status.as_dict(), status=200 if status.healthy else 503)
+
+
+@require_GET
+@never_cache
 @ensure_csrf_cookie
 def csrf(request: HttpRequest) -> JsonResponse:
     """Garante o cookie CSRF para o frontend antes da primeira requisição de escrita."""

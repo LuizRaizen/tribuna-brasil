@@ -26,7 +26,7 @@
 		-Server
 	}
 
-	@backend path /api/* /admin* /static/* /accounts/* /health /ready
+	@backend path /api/* /admin* /static/* /accounts/* /health /health/* /ready
 	handle @backend {
 		# O Caddy repassa X-Forwarded-For/Proto/Host automaticamente, respeitando trusted_proxies.
 		# O SSE (text/event-stream) é transmitido sem buffer.

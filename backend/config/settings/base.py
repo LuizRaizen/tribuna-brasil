@@ -239,10 +239,22 @@ API_DOCS_ENABLED = env.bool("API_DOCS_ENABLED", default=False)
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = None
 CELERY_TASK_ACKS_LATE = True
-CELERY_TASK_REJECT_ON_WORKER_LOST = True
+# Tarefa cujo processo morre (ex.: falta de memória) NÃO volta para a fila. Com True, uma importação
+# que estourava a memória era reentregue para sempre, ocupava o worker e a apuração do 2º turno
+# (25/10/2026) não foi coletada. A próxima execução agendada refaz o trabalho.
+CELERY_TASK_REJECT_ON_WORKER_LOST = False
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_TIME_LIMIT = 60 * 30
 CELERY_TASK_SOFT_TIME_LIMIT = 60 * 25
+# Com acks_late, o Redis reentrega a outro processo a tarefa não confirmada após este prazo, mesmo
+# que ela ainda esteja rodando. Precisa ser maior que o maior time_limit (DataJud: 7500 s), senão a
+# mesma importação roda em dobro.
+CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timeout": 60 * 60 * 3}
+# Duas filas, dois workers (docker-compose.prod.yml): a apuração nunca espera uma importação.
+#   realtime: coleta de resultados do TSE, a cada minuto na janela de apuração;
+#   bulk: importações diárias pesadas (candidaturas, prestação de contas, Câmara, DataJud…).
+CELERY_TASK_DEFAULT_QUEUE = "bulk"
+CELERY_TASK_ROUTES = {"elections.*": {"queue": "realtime"}}
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TIMEZONE = "America/Sao_Paulo"
 CELERY_BEAT_SCHEDULE = {

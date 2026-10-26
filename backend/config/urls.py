@@ -26,6 +26,7 @@ api_v1: list[URLPattern | URLResolver] = [
 urlpatterns = [
     path("health", core_views.health, name="health"),
     path("ready", core_views.ready, name="ready"),
+    path("health/apuracao", core_views.results_collection, name="health-results"),
     path("api/v1/", include(api_v1)),
     path("accounts/", include("allauth.urls")),
     path(settings.ADMIN_URL, admin.site.urls),

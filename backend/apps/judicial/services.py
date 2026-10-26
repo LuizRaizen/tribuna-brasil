@@ -85,17 +85,20 @@ def _movements(source: dict[str, Any]) -> list[dict[str, Any]]:
     return items
 
 
-def _best(hits: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """O mesmo número pode aparecer em mais de um grau: fica o registro atualizado por último."""
-    chosen: dict[str, dict[str, Any]] = {}
-    for hit in hits:
+def _keep_best(
+    chosen: dict[str, dict[str, Any]], page: list[dict[str, Any]], wanted: dict[str, Candidacy]
+) -> None:
+    """Guarda só os processos procurados; o mesmo número pode aparecer em mais de um grau, e
+    fica o registro atualizado por último. O resto da página é descartado (memória constante)."""
+    for hit in page:
         number = str(hit.get("numeroProcesso") or "")
+        if number not in wanted:
+            continue
         current = chosen.get(number)
         if current is None or str(hit.get("dataHoraUltimaAtualizacao") or "") > str(
             current.get("dataHoraUltimaAtualizacao") or ""
         ):
             chosen[number] = hit
-    return chosen
 
 
 def _updated_since(source: Source, *, full: bool) -> str | None:
@@ -136,20 +139,19 @@ def import_registration_processes(
     digest = hashlib.sha256()
     size = 0
     for court, wanted in sorted(by_court.items()):
+        chosen: dict[str, dict[str, Any]] = {}
         try:
-            pages = client.search_registrations(court, year=year, updated_since=since)
+            for raw, page in client.search_registrations(court, year=year, updated_since=since):
+                digest.update(raw)
+                size += len(raw)
+                _keep_best(chosen, page, wanted)
         except SourceError as exc:
             # Um tribunal fora do ar não impede os demais.
             report.status = SyncRun.Status.FAILED
             report.errors.append(f"{court}: {exc}")
             continue
-        hits: list[dict[str, Any]] = []
-        for raw, page in pages:
-            digest.update(raw)
-            size += len(raw)
-            hits.extend(page)
         before = report.found + report.secret
-        _store(court, _best(hits), wanted, report)
+        _store(court, chosen, wanted, report)
         seen = report.found + report.secret - before
         if since is None and seen < len(wanted):
             # Lacuna da fonte: o TSE informa o número, mas o DataJud não o tem (ainda).
