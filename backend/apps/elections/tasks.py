@@ -21,7 +21,7 @@ def poll_results() -> int:
     feeds = ResultFeed.objects.filter(enabled=True, finished=False).select_related("round")
     scheduled = 0
     for feed in feeds:
-        if feed.in_collection_window(now):
+        if feed.is_due(now):
             collect_feed.apply_async(args=[feed.pk], countdown=scheduled * 0.4, expires=55)
             scheduled += 1
     logger.info("results.poll", scheduled=scheduled)

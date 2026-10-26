@@ -73,8 +73,19 @@ def test_poll_only_schedules_feeds_inside_collection_window(
             "apps.elections.tasks.timezone.now", return_value=datetime(2026, 10, 4, 19, tzinfo=BRT)
         ):
             assert poll_results() == 2
+        # Depois da janela: só os ainda não finalizados, e a cada 15 minutos (repescagem).
         with mock.patch(
-            "apps.elections.tasks.timezone.now", return_value=datetime(2026, 10, 9, 12, tzinfo=BRT)
+            "apps.elections.tasks.timezone.now",
+            return_value=datetime(2026, 10, 9, 12, 7, tzinfo=BRT),
         ):
-            assert poll_results() == 0  # janela encerrada
-    assert schedule.call_count == 2
+            assert poll_results() == 0
+        with mock.patch(
+            "apps.elections.tasks.timezone.now",
+            return_value=datetime(2026, 10, 9, 12, 15, tzinfo=BRT),
+        ):
+            assert poll_results() == 2
+        with mock.patch(
+            "apps.elections.tasks.timezone.now", return_value=datetime(2026, 11, 10, 12, tzinfo=BRT)
+        ):
+            assert poll_results() == 0  # 30 dias depois: encerrado
+    assert schedule.call_count == 4

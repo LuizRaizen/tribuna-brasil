@@ -10,6 +10,10 @@ from apps.sources.models import DataSnapshot
 from .elections import Contest, ElectionRound, Region
 
 COLLECTION_WINDOW = timedelta(days=3)
+# Depois da janela, arquivo sem totalização final continua sendo consultado, com menos frequência:
+# uma coleta que parou (como no 2º turno de 2026) não pode perder o resultado final para sempre.
+LATE_WINDOW = timedelta(days=30)
+LATE_EVERY_MINUTES = 15
 
 
 class ResultFeed(models.Model):
@@ -41,6 +45,15 @@ class ResultFeed(models.Model):
         now = now or timezone.now()
         start = self.round.closes_datetime
         return start <= now <= start + COLLECTION_WINDOW
+
+    def is_due(self, now: datetime | None = None) -> bool:
+        """Coletar nesta rodada do scheduler? A cada minuto na janela; depois, a cada 15 minutos."""
+        now = now or timezone.now()
+        if self.in_collection_window(now):
+            return True
+        start = self.round.closes_datetime
+        late = start + COLLECTION_WINDOW < now <= start + LATE_WINDOW
+        return late and now.minute % LATE_EVERY_MINUTES == 0
 
 
 class ResultSnapshot(models.Model):
