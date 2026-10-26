@@ -1,4 +1,4 @@
-import { BellIcon, DotsNineIcon, MagnifyingGlassIcon } from '@phosphor-icons/react'
+import { BellIcon, DotsNineIcon, DownloadSimpleIcon, MagnifyingGlassIcon } from '@phosphor-icons/react'
 import { Link, NavLink, useLocation } from 'react-router'
 import { Logo } from '@/components/brand/Logo'
 import { buttonClass } from '@/components/ui/Button'
@@ -86,13 +86,17 @@ export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
             <MagnifyingGlassIcon weight="bold" className="size-5" aria-hidden="true" />
           </button>
           {user && <NotificationsBell />}
+          {/* Ícones (com nome acessível e dica) em vez de texto: logado, com a busca aberta e o app
+              instalável, os rótulos não cabiam a 1440 px e a página rolava para o lado. */}
           {method === 'prompt' && (
             <button
               type="button"
               onClick={install}
-              className="hidden min-h-11 rounded-control px-3 text-sm font-semibold text-azul hover:bg-azul-50 xl:inline-flex xl:items-center"
+              aria-label="Instalar o app"
+              title="Instalar o app"
+              className="hidden size-11 place-items-center rounded-control text-azul hover:bg-azul-50 lg:grid"
             >
-              Instalar app
+              <DownloadSimpleIcon weight="bold" className="size-5" aria-hidden="true" />
             </button>
           )}
           {/* No celular, "Conta" já está na barra inferior: o cabeçalho fica com o essencial. */}
@@ -101,12 +105,13 @@ export function Header({ onSearch, onMenu }: { onSearch: () => void; onMenu: () 
           ) : user ? (
             <Link
               to="/conta"
-              className="hidden min-h-11 items-center gap-2 rounded-control px-2 text-sm font-semibold text-ink no-underline hover:bg-sunken lg:inline-flex"
+              aria-label="Minha conta"
+              title="Minha conta"
+              className="hidden size-11 place-items-center rounded-control no-underline hover:bg-sunken lg:grid"
             >
               <span className="grid size-8 place-items-center rounded-full bg-azul-50 font-bold text-azul" aria-hidden="true">
                 {(user.display || user.email).charAt(0).toUpperCase()}
               </span>
-              <span className="sr-only lg:not-sr-only">Minha conta</span>
             </Link>
           ) : onAuthPage ? null : (
             <Link to="/conta/entrar" viewTransition className={buttonClass('secondary', 'md', 'max-lg:hidden')}>
