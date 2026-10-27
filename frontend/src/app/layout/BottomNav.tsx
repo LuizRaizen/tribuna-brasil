@@ -1,5 +1,5 @@
-import { BellIcon, MagnifyingGlassIcon, SwatchesIcon } from '@phosphor-icons/react'
-import { Link, NavLink } from 'react-router'
+import { BellIcon, LightbulbIcon, MagnifyingGlassIcon, SwatchesIcon } from '@phosphor-icons/react'
+import { Link, NavLink, useLocation } from 'react-router'
 import { Sheet } from '@/components/ui/Sheet'
 import { InstallButton } from '@/features/install/InstallApp'
 import { SearchCombobox } from '@/features/search/SearchCombobox'
@@ -53,6 +53,7 @@ export function SearchSheet({ open, onClose }: { open: boolean; onClose: () => v
 
 /** Menu em gaveta (celular): todas as áreas, inclusive as que não cabem na barra inferior. */
 export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { pathname } = useLocation()
   const items = [
     ...NAV_ITEMS,
     { to: '/busca', label: 'Buscar', icon: MagnifyingGlassIcon },
@@ -77,7 +78,11 @@ export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => voi
             </li>
           ))}
         </ul>
-        <Link to="/como-funciona#correcoes" viewTransition onClick={onClose} className="mt-6 flex min-h-11 items-center gap-2 font-semibold">
+        <Link to="/sugerir" state={{ from: pathname }} viewTransition onClick={onClose} className="mt-6 flex min-h-11 items-center gap-2 font-semibold">
+          <LightbulbIcon className="size-5" aria-hidden="true" />
+          Sugerir uma melhoria
+        </Link>
+        <Link to="/como-funciona#correcoes" viewTransition onClick={onClose} className="flex min-h-11 items-center gap-2 font-semibold">
           <SwatchesIcon className="size-5" aria-hidden="true" />
           Corrigir uma informação
         </Link>

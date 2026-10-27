@@ -33,3 +33,46 @@ class CorrectionReport(models.Model):
 
     def __str__(self) -> str:
         return f"{self.page_path} ({self.get_status_display()})"
+
+
+class Suggestion(models.Model):
+    """Sugestão de melhoria para o Tribuna, enviada por qualquer pessoa e lida no Admin.
+
+    Fica no banco (e não numa caixa de e-mail) para nada se perder e cada uma ter um status.
+    O e-mail é opcional: só para quem quer resposta (LGPD, minimização).
+    """
+
+    class Topic(models.TextChoices):
+        NEW_FEATURE = "new_feature", "Nova funcionalidade"
+        IMPROVEMENT = "improvement", "Melhoria em algo que já existe"
+        PROBLEM = "problem", "Algo não funciona"
+        CONTENT = "content", "Conteúdo e explicações"
+        OTHER = "other", "Outro assunto"
+
+    class Status(models.TextChoices):
+        NEW = "new", "Nova"
+        REVIEWING = "reviewing", "Em análise"
+        PLANNED = "planned", "Vai ser feita"
+        DONE = "done", "Feita"
+        DISMISSED = "dismissed", "Descartada"
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.NEW)
+    topic = models.CharField("assunto", max_length=16, choices=Topic.choices)
+    message = models.TextField("sugestão")
+    page_path = models.CharField("enviada a partir da página", max_length=300, blank=True)
+    contact_email = models.EmailField("e-mail para retorno", blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    ip_hash = models.CharField(max_length=64, blank=True)
+    team_note = models.TextField("observação da equipe", blank=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "sugestão de melhoria"
+        verbose_name_plural = "sugestões de melhoria"
+        ordering = ("-created_at",)
+
+    def __str__(self) -> str:
+        return f"{self.get_topic_display()}: {self.message[:60]}"

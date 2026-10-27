@@ -25,6 +25,7 @@ const ConfirmEmailPage = lazy(() => import('@/pages/auth/ConfirmEmailPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
 const AccountPage = lazy(() => import('@/pages/account/AccountPage'))
+const SuggestionPage = lazy(() => import('@/pages/SuggestionPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 export const routes: RouteObject[] = [
@@ -34,6 +35,7 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <HomePage /> },
       { path: 'como-funciona', element: <HowItWorksPage /> },
+      { path: 'sugerir', element: <SuggestionPage /> },
       { path: 'apuracao', element: <ResultsPage /> },
       { path: 'pesquisas', element: <PollsPage /> },
       { path: 'estados', element: <StatesIndexPage /> },

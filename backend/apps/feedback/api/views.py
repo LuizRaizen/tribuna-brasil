@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from apps.core.net import client_ip, pseudonymize
 
-from ..models import CorrectionReport
+from ..models import CorrectionReport, Suggestion
 
 
 class CorrectionAnonThrottle(AnonRateThrottle):
@@ -55,6 +55,56 @@ class CorrectionCreateView(APIView):
             # Robô: responde como sucesso para não ensinar a contornar a armadilha.
             return Response({"received": True}, status=status.HTTP_201_CREATED)
         CorrectionReport.objects.create(
+            **values,
+            user=request.user if request.user.is_authenticated else None,
+            ip_hash=pseudonymize(client_ip(request)),
+        )
+        response = Response({"received": True}, status=status.HTTP_201_CREATED)
+        response["Cache-Control"] = "no-store"
+        return response
+
+
+class SuggestionAnonThrottle(AnonRateThrottle):
+    scope = "suggestions_anon"
+    rate = "5/hour"
+
+
+class SuggestionUserThrottle(UserRateThrottle):
+    scope = "suggestions_user"
+    rate = "20/hour"
+
+
+class SuggestionSerializer(serializers.Serializer):
+    topic = serializers.ChoiceField(choices=Suggestion.Topic.choices)
+    message = serializers.CharField(min_length=10, max_length=3000)
+    page_path = serializers.CharField(max_length=300, required=False, allow_blank=True)
+    contact_email = serializers.EmailField(required=False, allow_blank=True)
+    # Campo-armadilha: invisível para pessoas, preenchido por robôs.
+    website = serializers.CharField(required=False, allow_blank=True)
+
+    def validate_page_path(self, value: str) -> str:
+        # Só caminhos internos; uma URL externa aqui é descartada em vez de recusar a sugestão.
+        return value if value.startswith("/") and not value.startswith("//") else ""
+
+
+class SuggestionCreateView(APIView):
+    """Sugestão de melhoria (sem conta). A leitura é feita no Admin, em "Sugestões de melhoria"."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [SuggestionAnonThrottle, SuggestionUserThrottle]
+
+    @extend_schema(
+        operation_id="suggestions_create",
+        request=SuggestionSerializer,
+        responses=OpenApiTypes.OBJECT,
+    )
+    def post(self, request: Request) -> Response:
+        data = SuggestionSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        values: dict[str, Any] = dict(data.validated_data)
+        if values.pop("website", ""):
+            return Response({"received": True}, status=status.HTTP_201_CREATED)
+        Suggestion.objects.create(
             **values,
             user=request.user if request.user.is_authenticated else None,
             ip_hash=pseudonymize(client_ip(request)),

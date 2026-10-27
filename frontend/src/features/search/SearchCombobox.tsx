@@ -24,6 +24,7 @@ const PAGES = [
   { label: 'Estados', to: '/estados', keys: 'estados mapa uf regiao' },
   { label: 'Partidos', to: '/partidos', keys: 'partidos siglas' },
   { label: 'Como o Tribuna funciona', to: '/como-funciona', keys: 'como funciona fontes metodologia correcao' },
+  { label: 'Sugerir uma melhoria', to: '/sugerir', keys: 'sugerir sugestao melhoria ideia contato fale conosco' },
 ]
 
 type Option = { id: string; to: string; node: ReactNode }

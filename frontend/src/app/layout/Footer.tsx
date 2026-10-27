@@ -1,5 +1,5 @@
-import { ArrowUpRightIcon, PencilSimpleLineIcon } from '@phosphor-icons/react'
-import { Link } from 'react-router'
+import { ArrowUpRightIcon, LightbulbIcon, PencilSimpleLineIcon } from '@phosphor-icons/react'
+import { Link, useLocation } from 'react-router'
 import { Logo } from '@/components/brand/Logo'
 import { InstallButton } from '@/features/install/InstallApp'
 import { OFFICIAL_SOURCES } from '@/lib/officialSources'
@@ -10,6 +10,7 @@ import { NAV_ITEMS } from './nav'
  * quebram de linha por inteiro (nunca no meio do nome). No desktop: três colunas.
  */
 export function Footer() {
+  const { pathname } = useLocation()
   return (
     <footer className="border-t border-line bg-surface pb-24 lg:pb-0">
       <div className="container-page py-10 md:py-14">
@@ -72,10 +73,16 @@ export function Footer() {
 
         <div className="mt-10 flex flex-col gap-3 border-t border-line pt-6 text-sm sm:flex-row sm:items-center sm:justify-between">
           <p className="text-ink-3">Dados abertos de órgãos públicos. Sem propaganda política.</p>
-          <Link to="/como-funciona#correcoes" viewTransition className="inline-flex min-h-11 w-fit items-center gap-2 font-semibold sm:min-h-0">
-            <PencilSimpleLineIcon weight="bold" className="size-4" aria-hidden="true" />
-            Corrigir uma informação
-          </Link>
+          <div className="flex flex-col gap-1 sm:flex-row sm:gap-6">
+            <Link to="/sugerir" state={{ from: pathname }} viewTransition className="inline-flex min-h-11 w-fit items-center gap-2 font-semibold sm:min-h-0">
+              <LightbulbIcon weight="bold" className="size-4" aria-hidden="true" />
+              Sugerir uma melhoria
+            </Link>
+            <Link to="/como-funciona#correcoes" viewTransition className="inline-flex min-h-11 w-fit items-center gap-2 font-semibold sm:min-h-0">
+              <PencilSimpleLineIcon weight="bold" className="size-4" aria-hidden="true" />
+              Corrigir uma informação
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
